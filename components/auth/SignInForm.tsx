@@ -25,7 +25,7 @@ export function SignInForm() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (email === "Test" && password === "123456") {
+    if (email === "default@gmail.com" && password === "Default@123") {
       document.cookie = `${AUTH_COOKIE}=1; path=/; SameSite=Lax`;
       const from = new URLSearchParams(window.location.search).get("from");
       router.replace(from && from.startsWith("/") ? from : "/dashboard");
