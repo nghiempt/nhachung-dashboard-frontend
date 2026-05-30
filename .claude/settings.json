@@ -2,7 +2,25 @@
   "permissions": {
     "allow": [
       "Bash(curl -s http://localhost:3000/cai-dat -o /tmp/cai-dat-out.html -w \"%{http_code}\\\\n\")",
-      "Bash(curl -s http://localhost:3000/cai-dat -o /dev/null)"
+      "Bash(curl -s http://localhost:3000/cai-dat -o /dev/null)",
+      "Bash(grep -rl \"qa-icon-box\\\\|stat-icon-box\\\\|notif-icon\" /Users/nghiempt/Usage/nhachung-dashboard-frontend --include=\"*.css\" --include=\"*.scss\" -not -path \"*/node_modules/*\")",
+      "Bash(cd /Users/nghiempt/Usage/nhachung-dashboard-frontend *)",
+      "Read(//Users/nghiempt/Usage/**)",
+      "Bash(cp /Users/nghiempt/Usage/nhachung-html/signin.html ./signin.html)",
+      "Bash(cp /Users/nghiempt/Usage/nhachung-html/signup.html ./signup.html)",
+      "Bash(awk 'NR==1{print \"L1: \"substr\\($0,1,200\\)\"...\"} NR>=38 && NR<=51{ if\\(length\\($0\\)>400\\) print \"L\"NR\" [\"length\\($0\\)\"ch]: \"substr\\($0,1,200\\)\" ...[TRUNC]... \"substr\\($0,length\\($0\\)-150\\); else print \"L\"NR\": \"$0 }' signin.html)",
+      "Bash(perl -0pe 's/data:image\\\\/[a-zA-Z+]+;base64,[A-Za-z0-9+\\\\/=]+/data:IMG_PLACEHOLDER/g' signin.html)",
+      "Bash(perl -0pe 's/></>\\\\n</g' /tmp/signin_nobase64.html)",
+      "Bash(perl -pe 's/<style>.*//')",
+      "Bash(sed -n '24p' signin.html)",
+      "Bash(sed -n '38p' signin.html)",
+      "Bash(perl -pe 's/<\\\\/style>.*//')",
+      "Bash(sed -n '1p' signup.html)",
+      "Bash(perl -0pe 's/data:image\\\\/[a-zA-Z+]+;base64,[A-Za-z0-9+\\\\/=]+/IMG/g')",
+      "Bash(perl -pe 's/^data:image\\\\/png;base64,//' /tmp/authimg/signin.uri)",
+      "Bash(sips -g pixelWidth -g pixelHeight public/images/auth/preview.png)",
+      "Bash(perl -0ne 'if\\(/<style>\\(.*?\\)<\\\\/style>/s\\){my $c=$1; $c=~s/}/}\\\\n/g; print $c}' signup.html)",
+      "Bash(grep -v '^\\\\s*$')"
     ]
   }
 }

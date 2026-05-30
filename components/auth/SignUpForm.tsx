@@ -1,0 +1,133 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import styles from "./auth.module.css";
+import { BrandLogo } from "./BrandLogo";
+import { SupportBox } from "./SupportBox";
+import { PasswordField, SubmitArrowIcon } from "./PasswordField";
+
+export function SignUpForm() {
+  const [bizName, setBizName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [referral, setReferral] = useState("");
+  const [agree, setAgree] = useState(false);
+
+  return (
+    <div className={styles.loginPage}>
+      <div className={`${styles.leftPanel} ${styles.leftPanelSignup}`}>
+        <BrandLogo />
+
+        <div className={styles.formWrap}>
+          <div className={styles.titleSection}>
+            <h1>Tạo tài khoản miễn phí</h1>
+            <p>Bắt đầu với 500 tin AI mỗi tháng</p>
+          </div>
+
+          <form className={styles.loginForm} onSubmit={(e) => e.preventDefault()}>
+            <div className={styles.field}>
+              <label htmlFor="biz-name">Tên doanh nghiệp / cửa hàng</label>
+              <input
+                type="text"
+                id="biz-name"
+                name="biz-name"
+                placeholder="VD: Spa Mai Anh"
+                autoComplete="organization"
+                value={bizName}
+                onChange={(e) => setBizName(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="fullname">Họ và tên của bạn</label>
+              <input
+                type="text"
+                id="fullname"
+                name="fullname"
+                placeholder=""
+                autoComplete="name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder=""
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <PasswordField
+              id="password"
+              label="Mật khẩu (tối thiểu 8 ký tự)"
+              autoComplete="new-password"
+              value={password}
+              onChange={setPassword}
+            />
+
+            <div className={styles.field}>
+              <label htmlFor="referral">Mã giới thiệu (tùy chọn)</label>
+              <input
+                type="text"
+                id="referral"
+                name="referral"
+                placeholder="VD: TRUONG2026"
+                autoComplete="off"
+                value={referral}
+                onChange={(e) => setReferral(e.target.value)}
+              />
+              <p className={styles.fieldHint}>
+                Bạn sẽ được giảm giá khi nâng cấp gói. Mã không hợp lệ sẽ bị bỏ qua.
+              </p>
+            </div>
+
+            <div className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                id="agree"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
+              />
+              <label htmlFor="agree">
+                Tôi đồng ý với{" "}
+                <a href="https://zalo.webico.ai/terms" target="_blank" rel="noreferrer">
+                  Điều khoản dịch vụ
+                </a>{" "}
+                và{" "}
+                <a href="https://zalo.webico.ai/privacy" target="_blank" rel="noreferrer">
+                  Chính sách bảo mật
+                </a>
+                .
+              </label>
+            </div>
+
+            <button type="submit" className={styles.submitBtn}>
+              <span>Tạo tài khoản</span>
+              <SubmitArrowIcon />
+            </button>
+          </form>
+
+          <p className={styles.registerLink}>
+            Đã có tài khoản? <Link href="/sign-in">Đăng nhập</Link>
+          </p>
+
+          <SupportBox />
+        </div>
+      </div>
+
+      <div className={styles.rightPanel}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/auth/preview.png" alt="Webico dashboard preview" />
+      </div>
+    </div>
+  );
+}
