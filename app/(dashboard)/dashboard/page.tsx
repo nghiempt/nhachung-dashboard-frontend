@@ -1,4 +1,89 @@
+"use client";
+
+import { useApiData } from "@/lib/hooks";
+import { formatDateLong, formatTime, timeAgo, formatNumber } from "@/lib/format";
+import { notifIconColor, type IconColor } from "@/lib/ui-maps";
+
+interface OverviewHero {
+  greeting: string;
+  buildingName: string;
+  residentsCount: number;
+  unreadNotifications: number;
+}
+interface OverviewStat {
+  key: string;
+  label: string;
+  value: number | null;
+  unit?: string;
+  deferred?: boolean;
+  changePercent?: number | null;
+}
+interface OverviewNotification {
+  id: string;
+  title: string;
+  source: string;
+  category: string;
+  iconType: string;
+  isUrgent: boolean;
+  status: string;
+  time: string;
+}
+interface OverviewCommunityPost {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+  viewCount: number;
+  createdAt: string;
+}
+interface OverviewEvent {
+  id: string;
+  title: string;
+  startAt: string;
+  endAt: string;
+  location: string;
+}
+interface DashboardOverview {
+  hero: OverviewHero;
+  stats: OverviewStat[];
+  notifications: OverviewNotification[];
+  communityPosts: OverviewCommunityPost[];
+  events: OverviewEvent[];
+}
+
+// Colored notif icon assets, keyed by the semantic color from the category map.
+const NOTIF_ICON_BY_COLOR: Record<IconColor, string> = {
+  red: "/images/dashboard/notif-icon-1.svg",
+  blue: "/images/dashboard/notif-icon-2.svg",
+  violet: "/images/dashboard/notif-icon-3.svg",
+  green: "/images/dashboard/notif-icon-3.svg",
+  mint: "/images/dashboard/notif-icon-3.svg",
+  orange: "/images/dashboard/notif-icon-4.svg",
+  amber: "/images/dashboard/notif-icon-4.svg",
+};
+
+// Background accents for the 4 stat cards (preserve original order/colors).
+const STAT_ICON_BG = ["#eae7fe", "#e6f7f1", "#fef1e6", "#e6f0fe"];
+const STAT_ICON_IMG = [
+  "/images/dashboard/img_13.svg",
+  "/images/dashboard/img_14.svg",
+  "/images/dashboard/img_15.svg",
+  "/images/dashboard/img_16.svg",
+];
+
+function statDisplayValue(stat: OverviewStat): string {
+  if (stat.deferred || stat.value == null) return "Đang cập nhật";
+  return `${formatNumber(stat.value)}${stat.unit ?? ""}`;
+}
+
 export default function DashboardPage() {
+  const { data, loading } = useApiData<DashboardOverview>("/dashboard/overview");
+
+  const hero = data?.hero;
+  const stats = data?.stats ?? [];
+  const notifications = data?.notifications ?? [];
+  const communityPosts = data?.communityPosts ?? [];
+  const events = data?.events ?? [];
+
   return (
     <div className="db-content">
 
@@ -9,25 +94,25 @@ export default function DashboardPage() {
 
         <div className="hero-left">
           <div className="hero-text">
-            <p className="hero-greeting">Chào buổi sáng, Chris!</p>
-            <p className="hero-date">Hôm nay là thứ 5, ngày 23 tháng 5 năm 2026</p>
+            <p className="hero-greeting">{hero?.greeting ?? (loading ? "Đang tải..." : "")}</p>
+            <p className="hero-date">Hôm nay là {formatDateLong(new Date())}</p>
             <div className="hero-meta">
               <div className="hero-meta-item">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/images/dashboard/img_1.svg" alt="" />
-                Landmark 1
+                {hero?.buildingName ?? ""}
               </div>
               <div className="hero-meta-item">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/images/dashboard/img_2.svg" alt="" />
-                1389 cư dân
+                {formatNumber(hero?.residentsCount)} cư dân
               </div>
             </div>
           </div>
           <div className="hero-notif-pill">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/dashboard/img_3.svg" alt="" />
-            Bạn có 12 thông báo mới
+            Bạn có {formatNumber(hero?.unreadNotifications)} thông báo mới
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="hero-notif-pill-arrow" src="/images/dashboard/hero-notif-pill-arrow.svg" alt="" />
           </div>
@@ -117,54 +202,35 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="stats-grid">
-              <div className="stats-row">
-                <div className="stat-card">
-                  <div className="stat-icon-box" style={{ background: '#eae7fe' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/dashboard/img_13.svg" alt="" />
-                  </div>
-                  <div className="stat-info">
-                    <div className="stat-label">Thu chi tháng 5/2026</div>
-                    <div className="stat-value">128.450.000đ</div>
-                    <div className="stat-change"><span className="pct down">-8.5%</span> so với tháng trước</div>
-                  </div>
+              {[0, 2].map((rowStart) => (
+                <div className="stats-row" key={rowStart}>
+                  {[rowStart, rowStart + 1].map((i) => {
+                    const stat = stats[i];
+                    if (!stat) {
+                      return <div className="stat-card" key={i} />;
+                    }
+                    return (
+                      <div className="stat-card" key={stat.key}>
+                        <div className="stat-icon-box" style={{ background: STAT_ICON_BG[i] }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={STAT_ICON_IMG[i]} alt="" />
+                        </div>
+                        <div className="stat-info">
+                          <div className="stat-label">{stat.label}</div>
+                          <div className="stat-value">{statDisplayValue(stat)}</div>
+                          {!stat.deferred && stat.changePercent != null && (
+                            <div className="stat-change">
+                              <span className={`pct ${stat.changePercent < 0 ? "down" : "up"}`}>
+                                {stat.changePercent < 0 ? "" : "+"}{stat.changePercent}%
+                              </span> so với tháng trước
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="stat-card">
-                  <div className="stat-icon-box" style={{ background: '#e6f7f1' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/dashboard/img_14.svg" alt="" />
-                  </div>
-                  <div className="stat-info">
-                    <div className="stat-label">Quỹ bảo trì</div>
-                    <div className="stat-value">2.450.000.000đ</div>
-                    <div className="stat-change"><span className="pct up">+4.2%</span> so với tháng trước</div>
-                  </div>
-                </div>
-              </div>
-              <div className="stats-row">
-                <div className="stat-card">
-                  <div className="stat-icon-box" style={{ background: '#fef1e6' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/dashboard/img_15.svg" alt="" />
-                  </div>
-                  <div className="stat-info">
-                    <div className="stat-label">Phản ánh đang xử lý</div>
-                    <div className="stat-value">24</div>
-                    <div className="stat-change"><span className="pct down">-12.5%</span> so với tháng trước</div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon-box" style={{ background: '#e6f0fe' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/dashboard/img_16.svg" alt="" />
-                  </div>
-                  <div className="stat-info">
-                    <div className="stat-label">Tỉ lệ xử lý đúng hạn</div>
-                    <div className="stat-value">92%</div>
-                    <div className="stat-change"><span className="pct up">+8.3%</span> so với tháng trước</div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -180,53 +246,27 @@ export default function DashboardPage() {
             </div>
             <div className="community-grid">
 
-              <div className="community-card">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="community-photo" src="/images/dashboard/community-1.png" alt="" />
-                <div className="community-body">
-                  <div className="community-title">Cập nhật tiến độ bảo trì thang máy tháng 5/2024</div>
-                  <div className="community-meta">
-                    <span className="community-time">2 giờ trước</span>
-                    <div className="community-views">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/dashboard/img_19.svg" alt="" />
-                      284
+              {communityPosts.map((post, i) => (
+                <div className="community-card" key={post.id}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className="community-photo"
+                    src={post.thumbnailUrl ?? `/images/dashboard/community-${(i % 3) + 1}.png`}
+                    alt=""
+                  />
+                  <div className="community-body">
+                    <div className="community-title">{post.title}</div>
+                    <div className="community-meta">
+                      <span className="community-time">{timeAgo(post.createdAt)}</span>
+                      <div className="community-views">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/images/dashboard/img_19.svg" alt="" />
+                        {formatNumber(post.viewCount)}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="community-card">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="community-photo" src="/images/dashboard/community-2.png" alt="" />
-                <div className="community-body">
-                  <div className="community-title">Ngày hội cư dân Sunshine Riverside 2024</div>
-                  <div className="community-meta">
-                    <span className="community-time">1 ngày trước</span>
-                    <div className="community-views">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/dashboard/img_19.svg" alt="" />
-                      256
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="community-card">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="community-photo" src="/images/dashboard/community-3.png" alt="" />
-                <div className="community-body">
-                  <div className="community-title">Lớp học Yoga miễn phí cho cư dân vào mỗi sáng thứ 7</div>
-                  <div className="community-meta">
-                    <span className="community-time">2 ngày trước</span>
-                    <div className="community-views">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/dashboard/img_19.svg" alt="" />
-                      89
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
 
             </div>
           </div>
@@ -248,45 +288,21 @@ export default function DashboardPage() {
             </div>
             <div className="notif-list-card">
 
-              <div className="notif-row">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="notif-icon" src="/images/dashboard/notif-icon-1.svg" alt="" />
-                <div className="notif-info">
-                  <div className="notif-title">Bảo trì hệ thống PCCC định kỳ</div>
-                  <div className="notif-sub">Ban quản trị</div>
+              {notifications.map((n) => (
+                <div className="notif-row" key={n.id}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className="notif-icon"
+                    src={NOTIF_ICON_BY_COLOR[notifIconColor(n.category)]}
+                    alt=""
+                  />
+                  <div className="notif-info">
+                    <div className="notif-title">{n.title}</div>
+                    <div className="notif-sub">{n.source}</div>
+                  </div>
+                  <span className="notif-time">{formatTime(n.time)}</span>
                 </div>
-                <span className="notif-time">10:30 AM</span>
-              </div>
-
-              <div className="notif-row">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="notif-icon" src="/images/dashboard/notif-icon-2.svg" alt="" />
-                <div className="notif-info">
-                  <div className="notif-title">Thông báo điều chỉnh phí giữ xe</div>
-                  <div className="notif-sub">Ban quản trị</div>
-                </div>
-                <span className="notif-time">09:15 AM</span>
-              </div>
-
-              <div className="notif-row">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="notif-icon" src="/images/dashboard/notif-icon-3.svg" alt="" />
-                <div className="notif-info">
-                  <div className="notif-title">Sự kiện: Ngày hội cư dân 2024</div>
-                  <div className="notif-sub">Ban quản trị</div>
-                </div>
-                <span className="notif-time">Hôm qua</span>
-              </div>
-
-              <div className="notif-row">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="notif-icon" src="/images/dashboard/notif-icon-4.svg" alt="" />
-                <div className="notif-info">
-                  <div className="notif-title">Tạm ngưng cấp nước khu A</div>
-                  <div className="notif-sub">Ban quản trị</div>
-                </div>
-                <span className="notif-time">21/05/2024</span>
-              </div>
+              ))}
 
             </div>
           </div>
@@ -385,37 +401,23 @@ export default function DashboardPage() {
               {/* Event cards */}
               <div className="event-grid" style={{ marginTop: '12px' }}>
 
-                <div className="event-card">
-                  <div className="event-title">Ngày hội cư dân 2024</div>
-                  <div className="event-meta">
-                    <div className="event-meta-row">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/dashboard/img_30.svg" alt="" />
-                      <span>08:00 - 17:00</span>
-                    </div>
-                    <div className="event-meta-row">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/dashboard/img_31.svg" alt="" />
-                      <span>Sảnh chính</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="event-card">
-                  <div className="event-title">Bảo trì hệ thống PCCC</div>
-                  <div className="event-meta">
-                    <div className="event-meta-row">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/dashboard/img_30.svg" alt="" />
-                      <span>13:00 - 15:00</span>
-                    </div>
-                    <div className="event-meta-row">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/dashboard/img_31.svg" alt="" />
-                      <span>Tòa nhà A</span>
+                {events.map((ev) => (
+                  <div className="event-card" key={ev.id}>
+                    <div className="event-title">{ev.title}</div>
+                    <div className="event-meta">
+                      <div className="event-meta-row">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/images/dashboard/img_30.svg" alt="" />
+                        <span>{formatTime(ev.startAt)} - {formatTime(ev.endAt)}</span>
+                      </div>
+                      <div className="event-meta-row">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/images/dashboard/img_31.svg" alt="" />
+                        <span>{ev.location}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ))}
 
               </div>
             </div>

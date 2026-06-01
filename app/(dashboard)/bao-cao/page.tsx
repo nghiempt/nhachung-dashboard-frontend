@@ -1,3 +1,11 @@
+"use client";
+
+import { useState } from "react";
+import { useApiData } from "@/lib/hooks";
+import { apiPost } from "@/lib/api";
+import { formatDate } from "@/lib/format";
+import { REPORT_STATUS, REPORT_PERIOD } from "@/lib/ui-maps";
+
 const EyeIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -22,6 +30,14 @@ const EditIcon = () => (
 
 type FileType = "pdf" | "doc" | "xls";
 
+// Map API file types (pdf/docx/xlsx/...) onto the three icon variants.
+function iconType(fileType?: string | null): FileType {
+  const ft = (fileType ?? "").toLowerCase();
+  if (ft.startsWith("xls")) return "xls";
+  if (ft.startsWith("doc")) return "doc";
+  return "pdf";
+}
+
 const FileIcon = ({ type }: { type: FileType }) => {
   const color = type === "pdf" ? "#f5222d" : type === "doc" ? "#1870c4" : "#1c9d5f";
   const bg = type === "pdf" ? "#fff1f0" : type === "doc" ? "#e8f0fe" : "#e8f8ee";
@@ -32,72 +48,101 @@ const FileIcon = ({ type }: { type: FileType }) => {
         <path d="M14 0v6h6" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M14 0l6 6" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
       </svg>
-      <div className="rc-file-ext" style={{ color }}>{type.toUpperCase()}</div>
+      <div className="rc-file-ext" style={{ color }}>{(type === "doc" ? "DOCX" : type === "xls" ? "XLSX" : "PDF")}</div>
     </div>
   );
 };
 
-type Report = {
-  type: FileType;
-  period: string;
+interface Summary {
+  total: number;
+  published: number;
+  pending: number;
+  dueSoon: number;
+}
+
+interface ReportTab {
+  key: string;
+  label: string;
+  count: number;
+}
+
+interface ReportItem {
+  id: string;
   title: string;
-  date: string;
-  badgeClass: string;
-  badgeText: string;
-  rightText: string;
-};
+  periodType: string;
+  periodLabel: string;
+  status: string;
+  category: string;
+  fileType: string | null;
+  sizeBytes: number | null;
+  sizeLabel: string;
+  url: string | null;
+  responsibleName: string | null;
+  dueDate: string | null;
+  publishedAt: string | null;
+  viewCount: number;
+  downloadCount: number;
+}
 
-const monthlyReports: Report[] = [
-  { type: "pdf", period: "Báo cáo tháng", title: "Báo cáo hoạt động BQT tháng 5/2024", date: "Hạn nộp: 10/06/2024", badgeClass: "badge badge-orange", badgeText: "Chờ duyệt", rightText: "Ô. Nguyễn Thanh Bình" },
-  { type: "pdf", period: "Báo cáo tháng", title: "Báo cáo hoạt động BQT tháng 4/2024", date: "Phát hành: 08/05/2024 · 2.4 MB", badgeClass: "badge badge-green", badgeText: "Đã phát hành", rightText: "247 lượt xem" },
-  { type: "pdf", period: "Báo cáo tháng", title: "Báo cáo hoạt động BQT tháng 3/2024", date: "Phát hành: 05/04/2024 · 2.1 MB", badgeClass: "badge badge-green", badgeText: "Đã phát hành", rightText: "312 lượt xem" },
-  { type: "doc", period: "Báo cáo tháng", title: "Báo cáo hoạt động BQT tháng 2/2024", date: "Phát hành: 07/03/2024 · 1.8 MB", badgeClass: "badge badge-green", badgeText: "Đã phát hành", rightText: "198 lượt xem" },
-  { type: "pdf", period: "Báo cáo tháng", title: "Báo cáo hoạt động BQT tháng 1/2024", date: "Phát hành: 06/02/2024 · 2.2 MB", badgeClass: "badge badge-green", badgeText: "Đã phát hành", rightText: "276 lượt xem" },
-];
+interface ReportsResponse {
+  tabs: ReportTab[];
+  items: ReportItem[];
+}
 
-const quarterlyReports: Report[] = [
-  { type: "pdf", period: "Báo cáo quý", title: "Báo cáo tổng hợp Quý 1/2024", date: "Phát hành: 15/04/2024 · 5.8 MB", badgeClass: "badge badge-green", badgeText: "Đã phát hành", rightText: "531 lượt xem" },
-  { type: "xls", period: "Báo cáo quý", title: "Báo cáo tài chính Quý 2/2024", date: "Hạn nộp: 15/07/2024", badgeClass: "badge badge-orange", badgeText: "Chờ duyệt", rightText: "Bà Trần Thị Lan Anh" },
-  { type: "pdf", period: "Báo cáo năm", title: "Báo cáo thường niên BQT năm 2023", date: "Phát hành: 20/01/2024 · 12.3 MB", badgeClass: "badge badge-green", badgeText: "Đã phát hành", rightText: "892 lượt xem" },
-];
-
-type UpcomingRow = {
+interface UpcomingItem {
+  id: string;
   title: string;
-  sub: string;
-  date: string;
-  urgent?: boolean;
-  person: string;
-  badgeClass: string;
-  badgeText: string;
-};
+  periodLabel: string;
+  status: string;
+  responsibleName: string | null;
+  dueDate: string | null;
+}
 
-const upcoming: UpcomingRow[] = [
-  { title: "Báo cáo tháng 6/2024", sub: "Tổng hợp hoạt động BQT", date: "10/07/2024 · 18 ngày", urgent: true, person: "Ô. Nguyễn Thanh Bình", badgeClass: "badge badge-gray", badgeText: "Chưa soạn" },
-  { title: "Báo cáo tổng hợp Q2/2024", sub: "Tổng hợp hoạt động cả quý", date: "15/07/2024 · 23 ngày", urgent: true, person: "Bà Trần Thị Lan Anh", badgeClass: "badge badge-orange", badgeText: "Chờ duyệt" },
-  { title: "Báo cáo tài chính Q2/2024", sub: "Thu chi và quỹ bảo trì", date: "20/07/2024 · 28 ngày", person: "Ô. Phạm Hoàng Nam", badgeClass: "badge badge-gray", badgeText: "Chưa soạn" },
-  { title: "Báo cáo vận hành Q2/2024", sub: "Bảo trì, an ninh, sự cố", date: "20/07/2024 · 28 ngày", person: "Ô. Lê Văn Đức", badgeClass: "badge badge-gray", badgeText: "Chưa soạn" },
-];
+// Map REPORT_STATUS color -> existing badge utility class.
+function badgeClassFor(status: string): string {
+  if (status === "published") return "badge badge-green";
+  if (status === "pending") return "badge badge-orange";
+  return "badge badge-gray";
+}
 
-function ReportCard({ r }: { r: Report }) {
+function ReportCard({ r }: { r: ReportItem }) {
+  const st = REPORT_STATUS[r.status] ?? REPORT_STATUS.draft;
+  const isPublished = r.status === "published";
+  const dateText = isPublished
+    ? `Phát hành: ${formatDate(r.publishedAt)}${r.sizeLabel ? ` · ${r.sizeLabel}` : ""}`
+    : `Hạn nộp: ${formatDate(r.dueDate)}`;
+  const rightText = isPublished
+    ? `${r.viewCount} lượt xem`
+    : r.responsibleName ?? "";
+
+  const openReport = async () => {
+    try {
+      await apiPost(`/reports/${r.id}/view`, {});
+    } catch {
+      /* ignore view-count failures */
+    }
+    if (r.url) window.open(r.url, "_blank");
+  };
+
   return (
     <div className="report-card">
       <div className="rc-top">
-        <FileIcon type={r.type} />
+        <FileIcon type={iconType(r.fileType)} />
         <div className="rc-meta">
-          <div className="rc-period">{r.period}</div>
+          <div className="rc-period">{REPORT_PERIOD[r.periodType] ?? "Báo cáo"}</div>
           <div className="rc-title">{r.title}</div>
-          <div className="rc-date">{r.date}</div>
+          <div className="rc-date">{dateText}</div>
         </div>
       </div>
       <div className="rc-divider"></div>
       <div className="rc-bottom">
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span className={r.badgeClass}>{r.badgeText}</span>
-          <span style={{ fontSize: 11, color: "#585c7b" }}>{r.rightText}</span>
+          <span className={badgeClassFor(r.status)}>{st.label}</span>
+          <span style={{ fontSize: 11, color: "#585c7b" }}>{rightText}</span>
         </div>
         <div className="rc-actions">
-          <button className="rc-btn" title="Xem"><EyeIcon /></button>
-          <button className="rc-btn" title="Tải xuống"><DownloadIcon /></button>
+          <button className="rc-btn" title="Xem" onClick={openReport}><EyeIcon /></button>
+          <button className="rc-btn" title="Tải xuống" onClick={openReport}><DownloadIcon /></button>
         </div>
       </div>
     </div>
@@ -105,6 +150,22 @@ function ReportCard({ r }: { r: Report }) {
 }
 
 export default function BaoCaoPage() {
+  const [periodType, setPeriodType] = useState<string>("all");
+
+  const { data: summary } = useApiData<Summary>("/reports/summary");
+  const { data: reports } = useApiData<ReportsResponse>(
+    periodType === "all" ? "/reports" : `/reports?periodType=${periodType}`,
+    [periodType],
+  );
+  const { data: upcoming } = useApiData<UpcomingItem[]>("/reports/upcoming");
+
+  const tabs = reports?.tabs ?? [];
+  const items = reports?.items ?? [];
+
+  const monthlyReports = items.filter((r) => r.periodType === "month");
+  // Quarterly section groups quarter + year reports together (mirrors original layout).
+  const otherReports = items.filter((r) => r.periodType === "quarter" || r.periodType === "year");
+
   return (
     <div className="bcdk-page">
       {/* ── Page Header ── */}
@@ -145,7 +206,7 @@ export default function BaoCaoPage() {
               <polyline points="14 2 14 8 20 8" />
             </svg>
           </div>
-          <div className="stat-val">28</div>
+          <div className="stat-val">{summary?.total ?? 0}</div>
           <div className="stat-lbl">Tổng báo cáo năm 2024</div>
           <div className="stat-trend">
             <span style={{ color: "#1c9d5f" }}>↑ +4</span>
@@ -160,7 +221,7 @@ export default function BaoCaoPage() {
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
-          <div className="stat-val green">21</div>
+          <div className="stat-val green">{summary?.published ?? 0}</div>
           <div className="stat-lbl">Đã phát hành</div>
           <div className="stat-trend"><span className="trend-neu">5 tháng đầu năm</span></div>
         </div>
@@ -172,7 +233,7 @@ export default function BaoCaoPage() {
               <polyline points="12 6 12 12 16 14" />
             </svg>
           </div>
-          <div className="stat-val orange">3</div>
+          <div className="stat-val orange">{summary?.pending ?? 0}</div>
           <div className="stat-lbl">Chờ phê duyệt</div>
           <div className="stat-trend"><span style={{ color: "#c8761b" }}>● Cần xem xét</span></div>
         </div>
@@ -185,7 +246,7 @@ export default function BaoCaoPage() {
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
           </div>
-          <div className="stat-val red">2</div>
+          <div className="stat-val red">{summary?.dueSoon ?? 0}</div>
           <div className="stat-lbl">Sắp đến hạn nộp</div>
           <div className="stat-trend"><span style={{ color: "#f5222d" }}>Trong 7 ngày tới</span></div>
         </div>
@@ -193,10 +254,15 @@ export default function BaoCaoPage() {
 
       {/* ── Filter ── */}
       <div className="filter-bar">
-        <button className="filter-tab active">Tất cả (28)</button>
-        <button className="filter-tab">Báo cáo tháng (20)</button>
-        <button className="filter-tab">Báo cáo quý (5)</button>
-        <button className="filter-tab">Báo cáo năm (3)</button>
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            className={`filter-tab${periodType === t.key ? " active" : ""}`}
+            onClick={() => setPeriodType(t.key)}
+          >
+            {t.label} ({t.count})
+          </button>
+        ))}
         <div className="filter-spacer"></div>
         <div className="search-mini">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -208,37 +274,24 @@ export default function BaoCaoPage() {
       </div>
 
       {/* ── Báo cáo tháng ── */}
-      <div className="report-section">
-        <div className="section-label">Báo cáo tháng — 2024</div>
-        <div className="report-grid">
-          {monthlyReports.map((r) => <ReportCard key={r.title} r={r} />)}
-
-          {/* Chưa soạn placeholder */}
-          <div className="report-card" style={{ borderStyle: "dashed", background: "#fafafa" }}>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "12px 0", textAlign: "center" }}>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: "#f7f7f7", border: "1.5px dashed #d4d7e5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b4b7c9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#585c7b" }}>Báo cáo tháng 6/2024</div>
-                <div style={{ fontSize: 12, color: "#b4b7c9", marginTop: 3 }}>Hạn nộp: 10/07/2024</div>
-              </div>
-              <span className="badge badge-gray">Chưa soạn</span>
-            </div>
+      {monthlyReports.length > 0 && (
+        <div className="report-section">
+          <div className="section-label">Báo cáo tháng — 2024</div>
+          <div className="report-grid">
+            {monthlyReports.map((r) => <ReportCard key={r.id} r={r} />)}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ── Báo cáo quý ── */}
-      <div className="report-section">
-        <div className="section-label">Báo cáo quý — 2024</div>
-        <div className="report-grid">
-          {quarterlyReports.map((r) => <ReportCard key={r.title} r={r} />)}
+      {/* ── Báo cáo quý / năm ── */}
+      {otherReports.length > 0 && (
+        <div className="report-section">
+          <div className="section-label">Báo cáo quý — 2024</div>
+          <div className="report-grid">
+            {otherReports.map((r) => <ReportCard key={r.id} r={r} />)}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Upcoming ── */}
       <div className="upcoming-card">
@@ -254,20 +307,23 @@ export default function BaoCaoPage() {
             <span>Trạng thái</span>
             <span style={{ textAlign: "right" }}>Thao tác</span>
           </div>
-          {upcoming.map((u) => (
-            <div className="up-row" key={u.title}>
-              <div>
-                <div className="up-title">{u.title}</div>
-                <div className="up-sub">{u.sub}</div>
+          {(upcoming ?? []).map((u) => {
+            const st = REPORT_STATUS[u.status] ?? REPORT_STATUS.draft;
+            return (
+              <div className="up-row" key={u.id}>
+                <div>
+                  <div className="up-title">{u.title}</div>
+                  <div className="up-sub">{u.periodLabel}</div>
+                </div>
+                <div className="up-date">{formatDate(u.dueDate)}</div>
+                <div className="up-person">{u.responsibleName ?? "—"}</div>
+                <div className="badge-cell"><span className={badgeClassFor(u.status)}>{st.label}</span></div>
+                <div className="action-cell">
+                  <button className="rc-btn"><EditIcon /></button>
+                </div>
               </div>
-              <div className={`up-date${u.urgent ? " urgent" : ""}`}>{u.date}</div>
-              <div className="up-person">{u.person}</div>
-              <div className="badge-cell"><span className={u.badgeClass}>{u.badgeText}</span></div>
-              <div className="action-cell">
-                <button className="rc-btn"><EditIcon /></button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

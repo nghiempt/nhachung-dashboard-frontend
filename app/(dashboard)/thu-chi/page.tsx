@@ -1,5 +1,145 @@
+"use client";
 /* eslint-disable @next/next/no-img-element */
+import { useState } from "react";
+import { useApiData } from "@/lib/hooks";
+import { formatVnd, formatDate } from "@/lib/format";
+import { trendDir } from "@/lib/ui-maps";
+
+interface LineItem {
+  id: string;
+  name: string;
+  category: string;
+  amount: number;
+  pctOfTotal: number;
+  comparisonPct: number | null;
+  comparisonDirection: string;
+  subInfo: string | null;
+  color: string | null;
+}
+interface FinancialOverview {
+  period: string;
+  totalIncome: number;
+  totalExpense: number;
+  surplus: number;
+  incomeChangePct: number;
+  expenseChangePct: number;
+  surplusChangePct: number;
+  ratios: { collectionRate: number; expenseRatio: number; expenseRatioChangePct: number };
+  lineItems: { income: LineItem[]; expense: LineItem[] };
+}
+interface PeriodPoint {
+  period: string;
+  totalIncome: number;
+  totalExpense: number;
+  surplus: number;
+}
+interface Txn {
+  id: string;
+  code: string;
+  type: string;
+  category: string;
+  description: string;
+  subInfo: string | null;
+  vendorName: string | null;
+  contractRef: string | null;
+  paymentMethod: string;
+  amount: number;
+  occurredAt: string;
+}
+interface TxnResp {
+  items: Txn[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+
+const DONUT_COLORS = ["#7a6dff", "#ff9d6a", "#3ddcb6", "#a99cff", "#c7d3ff", "#f5b5d4"];
+const PERIOD_LABELS = (period: string) => {
+  const [y, m] = period.split("-");
+  return `T${parseInt(m, 10)}/${y.slice(2)}`;
+};
+
+/** Format a money value to a compact M label, e.g. 748600000 -> "748,6M" */
+function toMillionLabel(v: number): string {
+  const millions = v / 1_000_000;
+  const rounded = Math.round(millions * 10) / 10;
+  return `${rounded.toLocaleString("vi-VN", { minimumFractionDigits: rounded % 1 === 0 ? 0 : 1, maximumFractionDigits: 1 })}M`;
+}
+
+/** Format a signed percentage chip text, e.g. 8.2 -> "+8.2%", 0 -> "±0%" */
+function pctChip(pct: number | null): string {
+  if (pct == null || pct === 0) return "±0%";
+  return `${pct > 0 ? "+" : ""}${pct}%`;
+}
+
 export default function ThuChiPage() {
+  const [page, setPage] = useState(1);
+  const LIMIT = 8;
+
+  const { data: overview } = useApiData<FinancialOverview>("/financial/overview");
+  const { data: periods } = useApiData<PeriodPoint[]>("/financial/periods?months=6");
+  const { data: txnData } = useApiData<TxnResp>(
+    `/financial/transactions?page=${page}&limit=${LIMIT}`,
+    [page],
+  );
+
+  const periodLabel = overview ? PERIOD_LABELS(overview.period) : "";
+  const prevPeriodLabel =
+    periods && periods.length >= 2 ? PERIOD_LABELS(periods[periods.length - 2].period) : "";
+  const cmpLabel = prevPeriodLabel ? `so với ${prevPeriodLabel}` : "so với tháng trước";
+
+  const incomeItems = overview?.lineItems.income ?? [];
+  const expenseItems = overview?.lineItems.expense ?? [];
+
+  // ── 6-month chart geometry ──
+  // Chart band: y=8 (top) .. y=264 (baseline). Bars sit on a 0..maxBar scale.
+  const TOP_Y = 8;
+  const BASE_Y = 264;
+  const BAND = BASE_Y - TOP_Y; // 256
+  const pts = periods ?? [];
+  const maxBar = Math.max(1, ...pts.map((p) => Math.max(p.totalIncome, p.totalExpense)));
+  const maxSurplus = Math.max(1, ...pts.map((p) => p.surplus));
+  const minSurplus = Math.min(0, ...pts.map((p) => p.surplus));
+  const groupX = (i: number) => 20 + i * 100; // income bar x; expense bar at +42
+  const lineX = (i: number) => 39 + i * 100;
+
+  const barRect = (val: number) => {
+    const h = Math.max(0, (val / maxBar) * BAND);
+    return { y: BASE_Y - h, height: h };
+  };
+  // Surplus line maps over [minSurplus, maxSurplus] into a sensible vertical band (8..200)
+  const surplusRange = Math.max(1, maxSurplus - minSurplus);
+  const lineY = (val: number) => {
+    const t = (val - minSurplus) / surplusRange; // 0..1
+    return 200 - t * 100; // higher surplus -> higher on chart (smaller y)
+  };
+
+  const linePoints = pts.map((p, i) => `${lineX(i)},${lineY(p.surplus).toFixed(0)}`).join(" ");
+
+  // Y-axis labels derived from maxBar (top label ~ maxBar rounded up)
+  const yTop = maxBar;
+  const yLbl = (frac: number) => {
+    const v = yTop * frac;
+    if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
+    return `${Math.round(v / 1_000_000)}M`;
+  };
+
+  const lastIdx = pts.length - 1;
+  const last = pts[lastIdx];
+
+  // ── Donut (expense structure) ──
+  const expenseTotal = overview?.totalExpense ?? 0;
+  const donutItems = expenseItems.map((it, i) => ({
+    color: it.color ?? DONUT_COLORS[i % DONUT_COLORS.length],
+    name: it.name,
+    pct: `${it.pctOfTotal}%`,
+    amt: toMillionLabel(it.amount),
+  }));
+
+  // ── Transactions ──
+  const txns = txnData?.items ?? [];
+  const meta = txnData?.meta;
+  const rangeStart = meta && meta.total > 0 ? (meta.page - 1) * meta.limit + 1 : 0;
+  const rangeEnd = meta ? Math.min(meta.page * meta.limit, meta.total) : 0;
+
   return (
     <div className="tc-page">
       {/* ── Page Header ── */}
@@ -11,7 +151,7 @@ export default function ThuChiPage() {
         <div className="tc-actions">
           <button className="tc-btn">
             <img src="https://www.figma.com/api/mcp/asset/bb824f87-1b0e-4c71-ba99-09a0e1da7f1e" alt="" width="16" height="16" />
-            Tháng 5/2024
+            {periodLabel ? `Tháng ${periodLabel.slice(1)}` : "Tháng này"}
             <img src="https://www.figma.com/api/mcp/asset/f68a73a3-66a4-4714-b40e-bd14e282faef" alt="" width="14" height="14" />
           </button>
           <button className="tc-btn">
@@ -33,11 +173,11 @@ export default function ThuChiPage() {
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tổng thu trong tháng</div>
-            <div className="kpi-value">2.845.600.000 đ</div>
+            <div className="kpi-value">{overview ? formatVnd(overview.totalIncome) : "Đang tải..."}</div>
             <div className="kpi-trend">
               <img src="https://www.figma.com/api/mcp/asset/533d51cd-ada2-4e1e-9195-c963cd036668" alt="" width="11" height="11" />
-              <span className="kpi-pct up">+12.4%</span>
-              <span className="kpi-tlabel">so với tháng 4/2024</span>
+              <span className={`kpi-pct ${overview && overview.incomeChangePct < 0 ? "down" : "up"}`}>{overview ? pctChip(overview.incomeChangePct) : ""}</span>
+              <span className="kpi-tlabel">{cmpLabel}</span>
             </div>
           </div>
         </div>
@@ -47,11 +187,11 @@ export default function ThuChiPage() {
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tổng chi trong tháng</div>
-            <div className="kpi-value">2.138.900.000 đ</div>
+            <div className="kpi-value">{overview ? formatVnd(overview.totalExpense) : "Đang tải..."}</div>
             <div className="kpi-trend">
               <img src="https://www.figma.com/api/mcp/asset/7e266243-494f-485c-afcc-77d8e7a3f69a" alt="" width="11" height="11" />
-              <span className="kpi-pct down">+8.7%</span>
-              <span className="kpi-tlabel">so với tháng 4/2024</span>
+              <span className={`kpi-pct ${overview && overview.expenseChangePct <= 0 ? "up" : "down"}`}>{overview ? pctChip(overview.expenseChangePct) : ""}</span>
+              <span className="kpi-tlabel">{cmpLabel}</span>
             </div>
           </div>
         </div>
@@ -61,11 +201,11 @@ export default function ThuChiPage() {
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Thặng dư / thâm hụt</div>
-            <div className="kpi-value">706.700.000 đ</div>
+            <div className="kpi-value">{overview ? formatVnd(overview.surplus) : "Đang tải..."}</div>
             <div className="kpi-trend">
               <img src="https://www.figma.com/api/mcp/asset/533d51cd-ada2-4e1e-9195-c963cd036668" alt="" width="11" height="11" />
-              <span className="kpi-pct up">+28.6%</span>
-              <span className="kpi-tlabel">so với tháng 4/2024</span>
+              <span className={`kpi-pct ${overview && overview.surplusChangePct < 0 ? "down" : "up"}`}>{overview ? pctChip(overview.surplusChangePct) : ""}</span>
+              <span className="kpi-tlabel">{cmpLabel}</span>
             </div>
           </div>
         </div>
@@ -75,11 +215,11 @@ export default function ThuChiPage() {
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tỉ lệ chi / thu</div>
-            <div className="kpi-value">75.2%</div>
+            <div className="kpi-value">{overview ? `${overview.ratios.expenseRatio}%` : "Đang tải..."}</div>
             <div className="kpi-trend">
               <img src="https://www.figma.com/api/mcp/asset/7e266243-494f-485c-afcc-77d8e7a3f69a" alt="" width="11" height="11" />
-              <span className="kpi-pct down">+3.1%</span>
-              <span className="kpi-tlabel">so với tháng 4/2024</span>
+              <span className={`kpi-pct ${overview && overview.ratios.expenseRatioChangePct <= 0 ? "up" : "down"}`}>{overview ? pctChip(overview.ratios.expenseRatioChangePct) : ""}</span>
+              <span className="kpi-tlabel">{cmpLabel}</span>
             </div>
           </div>
         </div>
@@ -117,10 +257,10 @@ export default function ThuChiPage() {
           </div>
 
           <div className="chart-svg-area" style={{ height: "300px", position: "relative" }}>
-            <span className="chart-y-lbl" style={{ top: "8px" }}>3.2B</span>
-            <span className="chart-y-lbl" style={{ top: "72px" }}>2.4B</span>
-            <span className="chart-y-lbl" style={{ top: "136px" }}>1.6B</span>
-            <span className="chart-y-lbl" style={{ top: "200px" }}>800M</span>
+            <span className="chart-y-lbl" style={{ top: "8px" }}>{yLbl(1)}</span>
+            <span className="chart-y-lbl" style={{ top: "72px" }}>{yLbl(0.75)}</span>
+            <span className="chart-y-lbl" style={{ top: "136px" }}>{yLbl(0.5)}</span>
+            <span className="chart-y-lbl" style={{ top: "200px" }}>{yLbl(0.25)}</span>
             <span className="chart-y-lbl" style={{ top: "264px" }}>0</span>
 
             <svg
@@ -134,65 +274,76 @@ export default function ThuChiPage() {
               <line x1="0" y1="200" x2="640" y2="200" stroke="#f0f0f5" strokeWidth="1" />
               <line x1="0" y1="264" x2="640" y2="264" stroke="#e8e8f0" strokeWidth="1" />
 
-              <rect x="20" y="72" width="38" height="192" rx="5" fill="#8b80f9" opacity="0.85" />
-              <rect x="62" y="122" width="38" height="142" rx="5" fill="#ef6b7c" opacity="0.85" />
+              {pts.map((p, i) => {
+                const inc = barRect(p.totalIncome);
+                const exp = barRect(p.totalExpense);
+                const isLast = i === lastIdx;
+                return (
+                  <g key={p.period}>
+                    <rect x={groupX(i)} y={inc.y} width="38" height={inc.height} rx="5" fill="#8b80f9" opacity={isLast ? undefined : 0.85} />
+                    <rect x={groupX(i) + 42} y={exp.y} width="38" height={exp.height} rx="5" fill="#ef6b7c" opacity={isLast ? undefined : 0.85} />
+                  </g>
+                );
+              })}
 
-              <rect x="120" y="88" width="38" height="176" rx="5" fill="#8b80f9" opacity="0.85" />
-              <rect x="162" y="116" width="38" height="148" rx="5" fill="#ef6b7c" opacity="0.85" />
+              {pts.length > 0 && (
+                <polyline
+                  points={linePoints}
+                  fill="none"
+                  stroke="#22c08a"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+              {pts.map((p, i) => (
+                <circle
+                  key={`c-${p.period}`}
+                  cx={lineX(i)}
+                  cy={lineY(p.surplus).toFixed(0)}
+                  r={i === lastIdx ? 6 : 4}
+                  fill="#22c08a"
+                  stroke="#fff"
+                  strokeWidth={i === lastIdx ? 2.5 : 2}
+                />
+              ))}
 
-              <rect x="220" y="64" width="38" height="200" rx="5" fill="#8b80f9" opacity="0.85" />
-              <rect x="262" y="108" width="38" height="156" rx="5" fill="#ef6b7c" opacity="0.85" />
-
-              <rect x="320" y="44" width="38" height="220" rx="5" fill="#8b80f9" opacity="0.85" />
-              <rect x="362" y="96" width="38" height="168" rx="5" fill="#ef6b7c" opacity="0.85" />
-
-              <rect x="420" y="64" width="38" height="200" rx="5" fill="#8b80f9" opacity="0.85" />
-              <rect x="462" y="106" width="38" height="158" rx="5" fill="#ef6b7c" opacity="0.85" />
-
-              <rect x="520" y="18" width="38" height="246" rx="5" fill="#8b80f9" />
-              <rect x="562" y="88" width="38" height="176" rx="5" fill="#ef6b7c" />
-
-              <polyline
-                points="39,150 139,172 239,132 339,124 439,132 539,100"
-                fill="none"
-                stroke="#22c08a"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="39" cy="150" r="4" fill="#22c08a" stroke="#fff" strokeWidth="2" />
-              <circle cx="139" cy="172" r="4" fill="#22c08a" stroke="#fff" strokeWidth="2" />
-              <circle cx="239" cy="132" r="4" fill="#22c08a" stroke="#fff" strokeWidth="2" />
-              <circle cx="339" cy="124" r="4" fill="#22c08a" stroke="#fff" strokeWidth="2" />
-              <circle cx="439" cy="132" r="4" fill="#22c08a" stroke="#fff" strokeWidth="2" />
-              <circle cx="539" cy="100" r="6" fill="#22c08a" stroke="#fff" strokeWidth="2.5" />
-
-              <text x="39" y="278" textAnchor="middle" fontSize="12" fill="#585c7b" fontFamily="Inter,sans-serif">T12/23</text>
-              <text x="139" y="278" textAnchor="middle" fontSize="12" fill="#585c7b" fontFamily="Inter,sans-serif">T1/24</text>
-              <text x="239" y="278" textAnchor="middle" fontSize="12" fill="#585c7b" fontFamily="Inter,sans-serif">T2/24</text>
-              <text x="339" y="278" textAnchor="middle" fontSize="12" fill="#585c7b" fontFamily="Inter,sans-serif">T3/24</text>
-              <text x="439" y="278" textAnchor="middle" fontSize="12" fill="#585c7b" fontFamily="Inter,sans-serif">T4/24</text>
-              <text x="539" y="278" textAnchor="middle" fontSize="12" fill="#4137f9" fontWeight="600" fontFamily="Inter,sans-serif">T5/24</text>
+              {pts.map((p, i) => (
+                <text
+                  key={`t-${p.period}`}
+                  x={lineX(i)}
+                  y="278"
+                  textAnchor="middle"
+                  fontSize="12"
+                  fill={i === lastIdx ? "#4137f9" : "#585c7b"}
+                  fontWeight={i === lastIdx ? 600 : undefined}
+                  fontFamily="Inter,sans-serif"
+                >
+                  {PERIOD_LABELS(p.period)}
+                </text>
+              ))}
             </svg>
 
-            <div className="chart-tooltip" style={{ top: "30px", left: "60%" }}>
-              <div className="tt-title">T5/2024</div>
-              <div className="tt-row">
-                <div className="tt-dot" style={{ background: "#8b80f9" }}></div>
-                <span className="tt-name">Tổng thu</span>
-                <span className="tt-val">2.845.600.000đ</span>
+            {last && (
+              <div className="chart-tooltip" style={{ top: "30px", left: "60%" }}>
+                <div className="tt-title">{PERIOD_LABELS(last.period)}</div>
+                <div className="tt-row">
+                  <div className="tt-dot" style={{ background: "#8b80f9" }}></div>
+                  <span className="tt-name">Tổng thu</span>
+                  <span className="tt-val">{formatVnd(last.totalIncome)}</span>
+                </div>
+                <div className="tt-row">
+                  <div className="tt-dot" style={{ background: "#ef6b7c" }}></div>
+                  <span className="tt-name">Tổng chi</span>
+                  <span className="tt-val">{formatVnd(last.totalExpense)}</span>
+                </div>
+                <div className="tt-row">
+                  <div className="tt-dot" style={{ background: "#22c08a" }}></div>
+                  <span className="tt-name">Thặng dư</span>
+                  <span className="tt-val">{formatVnd(last.surplus)}</span>
+                </div>
               </div>
-              <div className="tt-row">
-                <div className="tt-dot" style={{ background: "#ef6b7c" }}></div>
-                <span className="tt-name">Tổng chi</span>
-                <span className="tt-val">2.138.900.000đ</span>
-              </div>
-              <div className="tt-row">
-                <div className="tt-dot" style={{ background: "#22c08a" }}></div>
-                <span className="tt-name">Thặng dư</span>
-                <span className="tt-val">706.700.000đ</span>
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="chart-legend">
@@ -217,19 +368,12 @@ export default function ThuChiPage() {
           <div className="donut-wrap">
             <img src="https://www.figma.com/api/mcp/asset/b5288dca-c5ba-442d-9c20-ddaf75ae7faf" alt="Cơ cấu chi phí" />
             <div className="donut-center">
-              <div className="donut-cval">2.138,9M</div>
+              <div className="donut-cval">{toMillionLabel(expenseTotal)}</div>
               <div className="donut-clbl">Tổng chi</div>
             </div>
           </div>
           <div className="donut-legend">
-            {[
-              { color: "#7a6dff", name: "Vận hành", pct: "35%", amt: "748,6M" },
-              { color: "#ff9d6a", name: "Điện nước", pct: "22%", amt: "470,8M" },
-              { color: "#3ddcb6", name: "Bảo trì", pct: "18%", amt: "385,2M" },
-              { color: "#a99cff", name: "Dịch vụ", pct: "12%", amt: "256,6M" },
-              { color: "#c7d3ff", name: "Nhân sự", pct: "8%", amt: "171,1M" },
-              { color: "#f5b5d4", name: "Khác", pct: "5%", amt: "106,6M" },
-            ].map((r) => (
+            {donutItems.map((r) => (
               <div className="donut-row" key={r.name}>
                 <div className="donut-left">
                   <div className="donut-dot" style={{ background: r.color }}></div>
@@ -248,64 +392,64 @@ export default function ThuChiPage() {
         <div className="breakdown-card">
           <div className="breakdown-hd">
             <div className="breakdown-title">Chi tiết khoản thu</div>
-            <div className="breakdown-total"><span>Tổng:</span>2.845.600.000đ</div>
+            <div className="breakdown-total"><span>Tổng:</span>{overview ? formatVnd(overview.totalIncome) : "—"}</div>
           </div>
           <div className="bd-table">
-            {[
-              { name: "Phí quản lý chung cư", sub: "Đạt 98.6% kế hoạch • 856/868 căn hộ", width: "62%", color: "#8b80f9", amount: "1.764.272.000đ", cmp: "+8.2%", cmpClass: "up" },
-              { name: "Phí gửi xe", sub: "512 ô tô • 1.246 xe máy", width: "18%", color: "#8b80f9", amount: "512.208.000đ", cmp: "+15.3%", cmpClass: "up" },
-              { name: "Cho thuê mặt bằng", sub: "12 đơn vị thuê", width: "12%", color: "#8b80f9", amount: "341.472.000đ", cmp: "+22.4%", cmpClass: "up" },
-              { name: "Lãi tiền gửi quỹ", sub: "Quỹ bảo trì 6.5%/năm", width: "6%", color: "#8b80f9", amount: "170.736.000đ", cmp: "+3.1%", cmpClass: "up" },
-              { name: "Phí dịch vụ tiện ích", sub: "Hồ bơi • Phòng gym • BBQ", width: "2%", color: "#8b80f9", amount: "56.912.000đ", cmp: "-4.8%", cmpClass: "down" },
-            ].map((r) => (
-              <div className="bd-row" key={r.name}>
-                <div className="bd-name-col">
-                  <div className="bd-name">{r.name}</div>
-                  <div className="bd-sub">{r.sub}</div>
-                </div>
-                <div className="bd-bar-col">
-                  <div className="bd-bar-track">
-                    <div className="bd-bar-fill" style={{ width: r.width, background: r.color }}></div>
+            {incomeItems.map((r) => {
+              const t = trendDir(r.comparisonPct, r.comparisonDirection);
+              const cls = t.color === "#1c9d5f" ? "up" : t.color === "#ef4444" ? "down" : "neu";
+              return (
+                <div className="bd-row" key={r.id}>
+                  <div className="bd-name-col">
+                    <div className="bd-name">{r.name}</div>
+                    <div className="bd-sub">{r.subInfo}</div>
+                  </div>
+                  <div className="bd-bar-col">
+                    <div className="bd-bar-track">
+                      <div className="bd-bar-fill" style={{ width: `${r.pctOfTotal}%`, background: r.color ?? "#8b80f9" }}></div>
+                    </div>
+                  </div>
+                  <div className="bd-amount-col">
+                    <div className="bd-amount">{formatVnd(r.amount)}</div>
+                    <div className={`bd-cmp ${cls}`}>{pctChip(r.comparisonPct)}</div>
                   </div>
                 </div>
-                <div className="bd-amount-col">
-                  <div className="bd-amount">{r.amount}</div>
-                  <div className={`bd-cmp ${r.cmpClass}`}>{r.cmp}</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         <div className="breakdown-card">
           <div className="breakdown-hd">
             <div className="breakdown-title">Chi tiết khoản chi</div>
-            <div className="breakdown-total"><span>Tổng:</span>2.138.900.000đ</div>
+            <div className="breakdown-total"><span>Tổng:</span>{overview ? formatVnd(overview.totalExpense) : "—"}</div>
           </div>
           <div className="bd-table">
-            {[
-              { name: "Vận hành & quản lý", sub: "35% tổng chi", width: "100%", color: "#7a6dff", amount: "748.615.000đ", cmp: "+0.4%", cmpClass: "neu" },
-              { name: "Điện nước chung", sub: "22% tổng chi • Tăng do mùa nóng", width: "63%", color: "#ff9d6a", amount: "470.558.000đ", cmp: "+11.7%", cmpClass: "down" },
-              { name: "Bảo trì & sửa chữa", sub: "18% • Thay thế thiết bị PCCC", width: "51%", color: "#3ddcb6", amount: "385.002.000đ", cmp: "+14.2%", cmpClass: "down" },
-              { name: "Dịch vụ tiện ích", sub: "12% • Hồ bơi, gym, BBQ", width: "34%", color: "#a99cff", amount: "256.668.000đ", cmp: "-2.1%", cmpClass: "up" },
-              { name: "Nhân sự & lương", sub: "8% • 24 nhân viên", width: "23%", color: "#c7d3ff", amount: "171.112.000đ", cmp: "±0%", cmpClass: "neu" },
-            ].map((r) => (
-              <div className="bd-row" key={r.name}>
-                <div className="bd-name-col">
-                  <div className="bd-name">{r.name}</div>
-                  <div className="bd-sub">{r.sub}</div>
-                </div>
-                <div className="bd-bar-col">
-                  <div className="bd-bar-track">
-                    <div className="bd-bar-fill" style={{ width: r.width, background: r.color }}></div>
+            {expenseItems.map((r, i) => {
+              const t = trendDir(r.comparisonPct, r.comparisonDirection);
+              const cls = t.color === "#1c9d5f" ? "up" : t.color === "#ef4444" ? "down" : "neu";
+              const color = r.color ?? DONUT_COLORS[i % DONUT_COLORS.length];
+              // Bar widths in original were scaled so the largest item filled the track.
+              const maxPct = Math.max(1, ...expenseItems.map((e) => e.pctOfTotal));
+              const width = `${Math.round((r.pctOfTotal / maxPct) * 100)}%`;
+              return (
+                <div className="bd-row" key={r.id}>
+                  <div className="bd-name-col">
+                    <div className="bd-name">{r.name}</div>
+                    <div className="bd-sub">{r.subInfo}</div>
+                  </div>
+                  <div className="bd-bar-col">
+                    <div className="bd-bar-track">
+                      <div className="bd-bar-fill" style={{ width, background: color }}></div>
+                    </div>
+                  </div>
+                  <div className="bd-amount-col">
+                    <div className="bd-amount">{formatVnd(r.amount)}</div>
+                    <div className={`bd-cmp ${cls}`}>{pctChip(r.comparisonPct)}</div>
                   </div>
                 </div>
-                <div className="bd-amount-col">
-                  <div className="bd-amount">{r.amount}</div>
-                  <div className={`bd-cmp ${r.cmpClass}`}>{r.cmp}</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -329,89 +473,70 @@ export default function ThuChiPage() {
           <span style={{ textAlign: "right" }}>SỐ TIỀN</span>
         </div>
 
-        {[
-          {
-            id: "#GD-240525-038", iconBg: "#e3fbed", icon: "https://www.figma.com/api/mcp/asset/47f9e73d-0043-419f-8ee5-ba6a7ecba22e",
-            main: "Thu phí quản lý kỳ T5/2024 — A-12.05", sub: "76 căn hộ Block A",
-            catBg: "#efeaff", catColor: "#5a3ad9", cat: "Phí quản lý",
-            date: "25/05", method: "Chuyển khoản", amount: "+ 168.080.000đ", type: "income",
-          },
-          {
-            id: "#GD-240524-037", iconBg: "#ffeded", icon: "https://www.figma.com/api/mcp/asset/608266b7-1e25-4466-a5f3-68a8ebf94ae6",
-            main: "Thay thế bình chữa cháy CO₂ định kỳ", sub: "Công ty PCCC Sài Gòn • Hợp đồng 2024-PC-08",
-            catBg: "#fff1de", catColor: "#c8761b", cat: "Bảo trì",
-            date: "24/05", method: "Chuyển khoản", amount: "- 84.500.000đ", type: "expense",
-          },
-          {
-            id: "#GD-240523-036", iconBg: "#e3fbed", icon: "https://www.figma.com/api/mcp/asset/47f9e73d-0043-419f-8ee5-ba6a7ecba22e",
-            main: "Phí gửi xe ô tô tháng 5/2024 — Block B", sub: "142 chỗ đỗ xe • 1.500.000đ/chỗ",
-            catBg: "#e3fbed", catColor: "#1c9d5f", cat: "Phí gửi xe",
-            date: "23/05", method: "Chuyển khoản", amount: "+ 213.000.000đ", type: "income",
-          },
-          {
-            id: "#GD-240522-035", iconBg: "#ffeded", icon: "https://www.figma.com/api/mcp/asset/608266b7-1e25-4466-a5f3-68a8ebf94ae6",
-            main: "Hóa đơn tiền điện khu vực chung T4/2024", sub: "EVN HCM • Hợp đồng PD15-22",
-            catBg: "#e4f1ff", catColor: "#1f6dd4", cat: "Điện nước",
-            date: "22/05", method: "Chuyển khoản", amount: "- 312.680.000đ", type: "expense",
-          },
-          {
-            id: "#GD-240521-034", iconBg: "#e3fbed", icon: "https://www.figma.com/api/mcp/asset/47f9e73d-0043-419f-8ee5-ba6a7ecba22e",
-            main: "Cho thuê mặt bằng cửa hàng tầng 1 — Tháng 5", sub: "Highland Coffee • Hợp đồng MB-04",
-            catBg: "#fff1de", catColor: "#c8761b", cat: "Cho thuê",
-            date: "21/05", method: "Chuyển khoản", amount: "+ 78.000.000đ", type: "income",
-          },
-          {
-            id: "#GD-240520-033", iconBg: "#ffeded", icon: "https://www.figma.com/api/mcp/asset/608266b7-1e25-4466-a5f3-68a8ebf94ae6",
-            main: "Lương nhân viên vận hành tháng 5/2024", sub: "24 nhân viên • Bao gồm BHXH",
-            catBg: "#eef0f7", catColor: "#3e4265", cat: "Nhân sự",
-            date: "20/05", method: "Chuyển khoản", amount: "- 171.112.000đ", type: "expense",
-          },
-          {
-            id: "#GD-240518-032", iconBg: "#ffeded", icon: "https://www.figma.com/api/mcp/asset/608266b7-1e25-4466-a5f3-68a8ebf94ae6",
-            main: "Vệ sinh và bảo dưỡng hồ bơi tầng thượng", sub: "PoolCare Service • HĐ DV-2024-12",
-            catBg: "#efeaff", catColor: "#5a3ad9", cat: "Dịch vụ tiện ích",
-            date: "18/05", method: "Tiền mặt", amount: "- 24.500.000đ", type: "expense",
-          },
-          {
-            id: "#GD-240515-031", iconBg: "#e3fbed", icon: "https://www.figma.com/api/mcp/asset/47f9e73d-0043-419f-8ee5-ba6a7ecba22e",
-            main: "Lãi tiền gửi quỹ bảo trì Q2/2024", sub: "Vietcombank • Số tài khoản 0700-***-4521",
-            catBg: "#e3fbed", catColor: "#1c9d5f", cat: "Lãi tiền gửi",
-            date: "15/05", method: "Chuyển khoản", amount: "+ 56.912.000đ", type: "income",
-          },
-        ].map((t) => (
-          <div className="txn-row" key={t.id}>
-            <div className="txn-id-col">
-              <span className="txn-id">{t.id}</span>
-            </div>
-            <div className="txn-desc-col">
-              <div className="txn-type-icon" style={{ background: t.iconBg }}>
-                <img src={t.icon} alt="" width="18" height="18" />
+        {txns.length === 0 && (
+          <div className="txn-row"><div className="txn-desc-col"><div className="txn-desc-body"><div className="txn-desc-main">Đang tải...</div></div></div></div>
+        )}
+
+        {txns.map((t) => {
+          const isIncome = t.type === "income";
+          return (
+            <div className="txn-row" key={t.id}>
+              <div className="txn-id-col">
+                <span className="txn-id">{t.code}</span>
               </div>
-              <div className="txn-desc-body">
-                <div className="txn-desc-main">{t.main}</div>
-                <div className="txn-desc-sub">{t.sub}</div>
+              <div className="txn-desc-col">
+                <div className="txn-type-icon" style={{ background: isIncome ? "#e3fbed" : "#ffeded" }}>
+                  <img
+                    src={isIncome
+                      ? "https://www.figma.com/api/mcp/asset/47f9e73d-0043-419f-8ee5-ba6a7ecba22e"
+                      : "https://www.figma.com/api/mcp/asset/608266b7-1e25-4466-a5f3-68a8ebf94ae6"}
+                    alt=""
+                    width="18"
+                    height="18"
+                  />
+                </div>
+                <div className="txn-desc-body">
+                  <div className="txn-desc-main">{t.description}</div>
+                  <div className="txn-desc-sub">{t.subInfo}</div>
+                </div>
+              </div>
+              <div className="txn-cat-col">
+                <span
+                  className="txn-cat-badge"
+                  style={isIncome ? { background: "#e3fbed", color: "#1c9d5f" } : { background: "#fff1de", color: "#c8761b" }}
+                >
+                  {t.category}
+                </span>
+              </div>
+              <div className="txn-date-col">{formatDate(t.occurredAt)}</div>
+              <div className="txn-method-col">{t.paymentMethod}</div>
+              <div className="txn-amt-col">
+                <span className={`txn-amount ${t.type}`}>
+                  {isIncome ? "+ " : "- "}{formatVnd(t.amount)}
+                </span>
               </div>
             </div>
-            <div className="txn-cat-col">
-              <span className="txn-cat-badge" style={{ background: t.catBg, color: t.catColor }}>{t.cat}</span>
-            </div>
-            <div className="txn-date-col">{t.date}</div>
-            <div className="txn-method-col">{t.method}</div>
-            <div className="txn-amt-col"><span className={`txn-amount ${t.type}`}>{t.amount}</span></div>
-          </div>
-        ))}
+          );
+        })}
 
         <div className="txn-pagination">
-          <span className="txn-pag-label">Hiển thị 1 - 8 của 64 giao dịch trong tháng 5/2024</span>
+          <span className="txn-pag-label">
+            {meta && meta.total > 0
+              ? `Hiển thị ${rangeStart} - ${rangeEnd} của ${meta.total} giao dịch${periodLabel ? ` trong tháng ${periodLabel.slice(1)}` : ""}`
+              : "Không có giao dịch"}
+          </span>
           <div className="txn-pag-btns">
-            <button className="pag-btn">‹</button>
-            <button className="pag-btn active">1</button>
-            <button className="pag-btn">2</button>
-            <button className="pag-btn">3</button>
-            <button className="pag-btn">4</button>
-            <span className="pag-sep">…</span>
-            <button className="pag-btn">8</button>
-            <button className="pag-btn">›</button>
+            <button className="pag-btn" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>‹</button>
+            {Array.from({ length: meta?.totalPages ?? 0 }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                className={`pag-btn ${p === page ? "active" : ""}`}
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </button>
+            ))}
+            <button className="pag-btn" onClick={() => setPage((p) => Math.min(meta?.totalPages ?? p, p + 1))} disabled={!!meta && page >= meta.totalPages}>›</button>
           </div>
         </div>
       </div>

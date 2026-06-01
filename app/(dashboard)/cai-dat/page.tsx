@@ -1,6 +1,109 @@
+"use client";
 /* eslint-disable @next/next/no-img-element */
 
+import { useState } from "react";
+import { apiPatch, apiPost, apiDelete } from "@/lib/api";
+import { useApiData, useAction } from "@/lib/hooks";
+import { timeAgo, formatDateTime } from "@/lib/format";
+import { useUser } from "@/components/providers/UserProvider";
+import { signOut } from "@/lib/auth";
+
+interface NotificationSetting {
+  id?: string;
+  key: string;
+  label: string;
+  description: string;
+  isEnabled: boolean;
+  isLocked: boolean;
+}
+
+interface Settings {
+  email: string | null;
+  phoneNumber: string | null;
+  language: string;
+  theme: "light" | "dark" | "system";
+  twoFactorEnabled: boolean;
+  passwordChangedAt: string | null;
+  notificationSettings: NotificationSetting[];
+}
+
+interface Device {
+  id: string;
+  deviceName: string;
+  deviceOs: string;
+  location: string | null;
+  ip: string;
+  lastActiveAt: string;
+  isCurrent: boolean;
+}
+
+const LANG_LABEL: Record<string, { flag: string; label: string }> = {
+  vi: { flag: "🇻🇳", label: "Tiếng Việt" },
+  en: { flag: "🇬🇧", label: "English" },
+};
+
 export default function CaiDatPage() {
+  const { profile, activeBuilding } = useUser();
+  const { data: settings, refetch: refetchSettings } = useApiData<Settings>("/settings");
+  const { data: devices, refetch: refetchDevices } = useApiData<Device[]>("/settings/devices");
+
+  // ── Toggle a notification setting ──
+  const toggleNotif = useAction(async (key: string, isEnabled: boolean) => {
+    await apiPatch(`/settings/notifications/${key}`, { isEnabled });
+    refetchSettings();
+  });
+
+  // ── Patch generic settings (2FA / theme / language) ──
+  const patchSettings = useAction(async (body: Partial<Settings>) => {
+    await apiPatch("/settings", body);
+    refetchSettings();
+  });
+
+  // ── Change password ──
+  const [showPwForm, setShowPwForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const changePw = useAction(async () => {
+    await apiPost("/settings/change-password", { currentPassword, newPassword });
+    setPwSuccess(true);
+    setCurrentPassword("");
+    setNewPassword("");
+    refetchSettings();
+  });
+
+  // ── Devices ──
+  const revokeDevice = useAction(async (id: string) => {
+    await apiDelete(`/settings/devices/${id}`);
+    refetchDevices();
+  });
+  const revokeOthers = useAction(async () => {
+    await apiPost("/settings/devices/revoke-others");
+    refetchDevices();
+  });
+
+  // ── Delete account ──
+  const deleteAccount = useAction(async () => {
+    await apiDelete("/settings/account");
+    await signOut();
+    window.location.href = "/sign-in";
+  });
+
+  const notifs = settings?.notificationSettings ?? [];
+  const deviceList = devices ?? [];
+  const activeDeviceCount = deviceList.length;
+
+  const profileMeta = [profile?.email, activeBuilding?.apartment, activeBuilding?.name]
+    .filter(Boolean)
+    .join(" · ");
+
+  const lang = settings?.language ?? "vi";
+  const langInfo = LANG_LABEL[lang] ?? LANG_LABEL.vi;
+
+  const handleLangToggle = () => {
+    patchSettings.run({ language: lang === "vi" ? "en" : "vi" });
+  };
+
   return (
     <div className="caidat-page">
       <div className="page-header">
@@ -47,10 +150,10 @@ export default function CaiDatPage() {
             </div>
             <div className="sc-body">
               <div className="profile-row">
-                <img className="pr-avatar" src="https://www.figma.com/api/mcp/asset/ee21e768-a070-4e15-ad43-73a28943d4ee" alt="Chris Tran" width={52} height={52}/>
+                <img className="pr-avatar" src={profile?.avatarUrl ?? "https://www.figma.com/api/mcp/asset/ee21e768-a070-4e15-ad43-73a28943d4ee"} alt={profile?.fullName ?? ""} width={52} height={52}/>
                 <div className="pr-info">
-                  <div className="pr-name">Trần Hoàng Chris</div>
-                  <div className="pr-meta">chris.tran@gmail.com · Căn hộ A-12.05 · Landmark 1</div>
+                  <div className="pr-name">{profile?.fullName ?? "—"}</div>
+                  <div className="pr-meta">{profileMeta}</div>
                 </div>
                 <button className="pr-edit">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -61,10 +164,12 @@ export default function CaiDatPage() {
                 <div className="lr-icon" style={{ background: "#e4f1ff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#1870c4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
                 <div className="lr-text">
                   <div className="lr-label">Email</div>
-                  <div className="lr-sub">chris.tran@gmail.com</div>
+                  <div className="lr-sub">{settings?.email ?? profile?.email ?? "—"}</div>
                 </div>
                 <div className="lr-right">
-                  <span className="lr-badge badge-warn">Chưa xác minh</span>
+                  {profile?.emailVerified
+                    ? <span className="lr-badge badge-on">Đã xác minh</span>
+                    : <span className="lr-badge badge-warn">Chưa xác minh</span>}
                   <div className="lr-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </div>
               </div>
@@ -72,10 +177,12 @@ export default function CaiDatPage() {
                 <div className="lr-icon" style={{ background: "#e3fbed" }}><svg viewBox="0 0 24 24" fill="none" stroke="#1c9d5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l1.79-1.79a2 2 0 0 1 2.11-.45 13.81 13.81 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
                 <div className="lr-text">
                   <div className="lr-label">Số điện thoại</div>
-                  <div className="lr-sub">0912 345 678</div>
+                  <div className="lr-sub">{settings?.phoneNumber ?? profile?.phoneNumber ?? "—"}</div>
                 </div>
                 <div className="lr-right">
-                  <span className="lr-badge badge-on">Đã xác minh</span>
+                  {profile?.phoneVerified
+                    ? <span className="lr-badge badge-on">Đã xác minh</span>
+                    : <span className="lr-badge badge-warn">Chưa xác minh</span>}
                   <div className="lr-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </div>
               </div>
@@ -90,46 +197,23 @@ export default function CaiDatPage() {
               <div className="sc-hd-sub">Tuỳ chỉnh loại thông báo bạn nhận</div>
             </div>
             <div className="sc-body">
-              <div className="toggle-row">
-                <div className="tr-icon" style={{ background: "#efeeff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#4137f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-                <div className="tr-text">
-                  <div className="tr-label">Thông báo phí quản lý</div>
-                  <div className="tr-sub">Nhắc khi đến kỳ thanh toán và xác nhận đã thu</div>
+              {notifs.map((n) => (
+                <div className="toggle-row" key={n.key}>
+                  <div className="tr-icon" style={{ background: "#efeeff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#4137f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+                  <div className="tr-text">
+                    <div className="tr-label">{n.label}</div>
+                    <div className="tr-sub">{n.description}</div>
+                  </div>
+                  <div
+                    className={`toggle${n.isEnabled ? " on" : ""}`}
+                    style={n.isLocked ? { opacity: 0.5, pointerEvents: "none" } : undefined}
+                    onClick={() => {
+                      if (n.isLocked || toggleNotif.loading) return;
+                      toggleNotif.run(n.key, !n.isEnabled);
+                    }}
+                  ></div>
                 </div>
-                <div className="toggle on"></div>
-              </div>
-              <div className="toggle-row">
-                <div className="tr-icon" style={{ background: "#fff8ec" }}><svg viewBox="0 0 24 24" fill="none" stroke="#c8761b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-                <div className="tr-text">
-                  <div className="tr-label">Bảo trì &amp; Sửa chữa</div>
-                  <div className="tr-sub">Cập nhật tiến độ yêu cầu bảo trì của bạn</div>
-                </div>
-                <div className="toggle on"></div>
-              </div>
-              <div className="toggle-row">
-                <div className="tr-icon" style={{ background: "#ffeded" }}><svg viewBox="0 0 24 24" fill="none" stroke="#f5222d" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-                <div className="tr-text">
-                  <div className="tr-label">Thông báo khẩn cấp</div>
-                  <div className="tr-sub">PCCC, mất điện, sự cố — luôn bật</div>
-                </div>
-                <div className="toggle on" style={{ opacity: .5, pointerEvents: "none" }}></div>
-              </div>
-              <div className="toggle-row">
-                <div className="tr-icon" style={{ background: "#e4f1ff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#1870c4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-                <div className="tr-text">
-                  <div className="tr-label">Sự kiện cộng đồng</div>
-                  <div className="tr-sub">Thông báo về sự kiện trong toà nhà</div>
-                </div>
-                <div className="toggle on"></div>
-              </div>
-              <div className="toggle-row">
-                <div className="tr-icon" style={{ background: "#f7f5ff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#5a3ad9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-                <div className="tr-text">
-                  <div className="tr-label">Tài liệu &amp; Thông tin mới</div>
-                  <div className="tr-sub">Khi BQL cập nhật tài liệu, báo cáo mới</div>
-                </div>
-                <div className="toggle"></div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -140,21 +224,53 @@ export default function CaiDatPage() {
               <div className="sc-hd-title">Bảo mật</div>
             </div>
             <div className="sc-body">
-              <div className="link-row">
+              <div className="link-row" style={{ cursor: "pointer" }} onClick={() => { setShowPwForm((v) => !v); setPwSuccess(false); changePw.setError(null); }}>
                 <div className="lr-icon" style={{ background: "#efeeff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#4137f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
                 <div className="lr-text">
                   <div className="lr-label">Đổi mật khẩu</div>
-                  <div className="lr-sub">Cập nhật lần cuối 3 tháng trước</div>
+                  <div className="lr-sub">{settings?.passwordChangedAt ? `Đổi ${timeAgo(settings.passwordChangedAt)}` : "Cập nhật mật khẩu của bạn"}</div>
                 </div>
                 <div className="lr-right"><div className="lr-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>
               </div>
+              {showPwForm && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 4px 4px" }}>
+                  <input
+                    type="password"
+                    placeholder="Mật khẩu hiện tại"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    style={{ padding: "10px 12px", border: "1px solid #e2e2ea", borderRadius: 8, fontSize: 13 }}
+                  />
+                  <input
+                    type="password"
+                    placeholder="Mật khẩu mới"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    style={{ padding: "10px 12px", border: "1px solid #e2e2ea", borderRadius: 8, fontSize: 13 }}
+                  />
+                  {changePw.error && <div style={{ color: "#f5222d", fontSize: 12 }}>{changePw.error}</div>}
+                  {pwSuccess && <div style={{ color: "#1c9d5f", fontSize: 12 }}>Đổi mật khẩu thành công</div>}
+                  <button
+                    className="pr-edit"
+                    style={{ alignSelf: "flex-start" }}
+                    disabled={changePw.loading || !currentPassword || !newPassword}
+                    onClick={() => changePw.run()}
+                  >
+                    {changePw.loading ? "Đang lưu..." : "Lưu mật khẩu"}
+                  </button>
+                </div>
+              )}
               <div className="toggle-row">
                 <div className="tr-icon" style={{ background: "#e3fbed" }}><svg viewBox="0 0 24 24" fill="none" stroke="#1c9d5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
                 <div className="tr-text">
                   <div className="tr-label">Xác thực 2 bước (2FA)</div>
                   <div className="tr-sub">Bảo vệ tài khoản bằng mã OTP qua SMS</div>
                 </div>
-                <div className="toggle on"></div>
+                <div
+                  className={`toggle${settings?.twoFactorEnabled ? " on" : ""}`}
+                  style={patchSettings.loading ? { pointerEvents: "none" } : undefined}
+                  onClick={() => patchSettings.run({ twoFactorEnabled: !settings?.twoFactorEnabled })}
+                ></div>
               </div>
               <div className="link-row">
                 <div className="lr-icon" style={{ background: "#fff8ec" }}><svg viewBox="0 0 24 24" fill="none" stroke="#c8761b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
@@ -180,9 +296,9 @@ export default function CaiDatPage() {
                   <div className="tr-label">Ngôn ngữ</div>
                   <div className="tr-sub">Chọn ngôn ngữ hiển thị ứng dụng</div>
                 </div>
-                <div className="lang-select">
-                  <span className="lang-flag">🇻🇳</span>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>Tiếng Việt</span>
+                <div className="lang-select" style={{ cursor: "pointer" }} onClick={handleLangToggle}>
+                  <span className="lang-flag">{langInfo.flag}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{langInfo.label}</span>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
               </div>
@@ -193,15 +309,15 @@ export default function CaiDatPage() {
                   <div className="tr-sub">Chọn chế độ sáng hoặc tối</div>
                 </div>
                 <div className="theme-btns">
-                  <button className="theme-btn active">
+                  <button className={`theme-btn${settings?.theme === "light" ? " active" : ""}`} onClick={() => patchSettings.run({ theme: "light" })}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                     Sáng
                   </button>
-                  <button className="theme-btn">
+                  <button className={`theme-btn${settings?.theme === "dark" ? " active" : ""}`} onClick={() => patchSettings.run({ theme: "dark" })}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                     Tối
                   </button>
-                  <button className="theme-btn">
+                  <button className={`theme-btn${settings?.theme === "system" ? " active" : ""}`} onClick={() => patchSettings.run({ theme: "system" })}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                     Hệ thống
                   </button>
@@ -215,25 +331,21 @@ export default function CaiDatPage() {
             <div className="sc-hd">
               <div className="sc-hd-icon" style={{ background: "#e4f1ff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#1870c4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
               <div className="sc-hd-title">Thiết bị đăng nhập</div>
-              <div className="sc-hd-sub">2 thiết bị đang hoạt động</div>
+              <div className="sc-hd-sub">{activeDeviceCount} thiết bị đang hoạt động</div>
             </div>
             <div className="sc-body">
-              <div className="device-row">
-                <div className="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
-                <div className="device-info">
-                  <div className="device-name">iPhone 15 Pro Max</div>
-                  <div className="device-meta">iOS 17.4 · TP. Hồ Chí Minh · Hôm nay, 09:14</div>
+              {deviceList.map((d) => (
+                <div className="device-row" key={d.id}>
+                  <div className="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+                  <div className="device-info">
+                    <div className="device-name">{d.deviceName}</div>
+                    <div className="device-meta">{[d.deviceOs, d.location, formatDateTime(d.lastActiveAt)].filter(Boolean).join(" · ")}</div>
+                  </div>
+                  {d.isCurrent
+                    ? <div className="device-current">Thiết bị này</div>
+                    : <button className="device-logout" disabled={revokeDevice.loading} onClick={() => revokeDevice.run(d.id)}>Đăng xuất</button>}
                 </div>
-                <div className="device-current">Thiết bị này</div>
-              </div>
-              <div className="device-row">
-                <div className="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-                <div className="device-info">
-                  <div className="device-name">MacBook Pro 14&quot;</div>
-                  <div className="device-meta">macOS Sonoma · TP. Hồ Chí Minh · Hôm qua, 21:33</div>
-                </div>
-                <button className="device-logout">Đăng xuất</button>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -248,14 +360,30 @@ export default function CaiDatPage() {
                 <div className="dz-label">Đăng xuất tất cả thiết bị</div>
                 <div className="dz-sub">Kết thúc tất cả phiên đăng nhập trên mọi thiết bị</div>
               </div>
-              <button className="btn-danger-outline">Đăng xuất tất cả</button>
+              <button
+                className="btn-danger-outline"
+                disabled={revokeOthers.loading}
+                onClick={() => revokeOthers.run()}
+              >
+                Đăng xuất tất cả
+              </button>
             </div>
             <div className="dz-row">
               <div className="dz-text">
                 <div className="dz-label">Xoá tài khoản</div>
                 <div className="dz-sub">Xoá vĩnh viễn tài khoản và toàn bộ dữ liệu. Không thể khôi phục.</div>
               </div>
-              <button className="btn-danger">Xoá tài khoản</button>
+              <button
+                className="btn-danger"
+                disabled={deleteAccount.loading}
+                onClick={() => {
+                  if (window.confirm("Bạn có chắc chắn muốn xoá tài khoản? Hành động này không thể khôi phục.")) {
+                    deleteAccount.run();
+                  }
+                }}
+              >
+                Xoá tài khoản
+              </button>
             </div>
           </div>
         </div>

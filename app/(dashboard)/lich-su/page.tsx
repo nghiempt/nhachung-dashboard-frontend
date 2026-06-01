@@ -1,3 +1,11 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useApiData } from "@/lib/hooks";
+import { apiPost } from "@/lib/api";
+import { formatDate, formatNumber } from "@/lib/format";
+import { ARCHIVE_CATEGORY, docColor, docTypeLabel } from "@/lib/ui-maps";
+
 const EyeIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -22,75 +30,115 @@ const CalIcon = () => (
   </svg>
 );
 
-type FileExt = "PDF" | "DOC" | "XLS";
-type Cat = "fin" | "ops" | "sec" | "bqt" | "maint";
+// ── API shapes ──────────────────────────────────────────────
+interface ArchiveStats {
+  totalDocuments: number;
+  totalStorageBytes: number;
+  storageLabel: string;
+  yearsArchived: number;
+  range: { from: number; to: number };
+  totalDownloads: number;
+}
 
-const catText: Record<Cat, string> = {
-  fin: "Tài chính",
-  ops: "Vận hành",
-  sec: "An ninh",
-  bqt: "BQT",
-  maint: "Bảo trì",
-};
+interface ArchiveDoc {
+  id: string;
+  name: string;
+  fileType: string;
+  archiveCategory: string | null;
+  uploadDate: string;
+  sizeBytes: number;
+  sizeLabel: string;
+  downloadCount: number;
+  url?: string;
+}
 
-type Doc = { ext: FileExt; name: string; cat: Cat; date: string; size: string; dl: string };
+interface MonthGroup {
+  key: string;
+  label: string;
+  count: number;
+  documents: ArchiveDoc[];
+}
 
-type MonthGroup = { name: string; count: string; docs: Doc[] };
+interface YearGroup {
+  year: number;
+  count: number;
+  monthCount: number;
+  months: MonthGroup[];
+}
 
-const months2024: MonthGroup[] = [
-  {
-    name: "Tháng 5 / 2024", count: "6 tài liệu",
-    docs: [
-      { ext: "PDF", name: "Biên bản họp BQT tháng 5/2024", cat: "bqt", date: "22/05/2024", size: "1.2 MB", dl: "47" },
-      { ext: "XLS", name: "Bảng tổng hợp thu phí tháng 5/2024", cat: "fin", date: "20/05/2024", size: "854 KB", dl: "38" },
-      { ext: "PDF", name: "Kết quả kiểm tra PCCC định kỳ Q2/2024", cat: "sec", date: "16/05/2024", size: "3.1 MB", dl: "29" },
-      { ext: "DOC", name: "Nghị quyết BQT số 12/2024 — Phê duyệt ngân sách bảo trì Q3", cat: "bqt", date: "10/05/2024", size: "420 KB", dl: "93" },
-    ],
-  },
-  {
-    name: "Tháng 4 / 2024", count: "5 tài liệu",
-    docs: [
-      { ext: "PDF", name: "Báo cáo tổng hợp Quý 1/2024", cat: "fin", date: "15/04/2024", size: "5.8 MB", dl: "531" },
-      { ext: "PDF", name: "Biên bản họp BQT tháng 4/2024", cat: "bqt", date: "25/04/2024", size: "980 KB", dl: "124" },
-      { ext: "XLS", name: "Bảng kê chi phí bảo trì thang máy T2 — Q1/2024", cat: "maint", date: "08/04/2024", size: "1.4 MB", dl: "67" },
-    ],
-  },
-  {
-    name: "Tháng 1 / 2024", count: "3 tài liệu",
-    docs: [
-      { ext: "PDF", name: "Báo cáo thường niên Ban quản trị năm 2023", cat: "bqt", date: "20/01/2024", size: "12.3 MB", dl: "892" },
-      { ext: "DOC", name: "Kế hoạch hoạt động BQT năm 2024", cat: "bqt", date: "10/01/2024", size: "2.1 MB", dl: "314" },
-    ],
-  },
-];
+interface ArchiveResponse {
+  years: YearGroup[];
+}
 
-function DocRow({ d }: { d: Doc }) {
-  const badgeCls = d.ext === "PDF" ? "badge-pdf" : d.ext === "DOC" ? "badge-doc" : "badge-xls";
+interface CategoryCount {
+  category: string;
+  count: number;
+}
+
+interface TopDownload {
+  id: string;
+  name: string;
+  downloadCount: number;
+}
+
+interface FileTypeBreakdown {
+  fileType: string;
+  count: number;
+  pct: number;
+}
+
+// Badge class for the file-type chip in document rows.
+function fileBadgeClass(ext: string): string {
+  const e = ext.toLowerCase();
+  if (e === "pdf") return "badge-pdf";
+  if (e === "doc" || e === "docx") return "badge-doc";
+  if (e === "xls" || e === "xlsx") return "badge-xls";
+  return "badge-doc";
+}
+
+// Coloured rank/file-type chip backgrounds derived from the doc colour.
+function tintBg(color: string): string {
+  return `${color}1a`; // ~10% alpha
+}
+
+function DocRow({ d, onDownload }: { d: ArchiveDoc; onDownload: (d: ArchiveDoc) => void }) {
+  const ext = docTypeLabel(d.fileType);
+  const cat = d.archiveCategory ? ARCHIVE_CATEGORY[d.archiveCategory] : null;
+  const catInfo = cat ?? ARCHIVE_CATEGORY.other;
   return (
     <div className="doc-row">
       <div className="doc-name-col">
-        <span className={`doc-file-badge ${badgeCls}`}>{d.ext}</span>
+        <span
+          className={`doc-file-badge ${fileBadgeClass(ext)}`}
+          style={{ background: tintBg(docColor(d.fileType)), color: docColor(d.fileType) }}
+        >
+          {ext}
+        </span>
         <span className="doc-name">{d.name}</span>
       </div>
-      <div className="doc-cat"><span className={`badge badge-${d.cat}`}>{catText[d.cat]}</span></div>
-      <div className="doc-date">{d.date}</div>
-      <div className="doc-size">{d.size}</div>
-      <div className="doc-dl">{d.dl}</div>
+      <div className="doc-cat">
+        <span className="badge" style={{ background: tintBg(catInfo.color), color: catInfo.color }}>
+          {catInfo.label}
+        </span>
+      </div>
+      <div className="doc-date">{formatDate(d.uploadDate)}</div>
+      <div className="doc-size">{d.sizeLabel}</div>
+      <div className="doc-dl">{formatNumber(d.downloadCount)}</div>
       <div className="doc-act">
         <button className="doc-btn"><EyeIcon /></button>
-        <button className="doc-btn"><DownloadIcon /></button>
+        <button className="doc-btn" onClick={() => onDownload(d)}><DownloadIcon /></button>
       </div>
     </div>
   );
 }
 
-function MonthBlock({ m }: { m: MonthGroup }) {
+function MonthBlock({ m, onDownload }: { m: MonthGroup; onDownload: (d: ArchiveDoc) => void }) {
   return (
     <div className="month-group">
       <div className="month-hd">
         <CalIcon />
-        <span className="month-name">{m.name}</span>
-        <span className="month-count">{m.count}</span>
+        <span className="month-name">{m.label}</span>
+        <span className="month-count">{formatNumber(m.count)} tài liệu</span>
         <svg className="month-toggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="18 15 12 9 6 15" />
         </svg>
@@ -104,13 +152,67 @@ function MonthBlock({ m }: { m: MonthGroup }) {
           <span>Lượt tải</span>
           <span></span>
         </div>
-        {m.docs.map((d) => <DocRow key={d.name} d={d} />)}
+        {m.documents.map((d) => <DocRow key={d.id} d={d} onDownload={onDownload} />)}
       </div>
     </div>
   );
 }
 
 export default function LichSuPage() {
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [fileType, setFileType] = useState("");
+  const [year, setYear] = useState<number | null>(null);
+
+  const stats = useApiData<ArchiveStats>("/archive/stats").data;
+
+  const archiveQuery = useMemo(() => {
+    const p = new URLSearchParams();
+    if (search) p.set("search", search);
+    if (category) p.set("category", category);
+    if (fileType) p.set("fileType", fileType);
+    if (year != null) p.set("year", String(year));
+    const qs = p.toString();
+    return qs ? `/archive?${qs}` : "/archive";
+  }, [search, category, fileType, year]);
+
+  const { data: archive } = useApiData<ArchiveResponse>(archiveQuery, [archiveQuery]);
+  const { data: byCategory } = useApiData<CategoryCount[]>("/archive/by-category");
+  const { data: topDownloads } = useApiData<TopDownload[]>("/archive/top-downloads");
+  const { data: fileTypes } = useApiData<FileTypeBreakdown[]>("/archive/file-types");
+
+  const years = archive?.years ?? [];
+
+  // Year tabs: prefer the stat range, fall back to whatever the archive returns.
+  const yearTabs = useMemo(() => {
+    if (stats?.range) {
+      const out: number[] = [];
+      for (let y = stats.range.to; y >= stats.range.from; y--) out.push(y);
+      return out;
+    }
+    return years.map((y) => y.year);
+  }, [stats, years]);
+
+  const handleDownload = async (d: ArchiveDoc) => {
+    try {
+      await apiPost(`/archive/${d.id}/download`, {});
+    } catch {
+      // best-effort increment; still attempt to open the file
+    }
+    if (d.url) window.open(d.url, "_blank");
+  };
+
+  const TOP_RANK_COLORS = ["#4137f9", "#5a3ad9", "#1c9d5f", "#c8761b", "#1870c4"];
+  const FILETYPE_TINT: Record<string, { bg: string; color: string; label: string }> = {
+    pdf: { bg: "#fff1f0", color: "#f5222d", label: "PDF" },
+    xlsx: { bg: "#e8f8ee", color: "#1c9d5f", label: "Excel" },
+    xls: { bg: "#e8f8ee", color: "#1c9d5f", label: "Excel" },
+    docx: { bg: "#e8f0fe", color: "#1870c4", label: "Word" },
+    doc: { bg: "#e8f0fe", color: "#1870c4", label: "Word" },
+  };
+
+  const maxCatCount = Math.max(1, ...(byCategory ?? []).map((c) => c.count));
+
   return (
     <div className="lichsu-page">
       {/* ── Page Header ── */}
@@ -148,7 +250,7 @@ export default function LichSuPage() {
             </svg>
           </div>
           <div className="stat-body">
-            <div className="stat-val">347</div>
+            <div className="stat-val">{stats ? formatNumber(stats.totalDocuments) : "…"}</div>
             <div className="stat-lbl">Tổng tài liệu lưu trữ</div>
           </div>
         </div>
@@ -161,7 +263,7 @@ export default function LichSuPage() {
             </svg>
           </div>
           <div className="stat-body">
-            <div className="stat-val">2.8 GB</div>
+            <div className="stat-val">{stats ? stats.storageLabel : "…"}</div>
             <div className="stat-lbl">Dung lượng lưu trữ</div>
           </div>
         </div>
@@ -175,8 +277,10 @@ export default function LichSuPage() {
             </svg>
           </div>
           <div className="stat-body">
-            <div className="stat-val">4</div>
-            <div className="stat-lbl">Năm lưu trữ (2021–2024)</div>
+            <div className="stat-val">{stats ? formatNumber(stats.yearsArchived) : "…"}</div>
+            <div className="stat-lbl">
+              {stats ? `Năm lưu trữ (${stats.range.from}–${stats.range.to})` : "Năm lưu trữ"}
+            </div>
           </div>
         </div>
         <div className="stat-card">
@@ -188,7 +292,7 @@ export default function LichSuPage() {
             </svg>
           </div>
           <div className="stat-body">
-            <div className="stat-val">5,842</div>
+            <div className="stat-val">{stats ? formatNumber(stats.totalDownloads) : "…"}</div>
             <div className="stat-lbl">Tổng lượt tải xuống</div>
           </div>
         </div>
@@ -201,31 +305,60 @@ export default function LichSuPage() {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <input placeholder="Tìm theo tên tài liệu, nội dung, người tải lên..." />
+          <input
+            placeholder="Tìm theo tên tài liệu, nội dung, người tải lên..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-        <div className="filter-select">
+        <label className="filter-select">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
           </svg>
-          Danh mục: Tất cả
+          Danh mục:
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            style={{ border: "none", background: "transparent", font: "inherit", color: "inherit", cursor: "pointer", outline: "none" }}
+          >
+            <option value="">Tất cả</option>
+            {Object.entries(ARCHIVE_CATEGORY).map(([k, v]) => (
+              <option key={k} value={k}>{v.label}</option>
+            ))}
+          </select>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9" />
           </svg>
-        </div>
-        <div className="filter-select">
+        </label>
+        <label className="filter-select">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           </svg>
-          Loại: Tất cả
+          Loại:
+          <select
+            value={fileType}
+            onChange={(e) => setFileType(e.target.value)}
+            style={{ border: "none", background: "transparent", font: "inherit", color: "inherit", cursor: "pointer", outline: "none" }}
+          >
+            <option value="">Tất cả</option>
+            <option value="pdf">PDF</option>
+            <option value="docx">Word</option>
+            <option value="xlsx">Excel</option>
+          </select>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9" />
           </svg>
-        </div>
+        </label>
         <div className="year-tabs">
-          <button className="year-tab active">2024</button>
-          <button className="year-tab">2023</button>
-          <button className="year-tab">2022</button>
-          <button className="year-tab">2021</button>
+          {yearTabs.map((y) => (
+            <button
+              key={y}
+              className={`year-tab${year === y ? " active" : ""}`}
+              onClick={() => setYear((prev) => (prev === y ? null : y))}
+            >
+              {y}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -233,41 +366,28 @@ export default function LichSuPage() {
       <div className="archive-layout">
         {/* Main */}
         <div className="archive-main">
-          {/* 2024 */}
-          <div className="year-section">
-            <div className="year-header">
-              <span className="year-tag">2024</span>
-              <span className="year-count">28 tài liệu · 5 tháng</span>
-              <div className="year-line"></div>
-            </div>
-            {months2024.map((m) => <MonthBlock key={m.name} m={m} />)}
-          </div>
-
-          {/* 2023 preview */}
-          <div className="year-section">
-            <div className="year-header">
-              <span className="year-tag" style={{ background: "#f7f7f7", color: "#585c7b", borderColor: "#e2e5f1" }}>2023</span>
-              <span className="year-count">96 tài liệu · 12 tháng</span>
-              <div className="year-line"></div>
-              <a href="#" style={{ fontSize: 13, fontWeight: 500, color: "#4137f9", whiteSpace: "nowrap" }}>Xem tất cả →</a>
-            </div>
-            <div className="month-group">
-              <div className="month-hd">
-                <CalIcon />
-                <span className="month-name">Tháng 12 / 2023</span>
-                <span className="month-count">8 tài liệu</span>
-                <svg className="month-toggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+          {years.length === 0 && (
+            <div style={{ padding: "24px 4px", fontSize: 13, color: "#585c7b" }}>Đang tải...</div>
+          )}
+          {years.map((y, idx) => (
+            <div className="year-section" key={y.year}>
+              <div className="year-header">
+                <span
+                  className="year-tag"
+                  style={idx === 0 ? undefined : { background: "#f7f7f7", color: "#585c7b", borderColor: "#e2e5f1" }}
+                >
+                  {y.year}
+                </span>
+                <span className="year-count">
+                  {formatNumber(y.count)} tài liệu · {formatNumber(y.monthCount)} tháng
+                </span>
+                <div className="year-line"></div>
               </div>
-              <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 8 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#585c7b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-                <span style={{ fontSize: 13, color: "#585c7b" }}>Bấm để mở rộng 8 tài liệu tháng 12/2023</span>
-              </div>
+              {y.months.map((m) => (
+                <MonthBlock key={m.key} m={m} onDownload={handleDownload} />
+              ))}
             </div>
-          </div>
+          ))}
         </div>
 
         {/* Right sidebar */}
@@ -276,24 +396,22 @@ export default function LichSuPage() {
           <div className="sw-card">
             <div className="sw-title">Tài liệu theo danh mục</div>
             <div className="sw-list">
-              {[
-                { color: "#5a3ad9", label: "Ban quản trị", count: "124", width: "72%" },
-                { color: "#1c9d5f", label: "Tài chính", count: "89", width: "52%" },
-                { color: "#c8761b", label: "Bảo trì", count: "71", width: "42%" },
-                { color: "#f5222d", label: "An ninh & PCCC", count: "38", width: "22%" },
-                { color: "#1870c4", label: "Vận hành", count: "25", width: "15%" },
-              ].map((c) => (
-                <div key={c.label}>
-                  <div className="sw-row">
-                    <span className="sw-dot" style={{ background: c.color }}></span>
-                    <span className="sw-label">{c.label}</span>
-                    <span className="sw-count">{c.count}</span>
+              {(byCategory ?? []).map((c) => {
+                const info = ARCHIVE_CATEGORY[c.category] ?? ARCHIVE_CATEGORY.other;
+                const width = `${Math.round((c.count / maxCatCount) * 100)}%`;
+                return (
+                  <div key={c.category}>
+                    <div className="sw-row">
+                      <span className="sw-dot" style={{ background: info.color }}></span>
+                      <span className="sw-label">{info.label}</span>
+                      <span className="sw-count">{formatNumber(c.count)}</span>
+                    </div>
+                    <div className="sw-bar-track">
+                      <div className="sw-bar-fill" style={{ width, background: info.color }}></div>
+                    </div>
                   </div>
-                  <div className="sw-bar-track">
-                    <div className="sw-bar-fill" style={{ width: c.width, background: c.color }}></div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -301,20 +419,18 @@ export default function LichSuPage() {
           <div className="sw-card">
             <div className="sw-title">Tải xuống nhiều nhất</div>
             <div className="sw-list">
-              {[
-                { rank: "#1", color: "#4137f9", title: "Báo cáo thường niên 2023", count: "892 lượt tải" },
-                { rank: "#2", color: "#5a3ad9", title: "Báo cáo tổng hợp Q1/2024", count: "531 lượt tải" },
-                { rank: "#3", color: "#1c9d5f", title: "Kế hoạch hoạt động 2024", count: "314 lượt tải" },
-                { rank: "#4", color: "#c8761b", title: "Biên bản họp BQT T4/2024", count: "124 lượt tải" },
-              ].map((t) => (
-                <div className="sw-row" key={t.rank} style={{ alignItems: "flex-start", gap: 8 }}>
-                  <span style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 13, fontWeight: 800, color: t.color, flexShrink: 0, width: 18 }}>{t.rank}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "#272727", lineHeight: "16px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
-                    <div style={{ fontSize: 11, color: "#585c7b", marginTop: 2 }}>{t.count}</div>
+              {(topDownloads ?? []).map((t, i) => {
+                const color = TOP_RANK_COLORS[i] ?? "#585c7b";
+                return (
+                  <div className="sw-row" key={t.id} style={{ alignItems: "flex-start", gap: 8 }}>
+                    <span style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 13, fontWeight: 800, color, flexShrink: 0, width: 18 }}>#{i + 1}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: "#272727", lineHeight: "16px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</div>
+                      <div style={{ fontSize: 11, color: "#585c7b", marginTop: 2 }}>{formatNumber(t.downloadCount)} lượt tải</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -322,22 +438,21 @@ export default function LichSuPage() {
           <div className="sw-card">
             <div className="sw-title">Phân loại file</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {[
-                { tag: "PDF", tagBg: "#fff1f0", tagColor: "#f5222d", label: "PDF", count: "198", pct: "57%" },
-                { tag: "XLS", tagBg: "#e8f8ee", tagColor: "#1c9d5f", label: "Excel", count: "94", pct: "27%" },
-                { tag: "DOC", tagBg: "#e8f0fe", tagColor: "#1870c4", label: "Word", count: "55", pct: "16%" },
-              ].map((f) => (
-                <div key={f.tag} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 9, fontWeight: 800, padding: "3px 6px", borderRadius: 4, background: f.tagBg, color: f.tagColor }}>{f.tag}</span>
-                    <span style={{ fontSize: 13, color: "#585c7b" }}>{f.label}</span>
+              {(fileTypes ?? []).map((f) => {
+                const tint = FILETYPE_TINT[f.fileType] ?? { bg: tintBg(docColor(f.fileType)), color: docColor(f.fileType), label: docTypeLabel(f.fileType) };
+                return (
+                  <div key={f.fileType} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: "3px 6px", borderRadius: 4, background: tint.bg, color: tint.color }}>{docTypeLabel(f.fileType)}</span>
+                      <span style={{ fontSize: 13, color: "#585c7b" }}>{tint.label}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 13, fontWeight: 700, color: "#272727" }}>{formatNumber(f.count)}</span>
+                      <span style={{ fontSize: 12, color: "#585c7b" }}>{Math.round(f.pct)}%</span>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 13, fontWeight: 700, color: "#272727" }}>{f.count}</span>
-                    <span style={{ fontSize: 12, color: "#585c7b" }}>{f.pct}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

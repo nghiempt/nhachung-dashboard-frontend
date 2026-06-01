@@ -16,79 +16,84 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import { currentUser } from "@/data/user";
-import { buildings, activeBuilding } from "@/data/buildings";
+import { signOut } from "@/lib/auth";
+import { api } from "@/lib/api";
+import { useApiData } from "@/lib/hooks";
+import { useUser } from "@/components/providers/UserProvider";
+import { formatTime } from "@/lib/format";
 
-interface HeaderNotification {
+interface NotifItem {
   id: string;
   title: string;
-  meta: string;
-  isUnread: boolean;
-  iconBg: string;
-  iconColor: string;
-  type: "warning" | "info" | "calendar";
+  source?: string;
+  category: string;
+  status: "read" | "unread";
+  time: string;
+}
+interface NotifOverview {
+  notifications: NotifItem[];
 }
 
-const headerNotifications: HeaderNotification[] = [
-  {
-    id: "hn-1",
-    title: "Bảo trì hệ thống PCCC định kỳ — Tầng B1 & B2",
-    meta: "Ban quản trị · 10:30 sáng",
-    isUnread: true,
-    iconBg: "#fff3e0",
-    iconColor: "#c8761b",
-    type: "warning",
-  },
-  {
-    id: "hn-2",
-    title: "Điều chỉnh phí gửi xe ô tô từ tháng 6/2026",
-    meta: "Ban quản trị · 09:15 sáng",
-    isUnread: true,
-    iconBg: "#e8f4fd",
-    iconColor: "#1890ff",
-    type: "info",
-  },
-  {
-    id: "hn-3",
-    title: "Sự kiện: Ngày hội cư dân 1/6/2026 — Đăng ký tham gia",
-    meta: "Ban quản trị · Hôm qua",
-    isUnread: false,
-    iconBg: "#e6f9f1",
-    iconColor: "#1c9d5f",
-    type: "calendar",
-  },
-];
+const FALLBACK_AVATAR =
+  "https://www.figma.com/api/mcp/asset/ee21e768-a070-4e15-ad43-73a28943d4ee";
+
+function notifIcon(category: string) {
+  switch (category) {
+    case "maintenance":
+    case "security":
+    case "urgent":
+      return { bg: "#fff3e0", color: "#c8761b", el: AlertTriangle };
+    case "event":
+    case "community":
+      return { bg: "#e6f9f1", color: "#1c9d5f", el: CalendarDays };
+    default:
+      return { bg: "#e8f4fd", color: "#1890ff", el: Info };
+  }
+}
 
 export function Header() {
   const router = useRouter();
+  const { profile, buildings, activeBuilding, activateBuilding } = useUser();
   const [buildingOpen, setBuildingOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
 
+  const { data: overview, refetch } = useApiData<NotifOverview>("/dashboard/overview");
+  const recent = overview?.notifications ?? [];
+  const hasUnread = recent.some((n) => n.status === "unread");
+
+  const mine = buildings?.mine ?? [];
+  const explore = buildings?.explore ?? [];
+
+  const userName = profile?.displayName || profile?.fullName || "Cư dân";
+  const userEmail = profile?.email || "";
+  const userAvatar = profile?.avatarUrl || FALLBACK_AVATAR;
+  const userApartment = activeBuilding?.apartment
+    ? `Căn hộ ${activeBuilding.apartment}`
+    : activeBuilding?.name || "";
+
   const closeAll = () => { setBuildingOpen(false); setNotifOpen(false); setUserOpen(false); };
-  const handleLogout = () => {
-    document.cookie = "nc_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+  const handleLogout = async () => {
     closeAll();
+    await signOut();
     router.replace("/sign-in");
     router.refresh();
   };
-
-  const getNotifIcon = (type: HeaderNotification["type"], color: string) => {
-    switch (type) {
-      case "warning": return <AlertTriangle size={14} color={color} />;
-      case "info":    return <Info size={14} color={color} />;
-      case "calendar":return <CalendarDays size={14} color={color} />;
-    }
+  const handleSwitch = async (id: string, isActive: boolean) => {
+    closeAll();
+    if (!isActive) await activateBuilding(id);
+  };
+  const markAllRead = async () => {
+    try {
+      await api("/notifications/read-all", { method: "POST" });
+      refetch();
+    } catch { /* ignore */ }
   };
 
   return (
     <>
-      {/* Backdrop */}
       {(buildingOpen || notifOpen || userOpen) && (
-        <div
-          style={{ position: "fixed", inset: 0, zIndex: 100 }}
-          onClick={closeAll}
-        />
+        <div style={{ position: "fixed", inset: 0, zIndex: 100 }} onClick={closeAll} />
       )}
 
       <header style={{
@@ -122,7 +127,7 @@ export function Header() {
           >
             <Building2 size={20} color="#4137f9" style={{ flexShrink: 0 }} />
             <span style={{ flex: 1, fontSize: "14px", fontWeight: 500, color: "#272727", textAlign: "left", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {activeBuilding.name}
+              {activeBuilding?.name ?? "Chọn tòa nhà"}
             </span>
             <ChevronDown size={18} color="#585c7b" style={{ flexShrink: 0 }} />
           </button>
@@ -145,31 +150,35 @@ export function Header() {
                 <input type="text" placeholder="Tìm kiếm tòa nhà..." style={{ flex: 1, border: 0, outline: 0, fontSize: "13px", background: "transparent", color: "#222" }} />
               </div>
               <div style={{ fontSize: "11px", fontWeight: 700, color: "#b4b7c9", textTransform: "uppercase", letterSpacing: ".5px", padding: "10px 14px 3px" }}>Của tôi</div>
-              {buildings.filter(b => b.isOwned).map(b => (
-                <div key={b.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 14px", cursor: "pointer", background: b.isActive ? "#f1f7ff" : "transparent" }}>
+              {mine.map(b => (
+                <div key={b.id} onClick={() => handleSwitch(b.id, b.isActive)} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 14px", cursor: "pointer", background: b.isActive ? "#f1f7ff" : "transparent" }}>
                   <div style={{ width: 30, height: 30, borderRadius: "8px", background: "#f7f5ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Building2 size={15} color="#4137f9" />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: "13px", fontWeight: 600, color: "#222" }}>{b.name}</div>
-                    <div style={{ fontSize: "11px", color: "#585c7b", marginTop: "1px" }}>{b.apartment} · {b.location}</div>
+                    <div style={{ fontSize: "11px", color: "#585c7b", marginTop: "1px" }}>{[b.apartment, b.location].filter(Boolean).join(" · ")}</div>
                   </div>
                   {b.isActive && <Check size={14} color="#4137f9" />}
                 </div>
               ))}
-              <div style={{ height: 1, background: "#e2e5f1", margin: "4px 0" }} />
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "#b4b7c9", textTransform: "uppercase", letterSpacing: ".5px", padding: "10px 14px 3px" }}>Khám phá</div>
-              {buildings.filter(b => !b.isOwned).map(b => (
-                <div key={b.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 14px", cursor: "pointer" }} className="hover:bg-[#fafafa]">
-                  <div style={{ width: 30, height: 30, borderRadius: "8px", background: "#f7f7f7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Building2 size={15} color="#585c7b" />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#222" }}>{b.name}</div>
-                    <div style={{ fontSize: "11px", color: "#585c7b", marginTop: "1px" }}>{b.location}</div>
-                  </div>
-                </div>
-              ))}
+              {explore.length > 0 && (
+                <>
+                  <div style={{ height: 1, background: "#e2e5f1", margin: "4px 0" }} />
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#b4b7c9", textTransform: "uppercase", letterSpacing: ".5px", padding: "10px 14px 3px" }}>Khám phá</div>
+                  {explore.map(b => (
+                    <div key={b.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 14px", cursor: "pointer" }} className="hover:bg-[#fafafa]">
+                      <div style={{ width: 30, height: 30, borderRadius: "8px", background: "#f7f7f7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Building2 size={15} color="#585c7b" />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#222" }}>{b.name}</div>
+                        <div style={{ fontSize: "11px", color: "#585c7b", marginTop: "1px" }}>{b.location}</div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
@@ -211,13 +220,15 @@ export function Header() {
               }}
             >
               <Bell size={24} color="#272727" />
-              <span style={{
-                position: "absolute", top: "5px", right: "5px",
-                width: "8px", height: "8px",
-                background: "#4137f9",
-                borderRadius: "50%",
-                border: "1.5px solid #fff",
-              }} />
+              {hasUnread && (
+                <span style={{
+                  position: "absolute", top: "5px", right: "5px",
+                  width: "8px", height: "8px",
+                  background: "#4137f9",
+                  borderRadius: "50%",
+                  border: "1.5px solid #fff",
+                }} />
+              )}
             </button>
 
             {notifOpen && (
@@ -234,37 +245,32 @@ export function Header() {
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 16px 9px", borderBottom: "1px solid #e2e5f1" }}>
                   <span style={{ fontSize: "14px", fontWeight: 700, color: "#222" }}>Thông báo</span>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#4137f9", cursor: "pointer" }}>Đánh dấu đã đọc</span>
+                  <span onClick={markAllRead} style={{ fontSize: "12px", fontWeight: 600, color: "#4137f9", cursor: "pointer" }}>Đánh dấu đã đọc</span>
                 </div>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#b4b7c9", textTransform: "uppercase", letterSpacing: ".4px", padding: "9px 16px 3px" }}>Hôm nay</div>
-                {headerNotifications.slice(0, 2).map(n => (
-                  <div key={n.id} style={{
-                    display: "flex", alignItems: "flex-start", gap: "10px", padding: "9px 16px",
-                    cursor: "pointer", background: n.isUnread ? "#f1f7ff" : "transparent",
-                    position: "relative",
-                  }}>
-                    {n.isUnread && <span style={{ position: "absolute", left: 5, top: "50%", transform: "translateY(-50%)", width: 5, height: 5, borderRadius: "50%", background: "#4137f9" }} />}
-                    <div style={{ width: 30, height: 30, borderRadius: "8px", background: n.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {getNotifIcon(n.type, n.iconColor)}
+                {recent.length === 0 && (
+                  <div style={{ padding: "20px 16px", fontSize: "13px", color: "#b4b7c9", textAlign: "center" }}>Chưa có thông báo</div>
+                )}
+                {recent.slice(0, 4).map(n => {
+                  const ic = notifIcon(n.category);
+                  const Icon = ic.el;
+                  const isUnread = n.status === "unread";
+                  return (
+                    <div key={n.id} style={{
+                      display: "flex", alignItems: "flex-start", gap: "10px", padding: "9px 16px",
+                      cursor: "pointer", background: isUnread ? "#f1f7ff" : "transparent",
+                      position: "relative",
+                    }}>
+                      {isUnread && <span style={{ position: "absolute", left: 5, top: "50%", transform: "translateY(-50%)", width: 5, height: 5, borderRadius: "50%", background: "#4137f9" }} />}
+                      <div style={{ width: 30, height: 30, borderRadius: "8px", background: ic.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Icon size={14} color={ic.color} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#222", lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const }}>{n.title}</div>
+                        <div style={{ fontSize: "12px", color: "#b4b7c9", marginTop: 3 }}>{[n.source, formatTime(n.time)].filter(Boolean).join(" · ")}</div>
+                      </div>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 600, color: "#222", lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const }}>{n.title}</div>
-                      <div style={{ fontSize: "12px", color: "#b4b7c9", marginTop: 3 }}>{n.meta}</div>
-                    </div>
-                  </div>
-                ))}
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#b4b7c9", textTransform: "uppercase", letterSpacing: ".4px", padding: "9px 16px 3px" }}>Hôm qua</div>
-                {headerNotifications.slice(2).map(n => (
-                  <div key={n.id} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "9px 16px", cursor: "pointer" }}>
-                    <div style={{ width: 30, height: 30, borderRadius: "8px", background: n.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {getNotifIcon(n.type, n.iconColor)}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 600, color: "#222", lineHeight: 1.4 }}>{n.title}</div>
-                      <div style={{ fontSize: "12px", color: "#b4b7c9", marginTop: 3 }}>{n.meta}</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <Link href="/thong-bao" style={{ display: "block", textAlign: "center", padding: "11px", fontSize: "12px", fontWeight: 600, color: "#4137f9", borderTop: "1px solid #e2e5f1" }}>
                   Xem tất cả thông báo →
                 </Link>
@@ -286,14 +292,15 @@ export function Header() {
                 padding: 0,
               }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={currentUser.avatarUrl}
-                alt={currentUser.name}
+                src={userAvatar}
+                alt={userName}
                 style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
               />
               <div style={{ display: "flex", flexDirection: "column", gap: "2px", textAlign: "left" }}>
-                <span style={{ fontWeight: 600, fontSize: "14px", lineHeight: "16px", whiteSpace: "nowrap", color: "#272727" }}>{currentUser.name}</span>
-                <span style={{ fontSize: "12px", color: "#585c7b", lineHeight: "14px", whiteSpace: "nowrap" }}>{currentUser.apartment}</span>
+                <span style={{ fontWeight: 600, fontSize: "14px", lineHeight: "16px", whiteSpace: "nowrap", color: "#272727" }}>{userName}</span>
+                <span style={{ fontSize: "12px", color: "#585c7b", lineHeight: "14px", whiteSpace: "nowrap" }}>{userApartment}</span>
               </div>
               <ChevronDown size={10} color="#585c7b" style={{ flexShrink: 0 }} />
             </button>
@@ -311,10 +318,11 @@ export function Header() {
                 minWidth: "216px",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "13px 16px 16px" }}>
-                  <img src={currentUser.avatarUrl} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={userAvatar} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#222" }}>{currentUser.name}</div>
-                    <div style={{ fontSize: "11px", color: "#585c7b", marginTop: 1 }}>{currentUser.email}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#222" }}>{userName}</div>
+                    <div style={{ fontSize: "11px", color: "#585c7b", marginTop: 1 }}>{userEmail}</div>
                   </div>
                 </div>
                 <div style={{ height: 1, background: "#e2e5f1" }} />

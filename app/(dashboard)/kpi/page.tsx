@@ -1,63 +1,121 @@
-type KpiRow = {
-  metric: string;
+"use client";
+
+import { useApiData } from "@/lib/hooks";
+import { KPI_GRADE, KPI_RESULT } from "@/lib/ui-maps";
+
+type KpiMetric = {
+  name: string;
   unit: string;
-  target: string;
-  actual: string;
-  actualClass?: "green" | "orange" | "red";
-  achPct: string;
-  achColor: string;
-  achWidth: string;
-  achFillColor: string;
-  pts: string;
-  ptsStyle?: React.CSSProperties;
-  badgeClass: string;
-  badgeText: string;
+  targetValue: string;
+  actualValue: string;
+  statusColor: string;
+  achievementPct: number;
+  pointsEarned: number;
+  pointsMax: number;
+  resultBadge: string;
 };
 
-type KpiGroup = {
-  label: string;
+type KpiCategory = {
+  name: string;
   color: string;
-  rows: KpiRow[];
+  score: number;
+  maxScore: number;
+  metricsPassed: number;
+  metricsTotal: number;
+  grade: string;
+  metrics: KpiMetric[];
 };
 
-const groups: KpiGroup[] = [
-  {
-    label: "Tài chính", color: "#1c9d5f",
-    rows: [
-      { metric: "Tỉ lệ thu phí quản lý", unit: "% căn hộ đóng đúng hạn", target: "≥ 95%", actual: "98.6%", actualClass: "green", achPct: "103.8%", achColor: "#1c9d5f", achWidth: "100%", achFillColor: "#1c9d5f", pts: "20/20", badgeClass: "badge badge-green", badgeText: "Vượt" },
-      { metric: "Tỉ lệ thu quỹ bảo trì", unit: "% căn hộ đóng đúng hạn", target: "≥ 90%", actual: "98.6%", actualClass: "green", achPct: "109.6%", achColor: "#1c9d5f", achWidth: "100%", achFillColor: "#1c9d5f", pts: "20/20", badgeClass: "badge badge-green", badgeText: "Vượt" },
-      { metric: "Kiểm soát chi phí vận hành", unit: "% so với ngân sách", target: "≤ 105%", actual: "98.3%", actualClass: "green", achPct: "100%", achColor: "#1c9d5f", achWidth: "100%", achFillColor: "#1c9d5f", pts: "15/15", badgeClass: "badge badge-green", badgeText: "Đạt" },
-    ],
-  },
-  {
-    label: "Vận hành", color: "#1870c4",
-    rows: [
-      { metric: "Tỉ lệ xử lý yêu cầu đúng hạn", unit: "% yêu cầu hoàn thành đúng SLA", target: "≥ 90%", actual: "93.6%", actualClass: "green", achPct: "104%", achColor: "#1c9d5f", achWidth: "100%", achFillColor: "#1870c4", pts: "18/20", badgeClass: "badge badge-green", badgeText: "Đạt" },
-      { metric: "Thời gian phản hồi sự cố", unit: "Phút trung bình", target: "≤ 30ph", actual: "34ph", actualClass: "orange", achPct: "88.2%", achColor: "#c8761b", achWidth: "88%", achFillColor: "#c8761b", pts: "13/15", ptsStyle: { color: "#c8761b" }, badgeClass: "badge badge-orange", badgeText: "Cần cải thiện" },
-    ],
-  },
-  {
-    label: "Dịch vụ cư dân", color: "#4137f9",
-    rows: [
-      { metric: "Chỉ số hài lòng cư dân (CSAT)", unit: "Điểm trung bình / 5", target: "≥ 4.2", actual: "4.38", actualClass: "green", achPct: "104.3%", achColor: "#1c9d5f", achWidth: "100%", achFillColor: "#4137f9", pts: "20/20", badgeClass: "badge badge-green", badgeText: "Vượt" },
-      { metric: "Tỉ lệ giải quyết phản ánh", unit: "% phản ánh được xử lý trong 5 ngày", target: "≥ 85%", actual: "91.3%", actualClass: "green", achPct: "107.4%", achColor: "#1c9d5f", achWidth: "100%", achFillColor: "#4137f9", pts: "18/20", badgeClass: "badge badge-green", badgeText: "Đạt" },
-    ],
-  },
-  {
-    label: "An ninh & PCCC", color: "#f5222d",
-    rows: [
-      { metric: "Số vụ mất an ninh nghiêm trọng", unit: "Tổng vụ việc trong quý", target: "= 0", actual: "0", actualClass: "green", achPct: "100%", achColor: "#1c9d5f", achWidth: "100%", achFillColor: "#f5222d", pts: "20/20", badgeClass: "badge badge-green", badgeText: "Đạt" },
-    ],
-  },
-  {
-    label: "Bảo trì hạ tầng", color: "#c8761b",
-    rows: [
-      { metric: "Thực hiện kế hoạch bảo trì định kỳ", unit: "% hạng mục hoàn thành đúng kế hoạch", target: "≥ 90%", actual: "82%", actualClass: "orange", achPct: "91.1%", achColor: "#c8761b", achWidth: "82%", achFillColor: "#c8761b", pts: "12/15", ptsStyle: { color: "#c8761b" }, badgeClass: "badge badge-orange", badgeText: "Cần cải thiện" },
-    ],
-  },
-];
+type Kpi = {
+  period: string;
+  periodLabel: string;
+  totalScore: number;
+  maxScore: number;
+  grade: string;
+  targetScore: number;
+  scoreChange: number;
+  comparisonPeriod: string;
+  counts: { achieved: number; needsImprovement: number; notAchieved: number; total: number };
+  categories: KpiCategory[];
+};
+
+type KpiTrendPoint = { period: string; periodLabel: string; totalScore: number; targetScore: number };
+
+type KpiMember = {
+  id: string;
+  name: string;
+  initials: string;
+  role: string;
+  score: number;
+  grade: string;
+  termStart: number;
+  termEnd: number;
+  avatarColor: string;
+};
+
+// hex color -> light background (~12% tint) for avatars / icon bg
+function tint(hex: string): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  const mix = (c: number) => Math.round(c + (255 - c) * 0.88);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}
+
+function statusColorHex(c: string): string {
+  if (c === "green") return "#1c9d5f";
+  if (c === "orange") return "#c8761b";
+  if (c === "red") return "#f5222d";
+  return "#272727";
+}
 
 export default function KpiPage() {
+  const { data: kpi } = useApiData<Kpi>("/kpi");
+  const { data: trend } = useApiData<KpiTrendPoint[]>("/kpi/trend");
+  const { data: members } = useApiData<KpiMember[]>("/kpi/members");
+
+  const totalScore = kpi?.totalScore ?? 0;
+  const maxScore = kpi?.maxScore ?? 100;
+  const targetScore = kpi?.targetScore ?? 0;
+  const grade = KPI_GRADE[kpi?.grade ?? ""] ?? { label: "", color: "#272727", bg: "#f0f0f3" };
+  const counts = kpi?.counts ?? { achieved: 0, needsImprovement: 0, notAchieved: 0, total: 0 };
+  const categories = kpi?.categories ?? [];
+
+  // Overall ring: circumference = 2πr (r=46) ≈ 289.0265
+  const circ = 2 * Math.PI * 46;
+  const ringPct = Math.max(0, Math.min(1, totalScore / maxScore));
+  const ringDash = circ * ringPct;
+  const ringOffset = circ - ringDash;
+
+  const scoreChange = kpi?.scoreChange ?? 0;
+  const comparisonPeriod = kpi?.comparisonPeriod ?? "";
+
+  // ── Trend chart geometry ──
+  const trendPts = trend ?? [];
+  const chartX0 = 70;
+  const chartX1 = 320;
+  const stepX = trendPts.length > 1 ? (chartX1 - chartX0) / (trendPts.length - 1) : 0;
+  // y: 100 -> y=10, 40 -> y=160  =>  y = 10 + (100 - score) * (150/60)
+  const scoreToY = (s: number) => 10 + (100 - s) * (150 / 60);
+  const points = trendPts.map((p, i) => ({
+    x: chartX0 + i * stepX,
+    y: scoreToY(p.totalScore),
+    ...p,
+  }));
+  const linePoints = points.map((p) => `${p.x},${p.y.toFixed(1)}`).join(" ");
+  const last = points[points.length - 1];
+  const areaPoints = points.length
+    ? `${linePoints} ${last.x},160 ${points[0].x},160`
+    : "";
+  const targetVal = trendPts.length ? trendPts[trendPts.length - 1].targetScore : targetScore;
+  const targetY = scoreToY(targetVal);
+
+  // bottom summary cells (last two periods + growth)
+  const prevPt = trendPts.length >= 2 ? trendPts[trendPts.length - 2] : undefined;
+  const lastPt = trendPts.length ? trendPts[trendPts.length - 1] : undefined;
+  const growth = lastPt && prevPt ? +(lastPt.totalScore - prevPt.totalScore).toFixed(1) : 0;
+
   return (
     <div className="kpi-page">
       {/* ── Page Header ── */}
@@ -74,7 +132,7 @@ export default function KpiPage() {
               <line x1="8" y1="2" x2="8" y2="6" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            Quý 2/2024
+            {kpi?.periodLabel ?? "Đang tải..."}
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9" />
             </svg>
@@ -105,25 +163,25 @@ export default function KpiPage() {
               <circle cx="55" cy="55" r="46" fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="10" />
               <circle
                 cx="55" cy="55" r="46" fill="none" stroke="rgba(255,255,255,.9)" strokeWidth="10"
-                strokeDasharray="252.7 289" strokeDashoffset="72.3" strokeLinecap="round"
+                strokeDasharray={`${ringDash.toFixed(1)} ${circ.toFixed(1)}`} strokeDashoffset={ringOffset.toFixed(1)} strokeLinecap="round"
                 transform="rotate(-90 55 55)"
               />
             </svg>
             <div className="score-ring-label">
-              <div className="score-big">87.4</div>
-              <div className="score-max">/100</div>
+              <div className="score-big">{totalScore}</div>
+              <div className="score-max">/{maxScore}</div>
             </div>
           </div>
           <div className="score-info">
-            <div className="score-title">Tổng điểm KPI — Quý 2/2024</div>
-            <div className="score-grade">Xuất sắc</div>
+            <div className="score-title">Tổng điểm KPI — {kpi?.periodLabel ?? ""}</div>
+            <div className="score-grade">{grade.label}</div>
             <div className="score-grade-badge">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              Vượt chỉ tiêu 85 điểm
+              {totalScore >= targetScore ? "Vượt" : "Dưới"} chỉ tiêu {targetScore} điểm
             </div>
-            <div className="score-compare">So với Quý 1: <strong>+4.2 điểm ↑</strong></div>
+            <div className="score-compare">So với {comparisonPeriod}: <strong>{scoreChange >= 0 ? "+" : ""}{scoreChange} điểm {scoreChange >= 0 ? "↑" : "↓"}</strong></div>
           </div>
         </div>
 
@@ -135,9 +193,9 @@ export default function KpiPage() {
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
             </div>
-            <div className="stat-mini-trend trend-up">+3 so với Q1</div>
+            <div className="stat-mini-trend trend-up">{comparisonPeriod}</div>
           </div>
-          <div className="stat-mini-val green">18</div>
+          <div className="stat-mini-val green">{counts.achieved}</div>
           <div className="stat-mini-label">Chỉ tiêu đạt / vượt</div>
         </div>
 
@@ -151,7 +209,7 @@ export default function KpiPage() {
             </div>
             <div className="stat-mini-trend trend-same">Theo dõi</div>
           </div>
-          <div className="stat-mini-val orange">4</div>
+          <div className="stat-mini-val orange">{counts.needsImprovement}</div>
           <div className="stat-mini-label">Chỉ tiêu cần cải thiện</div>
         </div>
 
@@ -164,9 +222,9 @@ export default function KpiPage() {
                 <line x1="9" y1="9" x2="15" y2="15" />
               </svg>
             </div>
-            <div className="stat-mini-trend trend-down">-1 so với Q1</div>
+            <div className="stat-mini-trend trend-down">Cần xử lý</div>
           </div>
-          <div className="stat-mini-val red">2</div>
+          <div className="stat-mini-val red">{counts.notAchieved}</div>
           <div className="stat-mini-label">Chỉ tiêu chưa đạt</div>
         </div>
 
@@ -182,129 +240,42 @@ export default function KpiPage() {
                 <line x1="3" y1="18" x2="3.01" y2="18" />
               </svg>
             </div>
-            <div className="stat-mini-trend trend-same">Q2/2024</div>
+            <div className="stat-mini-trend trend-same">{kpi?.periodLabel ?? ""}</div>
           </div>
-          <div className="stat-mini-val">24</div>
+          <div className="stat-mini-val">{counts.total}</div>
           <div className="stat-mini-label">Tổng chỉ tiêu đánh giá</div>
         </div>
       </div>
 
       {/* ── Category KPI cards ── */}
       <div className="cat-grid">
-        <div className="cat-kpi-card active">
-          <div className="cat-icon-bg" style={{ background: "#e3fbed" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#1c9d5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </div>
-          <div>
-            <div className="cat-kpi-name">Tài chính</div>
-            <div className="cat-kpi-score-row">
-              <div className="cat-kpi-score">91</div>
-              <div className="cat-kpi-total">/100</div>
+        {categories.map((c, idx) => {
+          const g = KPI_GRADE[c.grade] ?? { label: "", color: c.color };
+          const widthPct = c.maxScore ? (c.score / c.maxScore) * 100 : 0;
+          return (
+            <div className={`cat-kpi-card${idx === 0 ? " active" : ""}`} key={c.name}>
+              <div className="cat-icon-bg" style={{ background: tint(c.color) }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke={c.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </div>
+              <div>
+                <div className="cat-kpi-name">{c.name}</div>
+                <div className="cat-kpi-score-row">
+                  <div className="cat-kpi-score" style={{ color: c.color }}>{c.score}</div>
+                  <div className="cat-kpi-total">/{c.maxScore}</div>
+                </div>
+              </div>
+              <div>
+                <div className="cat-track"><div className="cat-fill" style={{ width: `${widthPct}%`, background: c.color }}></div></div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
+                  <span style={{ fontSize: 11, color: "#585c7b" }}>{c.metricsPassed}/{c.metricsTotal} chỉ tiêu đạt</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: g.color }}>{g.label}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="cat-track"><div className="cat-fill" style={{ width: "91%", background: "#1c9d5f" }}></div></div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-              <span style={{ fontSize: 11, color: "#585c7b" }}>5/5 chỉ tiêu đạt</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#1c9d5f" }}>Xuất sắc</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="cat-kpi-card">
-          <div className="cat-icon-bg" style={{ background: "#e4f1ff" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#1870c4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93A10 10 0 0 1 19.07 19.07" />
-              <circle cx="12" cy="12" r="1" />
-            </svg>
-          </div>
-          <div>
-            <div className="cat-kpi-name">Vận hành</div>
-            <div className="cat-kpi-score-row">
-              <div className="cat-kpi-score">85</div>
-              <div className="cat-kpi-total">/100</div>
-            </div>
-          </div>
-          <div>
-            <div className="cat-track"><div className="cat-fill" style={{ width: "85%", background: "#1870c4" }}></div></div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-              <span style={{ fontSize: 11, color: "#585c7b" }}>4/5 chỉ tiêu đạt</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#1870c4" }}>Tốt</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="cat-kpi-card">
-          <div className="cat-icon-bg" style={{ background: "#efeeff" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#4137f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </div>
-          <div>
-            <div className="cat-kpi-name">Dịch vụ cư dân</div>
-            <div className="cat-kpi-score-row">
-              <div className="cat-kpi-score">88</div>
-              <div className="cat-kpi-total">/100</div>
-            </div>
-          </div>
-          <div>
-            <div className="cat-track"><div className="cat-fill" style={{ width: "88%", background: "#4137f9" }}></div></div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-              <span style={{ fontSize: 11, color: "#585c7b" }}>4/5 chỉ tiêu đạt</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#4137f9" }}>Tốt</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="cat-kpi-card">
-          <div className="cat-icon-bg" style={{ background: "#ffeded" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#f5222d" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          </div>
-          <div>
-            <div className="cat-kpi-name">An ninh &amp; PCCC</div>
-            <div className="cat-kpi-score-row">
-              <div className="cat-kpi-score">90</div>
-              <div className="cat-kpi-total">/100</div>
-            </div>
-          </div>
-          <div>
-            <div className="cat-track"><div className="cat-fill" style={{ width: "90%", background: "#f5222d" }}></div></div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-              <span style={{ fontSize: 11, color: "#585c7b" }}>5/5 chỉ tiêu đạt</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#f5222d" }}>Xuất sắc</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="cat-kpi-card">
-          <div className="cat-icon-bg" style={{ background: "#fff1de" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#c8761b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-            </svg>
-          </div>
-          <div>
-            <div className="cat-kpi-name">Bảo trì hạ tầng</div>
-            <div className="cat-kpi-score-row">
-              <div className="cat-kpi-score" style={{ color: "#c8761b" }}>76</div>
-              <div className="cat-kpi-total">/100</div>
-            </div>
-          </div>
-          <div>
-            <div className="cat-track"><div className="cat-fill" style={{ width: "76%", background: "#c8761b" }}></div></div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-              <span style={{ fontSize: 11, color: "#585c7b" }}>3/4 chỉ tiêu đạt</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#c8761b" }}>Cần cải thiện</span>
-            </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
       {/* ── Mid row: Trend + Detail ── */}
@@ -325,12 +296,19 @@ export default function KpiPage() {
               <line x1="34" y1="110" x2="330" y2="110" stroke="#f0f0f5" strokeWidth="1" />
               <line x1="34" y1="160" x2="330" y2="160" stroke="#f0f0f5" strokeWidth="1" />
 
-              <text x="70" y="175" textAnchor="middle" fontSize="10.5" fill="#585c7b">Q1/23</text>
-              <text x="120" y="175" textAnchor="middle" fontSize="10.5" fill="#585c7b">Q2/23</text>
-              <text x="170" y="175" textAnchor="middle" fontSize="10.5" fill="#585c7b">Q3/23</text>
-              <text x="220" y="175" textAnchor="middle" fontSize="10.5" fill="#585c7b">Q4/23</text>
-              <text x="270" y="175" textAnchor="middle" fontSize="10.5" fill="#585c7b">Q1/24</text>
-              <text x="320" y="175" textAnchor="middle" fontSize="10.5" fill="#4137f9" fontWeight="700">Q2/24</text>
+              {points.map((p, i) => (
+                <text
+                  key={p.period}
+                  x={p.x}
+                  y="175"
+                  textAnchor="middle"
+                  fontSize="10.5"
+                  fill={i === points.length - 1 ? "#4137f9" : "#585c7b"}
+                  fontWeight={i === points.length - 1 ? "700" : undefined}
+                >
+                  {p.periodLabel.replace("Quý ", "Q").replace("/20", "/")}
+                </text>
+              ))}
 
               <defs>
                 <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
@@ -338,23 +316,30 @@ export default function KpiPage() {
                   <stop offset="100%" stopColor="#4137f9" stopOpacity="0" />
                 </linearGradient>
               </defs>
-              <polygon points="70,110 120,100 170,82.5 220,75 270,55 320,25 320,160 70,160" fill="url(#trendGrad)" />
-              <polyline
-                points="70,110 120,100 170,82.5 220,75 270,55 320,25"
-                fill="none" stroke="#4137f9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              />
-              <circle cx="70" cy="110" r="4" fill="#4137f9" />
-              <circle cx="120" cy="100" r="4" fill="#4137f9" />
-              <circle cx="170" cy="82.5" r="4" fill="#4137f9" />
-              <circle cx="220" cy="75" r="4" fill="#4137f9" />
-              <circle cx="270" cy="55" r="4" fill="#4137f9" />
-              <circle cx="320" cy="25" r="6" fill="#fff" stroke="#4137f9" strokeWidth="2.5" />
+              {areaPoints && <polygon points={areaPoints} fill="url(#trendGrad)" />}
+              {linePoints && (
+                <polyline
+                  points={linePoints}
+                  fill="none" stroke="#4137f9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                />
+              )}
+              {points.map((p, i) =>
+                i === points.length - 1 ? (
+                  <circle key={p.period} cx={p.x} cy={p.y} r="6" fill="#fff" stroke="#4137f9" strokeWidth="2.5" />
+                ) : (
+                  <circle key={p.period} cx={p.x} cy={p.y} r="4" fill="#4137f9" />
+                )
+              )}
 
-              <rect x="288" y="4" width="52" height="18" rx="5" fill="#4137f9" />
-              <text x="314" y="16" textAnchor="middle" fontSize="10" fill="#fff" fontWeight="700">87.4 điểm</text>
+              {last && (
+                <>
+                  <rect x={last.x - 26} y={last.y - 21} width="52" height="18" rx="5" fill="#4137f9" />
+                  <text x={last.x} y={last.y - 9} textAnchor="middle" fontSize="10" fill="#fff" fontWeight="700">{last.totalScore} điểm</text>
+                </>
+              )}
 
-              <line x1="34" y1="47.5" x2="330" y2="47.5" stroke="#1c9d5f" strokeWidth="1.5" strokeDasharray="5 4" />
-              <text x="330" y="44" textAnchor="end" fontSize="10" fill="#1c9d5f" fontWeight="600">Mục tiêu 85</text>
+              <line x1="34" y1={targetY.toFixed(1)} x2="330" y2={targetY.toFixed(1)} stroke="#1c9d5f" strokeWidth="1.5" strokeDasharray="5 4" />
+              <text x="330" y={(targetY - 3).toFixed(1)} textAnchor="end" fontSize="10" fill="#1c9d5f" fontWeight="600">Mục tiêu {targetVal}</text>
             </svg>
           </div>
           <div className="chart-legend">
@@ -370,18 +355,18 @@ export default function KpiPage() {
 
           <div style={{ background: "#fafafa", borderRadius: 12, padding: "14px 16px", display: "flex", gap: 16 }}>
             <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: 12, color: "#585c7b", marginBottom: 4 }}>Q1/2024</div>
-              <div style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 20, fontWeight: 800, color: "#272727" }}>83.2</div>
+              <div style={{ fontSize: 12, color: "#585c7b", marginBottom: 4 }}>{prevPt?.periodLabel ?? ""}</div>
+              <div style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 20, fontWeight: 800, color: "#272727" }}>{prevPt?.totalScore ?? "—"}</div>
             </div>
             <div style={{ width: 1, background: "#e2e5f1" }}></div>
             <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: 12, color: "#4137f9", fontWeight: 600, marginBottom: 4 }}>Q2/2024 ●</div>
-              <div style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 20, fontWeight: 800, color: "#4137f9" }}>87.4</div>
+              <div style={{ fontSize: 12, color: "#4137f9", fontWeight: 600, marginBottom: 4 }}>{lastPt?.periodLabel ?? ""} ●</div>
+              <div style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 20, fontWeight: 800, color: "#4137f9" }}>{lastPt?.totalScore ?? "—"}</div>
             </div>
             <div style={{ width: 1, background: "#e2e5f1" }}></div>
             <div style={{ flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 12, color: "#585c7b", marginBottom: 4 }}>Tăng trưởng</div>
-              <div style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 20, fontWeight: 800, color: "#1c9d5f" }}>+4.2</div>
+              <div style={{ fontFamily: '"Manrope","Inter",sans-serif', fontSize: 20, fontWeight: 800, color: growth >= 0 ? "#1c9d5f" : "#f5222d" }}>{growth >= 0 ? "+" : ""}{growth}</div>
             </div>
           </div>
         </div>
@@ -402,30 +387,35 @@ export default function KpiPage() {
               <span>Kết quả</span>
             </div>
 
-            {groups.map((g) => (
-              <div key={g.label}>
+            {categories.map((c) => (
+              <div key={c.name}>
                 <div className="kpi-group-label">
-                  <span className="kpi-group-dot" style={{ background: g.color }}></span>
-                  {g.label}
+                  <span className="kpi-group-dot" style={{ background: c.color }}></span>
+                  {c.name}
                 </div>
-                {g.rows.map((r) => (
-                  <div className="kpi-row" key={r.metric}>
-                    <div className="kpi-name-col">
-                      <div className="kpi-metric">{r.metric}</div>
-                      <div className="kpi-unit">{r.unit}</div>
-                    </div>
-                    <div className="kpi-num">{r.target}</div>
-                    <div className={`kpi-num ${r.actualClass ?? ""}`}>{r.actual}</div>
-                    <div className="kpi-ach-wrap">
-                      <span className="kpi-ach-pct" style={{ color: r.achColor }}>{r.achPct}</span>
-                      <div className="kpi-ach-bar">
-                        <div className="kpi-ach-fill" style={{ width: r.achWidth, background: r.achFillColor }}></div>
+                {c.metrics.map((m) => {
+                  const achWidth = Math.max(0, Math.min(100, m.achievementPct));
+                  const achColor = statusColorHex(m.statusColor);
+                  const result = KPI_RESULT[m.resultBadge] ?? { label: m.resultBadge, color: "#585c7b", bg: "#f0f0f3" };
+                  return (
+                    <div className="kpi-row" key={m.name}>
+                      <div className="kpi-name-col">
+                        <div className="kpi-metric">{m.name}</div>
+                        <div className="kpi-unit">{m.unit}</div>
                       </div>
+                      <div className="kpi-num">{m.targetValue}</div>
+                      <div className="kpi-num" style={{ color: statusColorHex(m.statusColor) }}>{m.actualValue}</div>
+                      <div className="kpi-ach-wrap">
+                        <span className="kpi-ach-pct" style={{ color: achColor }}>{m.achievementPct}%</span>
+                        <div className="kpi-ach-bar">
+                          <div className="kpi-ach-fill" style={{ width: `${achWidth}%`, background: c.color }}></div>
+                        </div>
+                      </div>
+                      <div className="pts-cell"><span className="pts-val" style={m.statusColor === "orange" ? { color: "#c8761b" } : undefined}>{m.pointsEarned}/{m.pointsMax}</span></div>
+                      <div className="badge-cell"><span className="badge" style={{ color: result.color, background: result.bg }}>{result.label}</span></div>
                     </div>
-                    <div className="pts-cell"><span className="pts-val" style={r.ptsStyle}>{r.pts}</span></div>
-                    <div className="badge-cell"><span className={r.badgeClass}>{r.badgeText}</span></div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -436,28 +426,27 @@ export default function KpiPage() {
       <div className="members-card">
         <div className="card-hd">
           <div className="card-title">Thành viên Ban quản trị</div>
-          <span className="card-sub">Nhiệm kỳ 2023–2026</span>
+          <span className="card-sub">
+            {members && members.length ? `Nhiệm kỳ ${members[0].termStart}–${members[0].termEnd}` : "Nhiệm kỳ"}
+          </span>
         </div>
         <div className="members-grid">
-          {[
-            { initials: "NT", bg: "#efeeff", color: "#4137f9", name: "Ông Nguyễn Thanh Bình", role: "Chủ tịch BQT", score: "92", badge: "badge-green", badgeText: "Xuất sắc" },
-            { initials: "TL", bg: "#e3fbed", color: "#1c9d5f", name: "Bà Trần Thị Lan Anh", role: "Phó Chủ tịch BQT", score: "89", badge: "badge-green", badgeText: "Tốt" },
-            { initials: "PH", bg: "#e4f1ff", color: "#1870c4", name: "Ông Phạm Hoàng Nam", role: "Uỷ viên Tài chính", score: "91", badge: "badge-green", badgeText: "Xuất sắc" },
-            { initials: "LV", bg: "#fff1de", color: "#c8761b", name: "Ông Lê Văn Đức", role: "Uỷ viên Kỹ thuật", score: "83", badge: "badge-orange", badgeText: "Cần cải thiện" },
-            { initials: "VT", bg: "#ffeded", color: "#f5222d", name: "Bà Võ Thị Mai", role: "Uỷ viên An ninh", score: "88", badge: "badge-green", badgeText: "Tốt" },
-          ].map((m) => (
-            <div className="member-item" key={m.initials}>
-              <div className="member-avatar" style={{ background: m.bg, color: m.color }}>{m.initials}</div>
-              <div>
-                <div className="member-name">{m.name}</div>
-                <div className="member-role">{m.role}</div>
+          {(members ?? []).map((m) => {
+            const g = KPI_GRADE[m.grade] ?? { label: "", color: "#585c7b", bg: "#f0f0f3" };
+            return (
+              <div className="member-item" key={m.id}>
+                <div className="member-avatar" style={{ background: tint(m.avatarColor), color: m.avatarColor }}>{m.initials}</div>
+                <div>
+                  <div className="member-name">{m.name}</div>
+                  <div className="member-role">{m.role}</div>
+                </div>
+                <div className="member-score-row">
+                  <span className="member-score">{m.score}</span>
+                  <span className="member-badge badge" style={{ fontSize: 10, color: g.color, background: g.bg }}>{g.label}</span>
+                </div>
               </div>
-              <div className="member-score-row">
-                <span className="member-score">{m.score}</span>
-                <span className={`member-badge ${m.badge} badge`} style={{ fontSize: 10 }}>{m.badgeText}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

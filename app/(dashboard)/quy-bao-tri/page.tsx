@@ -1,3 +1,53 @@
+"use client";
+
+import { useApiData } from "@/lib/hooks";
+import { formatVnd, formatDate, formatNumber } from "@/lib/format";
+import { trendDir, MAINTENANCE_STATUS } from "@/lib/ui-maps";
+
+interface FundOverview {
+  balance: number;
+  totalCollected: number;
+  totalSpent: number;
+  interestIncome: number;
+  balanceChangePct: number;
+  collectedChangePct: number;
+  spentChangePct: number;
+  bankName: string;
+  accountNoMasked: string;
+  interestRate: number;
+  contributionRate: string;
+  collectionRate: number;
+  unitsPaid: number;
+  unitsTotal: number;
+  unitsUnpaid: number;
+  updatedAt: string;
+}
+
+interface FundMovement {
+  period: string;
+  cumulativeBalance: number;
+  maintenanceCost: number;
+}
+
+interface FundBlock {
+  block: string;
+  unitsPaid: number;
+  unitsTotal: number;
+  rate: number;
+  unitsUnpaid: number;
+}
+
+interface FundJob {
+  id: string;
+  name: string;
+  contractor: string;
+  status: string;
+  amount: number | null;
+  estimatedCost: number | null;
+  scheduledPeriod: string | null;
+  actualDate: string | null;
+}
+
 const ArrowUp = () => (
   <svg className="arrow-up" viewBox="0 0 12 12" fill="none">
     <path d="M6 10V2M2 6l4-4 4 4" stroke="#1c9d5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -10,7 +60,58 @@ const ArrowDown = () => (
   </svg>
 );
 
+// Short period label for the x-axis: "2024-Q3" -> "Q3/24", "2026-05" -> "T5/26"
+function periodLabel(period: string): string {
+  const [year, part] = period.split("-");
+  const yy = year.slice(-2);
+  if (part?.startsWith("Q")) return `${part}/${yy}`;
+  return `T${Number(part)}/${yy}`;
+}
+
 export default function QuyBaoTriPage() {
+  const { data: overview } = useApiData<FundOverview>("/fund/overview");
+  const { data: movements } = useApiData<FundMovement[]>("/fund/movements");
+  const { data: blocks } = useApiData<FundBlock[]>("/fund/blocks");
+  const { data: completed } = useApiData<FundJob[]>("/fund/jobs?status=completed");
+  const { data: planned } = useApiData<FundJob[]>("/fund/jobs?status=planned");
+  const { data: tentative } = useApiData<FundJob[]>("/fund/jobs?status=tentative");
+
+  const balanceTrend = trendDir(overview?.balanceChangePct);
+  const collectedTrend = trendDir(overview?.collectedChangePct);
+  // "Tổng đã chi" — more spending is a negative trend; show as down (red).
+  const spentTrend = trendDir(overview ? -(overview.spentChangePct ?? 0) : null);
+
+  // ── Chart geometry (viewBox 640x260) ──
+  const mv = movements ?? [];
+  const n = mv.length;
+  // Y axis labels are 10B (top, y=8) and 0 (bottom, y=248).
+  const chartTop = 8;
+  const chartBottom = 248;
+  const chartMaxVal = 10_000_000_000; // 10B matches the y-axis scale
+  const valToY = (v: number) =>
+    chartBottom - (v / chartMaxVal) * (chartBottom - chartTop);
+  const xAt = (i: number) => (n <= 1 ? 0 : (i / (n - 1)) * 640);
+
+  const linePoints = mv
+    .map((m, i) => `${xAt(i)},${valToY(m.cumulativeBalance)}`)
+    .join(" ");
+  const areaPath =
+    n > 0
+      ? `M ${linePoints.split(" ").join(" L ")} L ${xAt(n - 1)},${chartBottom} L ${xAt(0)},${chartBottom} Z`
+      : "";
+
+  // Bars: maintenanceCost, centered around each x, width 28.
+  const barW = 28;
+  const barMax = mv.length ? Math.max(...mv.map((m) => m.maintenanceCost)) : 0;
+  const barMaxH = chartBottom - 160; // keep bars in lower band, like the design
+
+  const planRows: { job: FundJob }[] = [
+    ...(planned ?? []),
+    ...(tentative ?? []),
+  ].map((job) => ({ job }));
+
+  const lastUpdated = overview ? formatDate(overview.updatedAt) : "—";
+
   return (
     <div className="qbt-page">
       {/* ── Page Header ── */}
@@ -56,10 +157,12 @@ export default function QuyBaoTriPage() {
           </div>
           <div>
             <div className="kpi-label">Số dư quỹ hiện tại</div>
-            <div className="kpi-value">8.265.000.000 đ</div>
+            <div className="kpi-value">{overview ? formatVnd(overview.balance) : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <ArrowUp />
-              <span className="kpi-pct up">+3.2%</span>
+              {(overview?.balanceChangePct ?? 0) >= 0 ? <ArrowUp /> : <ArrowDown />}
+              <span className="kpi-pct up" style={{ color: balanceTrend.color }}>
+                {(overview?.balanceChangePct ?? 0) >= 0 ? "+" : ""}{overview?.balanceChangePct ?? 0}%
+              </span>
               <span className="kpi-tlabel">so với tháng trước</span>
             </div>
           </div>
@@ -73,10 +176,12 @@ export default function QuyBaoTriPage() {
           </div>
           <div>
             <div className="kpi-label">Tổng đã thu</div>
-            <div className="kpi-value">12.450.000.000 đ</div>
+            <div className="kpi-value">{overview ? formatVnd(overview.totalCollected) : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <ArrowUp />
-              <span className="kpi-pct up">+8.4%</span>
+              {(overview?.collectedChangePct ?? 0) >= 0 ? <ArrowUp /> : <ArrowDown />}
+              <span className="kpi-pct up" style={{ color: collectedTrend.color }}>
+                {(overview?.collectedChangePct ?? 0) >= 0 ? "+" : ""}{overview?.collectedChangePct ?? 0}%
+              </span>
               <span className="kpi-tlabel">so với năm ngoái</span>
             </div>
           </div>
@@ -91,10 +196,12 @@ export default function QuyBaoTriPage() {
           </div>
           <div>
             <div className="kpi-label">Tổng đã chi</div>
-            <div className="kpi-value">4.185.000.000 đ</div>
+            <div className="kpi-value">{overview ? formatVnd(overview.totalSpent) : "Đang tải..."}</div>
             <div className="kpi-trend">
               <ArrowDown />
-              <span className="kpi-pct down">+12.1%</span>
+              <span className="kpi-pct down" style={{ color: spentTrend.color }}>
+                {(overview?.spentChangePct ?? 0) >= 0 ? "+" : ""}{overview?.spentChangePct ?? 0}%
+              </span>
               <span className="kpi-tlabel">so với năm ngoái</span>
             </div>
           </div>
@@ -109,10 +216,10 @@ export default function QuyBaoTriPage() {
           </div>
           <div>
             <div className="kpi-label">Lãi tiền gửi 2024</div>
-            <div className="kpi-value">538.225.000 đ</div>
+            <div className="kpi-value">{overview ? formatVnd(overview.interestIncome) : "Đang tải..."}</div>
             <div className="kpi-trend">
               <ArrowUp />
-              <span className="kpi-pct up">+6.5%</span>
+              <span className="kpi-pct up">+{overview?.interestRate ?? 0}%</span>
               <span className="kpi-tlabel">lãi suất / năm</span>
             </div>
           </div>
@@ -150,14 +257,22 @@ export default function QuyBaoTriPage() {
               <line x1="0" y1="188" x2="640" y2="188" stroke="#f0f0f5" strokeWidth="1" />
               <line x1="0" y1="248" x2="640" y2="248" stroke="#e8e8f0" strokeWidth="1" />
 
-              <rect x="16" y="208" width="28" height="40" rx="3" fill="#ef6b7c" opacity="0.7" />
-              <rect x="96" y="224" width="28" height="24" rx="3" fill="#ef6b7c" opacity="0.7" />
-              <rect x="176" y="216" width="28" height="32" rx="3" fill="#ef6b7c" opacity="0.7" />
-              <rect x="256" y="176" width="28" height="72" rx="3" fill="#ef6b7c" opacity="0.7" />
-              <rect x="336" y="220" width="28" height="28" rx="3" fill="#ef6b7c" opacity="0.7" />
-              <rect x="416" y="218" width="28" height="30" rx="3" fill="#ef6b7c" opacity="0.7" />
-              <rect x="496" y="164" width="28" height="84" rx="3" fill="#ef6b7c" opacity="0.7" />
-              <rect x="576" y="220" width="28" height="28" rx="3" fill="#ef6b7c" opacity="0.7" />
+              {mv.map((m, i) => {
+                const h = barMax > 0 ? (m.maintenanceCost / barMax) * barMaxH : 0;
+                const x = Math.min(Math.max(xAt(i) - barW / 2, 0), 640 - barW);
+                return (
+                  <rect
+                    key={`bar-${m.period}`}
+                    x={x}
+                    y={chartBottom - h}
+                    width={barW}
+                    height={h}
+                    rx="3"
+                    fill="#ef6b7c"
+                    opacity="0.7"
+                  />
+                );
+              })}
 
               <defs>
                 <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -165,37 +280,43 @@ export default function QuyBaoTriPage() {
                   <stop offset="100%" stopColor="#4137f9" stopOpacity="0.02" />
                 </linearGradient>
               </defs>
-              <path
-                d="M 0,188 L 80,148 L 160,114 L 240,124 L 320,96 L 400,62 L 480,74 L 560,54 L 640,46 L 640,248 L 0,248 Z"
-                fill="url(#areaGrad)"
-              />
-              <polyline
-                points="0,188 80,148 160,114 240,124 320,96 400,62 480,74 560,54 640,46"
-                fill="none"
-                stroke="#4137f9"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="0" cy="188" r="4" fill="#4137f9" stroke="#fff" strokeWidth="2" />
-              <circle cx="80" cy="148" r="4" fill="#4137f9" stroke="#fff" strokeWidth="2" />
-              <circle cx="160" cy="114" r="4" fill="#4137f9" stroke="#fff" strokeWidth="2" />
-              <circle cx="240" cy="124" r="4" fill="#4137f9" stroke="#fff" strokeWidth="2" />
-              <circle cx="320" cy="96" r="4" fill="#4137f9" stroke="#fff" strokeWidth="2" />
-              <circle cx="400" cy="62" r="4" fill="#4137f9" stroke="#fff" strokeWidth="2" />
-              <circle cx="480" cy="74" r="4" fill="#4137f9" stroke="#fff" strokeWidth="2" />
-              <circle cx="560" cy="54" r="4" fill="#4137f9" stroke="#fff" strokeWidth="2" />
-              <circle cx="640" cy="46" r="6" fill="#4137f9" stroke="#fff" strokeWidth="2.5" />
+              {areaPath && <path d={areaPath} fill="url(#areaGrad)" />}
+              {linePoints && (
+                <polyline
+                  points={linePoints}
+                  fill="none"
+                  stroke="#4137f9"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+              {mv.map((m, i) => (
+                <circle
+                  key={`pt-${m.period}`}
+                  cx={xAt(i)}
+                  cy={valToY(m.cumulativeBalance)}
+                  r={i === n - 1 ? 6 : 4}
+                  fill="#4137f9"
+                  stroke="#fff"
+                  strokeWidth={i === n - 1 ? 2.5 : 2}
+                />
+              ))}
 
-              <text x="0" y="260" textAnchor="middle" fontSize="11.5" fill="#585c7b" fontFamily="Inter,sans-serif">Q3/22</text>
-              <text x="80" y="260" textAnchor="middle" fontSize="11.5" fill="#585c7b" fontFamily="Inter,sans-serif">Q4/22</text>
-              <text x="160" y="260" textAnchor="middle" fontSize="11.5" fill="#585c7b" fontFamily="Inter,sans-serif">Q1/23</text>
-              <text x="240" y="260" textAnchor="middle" fontSize="11.5" fill="#585c7b" fontFamily="Inter,sans-serif">Q2/23</text>
-              <text x="320" y="260" textAnchor="middle" fontSize="11.5" fill="#585c7b" fontFamily="Inter,sans-serif">Q3/23</text>
-              <text x="400" y="260" textAnchor="middle" fontSize="11.5" fill="#585c7b" fontFamily="Inter,sans-serif">Q4/23</text>
-              <text x="480" y="260" textAnchor="middle" fontSize="11.5" fill="#585c7b" fontFamily="Inter,sans-serif">Q1/24</text>
-              <text x="560" y="260" textAnchor="middle" fontSize="11.5" fill="#585c7b" fontFamily="Inter,sans-serif">Q2/24</text>
-              <text x="640" y="260" textAnchor="middle" fontSize="11.5" fill="#4137f9" fontWeight="600" fontFamily="Inter,sans-serif">T5/24</text>
+              {mv.map((m, i) => (
+                <text
+                  key={`lbl-${m.period}`}
+                  x={xAt(i)}
+                  y="260"
+                  textAnchor="middle"
+                  fontSize="11.5"
+                  fill={i === n - 1 ? "#4137f9" : "#585c7b"}
+                  fontWeight={i === n - 1 ? 600 : undefined}
+                  fontFamily="Inter,sans-serif"
+                >
+                  {periodLabel(m.period)}
+                </text>
+              ))}
             </svg>
           </div>
 
@@ -217,11 +338,11 @@ export default function QuyBaoTriPage() {
 
           <div className="fund-info-list">
             {[
-              { k: "Ngân hàng", v: "Vietcombank" },
-              { k: "Số tài khoản", v: "0700-***-4521" },
-              { k: "Lãi suất tiền gửi", v: "6.5% / năm", cls: "green" },
-              { k: "Mức đóng quỹ", v: "2% giá trị HĐ" },
-              { k: "Cập nhật lần cuối", v: "25/05/2024" },
+              { k: "Ngân hàng", v: overview?.bankName ?? "—" },
+              { k: "Số tài khoản", v: overview?.accountNoMasked ?? "—" },
+              { k: "Lãi suất tiền gửi", v: overview ? `${overview.interestRate}% / năm` : "—", cls: "green" },
+              { k: "Mức đóng quỹ", v: overview?.contributionRate ?? "—" },
+              { k: "Cập nhật lần cuối", v: lastUpdated },
             ].map((r) => (
               <div className="fund-info-row" key={r.k}>
                 <span className="fund-info-key">{r.k}</span>
@@ -233,12 +354,14 @@ export default function QuyBaoTriPage() {
           <div className="collect-rate-wrap">
             <div className="collect-rate-hd">
               <span className="collect-rate-label">Tỉ lệ thu quỹ</span>
-              <span className="collect-rate-val">98.6%</span>
+              <span className="collect-rate-val">{overview?.collectionRate ?? 0}%</span>
             </div>
             <div className="collect-bar-track">
-              <div className="collect-bar-fill" style={{ width: "98.6%" }}></div>
+              <div className="collect-bar-fill" style={{ width: `${overview?.collectionRate ?? 0}%` }}></div>
             </div>
-            <span className="collect-sub">856 / 868 căn hộ đã đóng quỹ — còn 12 căn chưa đóng</span>
+            <span className="collect-sub">
+              {formatNumber(overview?.unitsPaid)} / {formatNumber(overview?.unitsTotal)} căn hộ đã đóng quỹ — còn {formatNumber(overview?.unitsUnpaid)} căn chưa đóng
+            </span>
           </div>
         </div>
       </div>
@@ -257,23 +380,22 @@ export default function QuyBaoTriPage() {
               <span>Số tiền</span>
               <span style={{ textAlign: "center" }}>Trạng thái</span>
             </div>
-            {[
-              { name: "Thay thiết bị PCCC", date: "20/05/2024", contractor: "PCCC Sài Gòn", amount: "385.002.000đ" },
-              { name: "Sơn lại hành lang Block B", date: "12/05/2024", contractor: "XD Việt Nam", amount: "124.500.000đ" },
-              { name: "Bảo dưỡng thang máy Otis", date: "05/05/2024", contractor: "OTIS Vietnam", amount: "86.800.000đ" },
-              { name: "Thay bơm nước tầng hầm B1", date: "28/04/2024", contractor: "Cơ điện lạnh BK", amount: "215.000.000đ" },
-              { name: "Sửa hệ thống điện tầng 1–5", date: "15/04/2024", contractor: "Điện lực Sunrise", amount: "54.300.000đ" },
-            ].map((r) => (
-              <div className="exp-row" key={r.name}>
-                <div>
-                  <div className="exp-name">{r.name}</div>
-                  <div style={{ fontSize: "11px", color: "#585c7b" }}>{r.date}</div>
+            {(completed ?? []).map((r) => {
+              const st = MAINTENANCE_STATUS[r.status] ?? MAINTENANCE_STATUS.completed;
+              return (
+                <div className="exp-row" key={r.id}>
+                  <div>
+                    <div className="exp-name">{r.name}</div>
+                    <div style={{ fontSize: "11px", color: "#585c7b" }}>{formatDate(r.actualDate)}</div>
+                  </div>
+                  <div className="exp-contractor">{r.contractor}</div>
+                  <div className="exp-amount">{formatVnd(r.amount)}</div>
+                  <div className="exp-status-wrap">
+                    <span className="badge badge-green" style={{ background: st.bg, color: st.color }}>{st.label}</span>
+                  </div>
                 </div>
-                <div className="exp-contractor">{r.contractor}</div>
-                <div className="exp-amount">{r.amount}</div>
-                <div className="exp-status-wrap"><span className="badge badge-green">Hoàn thành</span></div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -283,25 +405,27 @@ export default function QuyBaoTriPage() {
             <span className="table-link">Chi tiết →</span>
           </div>
           <div className="plan-list">
-            {[
-              { dot: "planned", name: "Bảo dưỡng điều hòa trung tâm", meta: "Công ty Lạnh Sunshine • Tháng 6/2024", amount: "320.000.000đ", badge: "blue", badgeText: "Đã lên KH" },
-              { dot: "planned", name: "Kiểm tra PCCC định kỳ Q3", meta: "PCCC Sài Gòn • Tháng 7/2024", amount: "45.000.000đ", badge: "blue", badgeText: "Đã lên KH" },
-              { dot: "planned", name: "Tổng vệ sinh bể ngầm", meta: "Công ty MT Xanh • Tháng 8/2024", amount: "28.500.000đ", badge: "blue", badgeText: "Đã lên KH" },
-              { dot: "tentative", name: "Sơn lại mặt tiền tòa nhà", meta: "Đang chọn nhà thầu • Tháng 9/2024", amount: "486.000.000đ", badge: "gray", badgeText: "Dự kiến" },
-              { dot: "tentative", name: "Nâng cấp hệ thống camera", meta: "Đang chọn nhà thầu • Q4/2024", amount: "210.000.000đ", badge: "gray", badgeText: "Dự kiến" },
-            ].map((r) => (
-              <div className="plan-row" key={r.name}>
-                <div className="plan-dot-col"><div className={`plan-dot ${r.dot}`}></div></div>
-                <div className="plan-body">
-                  <div className="plan-name">{r.name}</div>
-                  <div className="plan-meta">{r.meta}</div>
+            {planRows.map(({ job }) => {
+              const st = MAINTENANCE_STATUS[job.status] ?? MAINTENANCE_STATUS.planned;
+              const dot = job.status === "tentative" ? "tentative" : "planned";
+              const badge = job.status === "tentative" ? "gray" : "blue";
+              const metaPrefix = job.status === "tentative" ? "Đang chọn nhà thầu" : job.contractor;
+              return (
+                <div className="plan-row" key={job.id}>
+                  <div className="plan-dot-col"><div className={`plan-dot ${dot}`}></div></div>
+                  <div className="plan-body">
+                    <div className="plan-name">{job.name}</div>
+                    <div className="plan-meta">{metaPrefix} • {job.scheduledPeriod}</div>
+                  </div>
+                  <div className="plan-right">
+                    <div className="plan-amount">{formatVnd(job.estimatedCost)}</div>
+                    <div className="plan-period">
+                      <span className={`badge badge-${badge}`} style={{ background: st.bg, color: st.color }}>{st.label}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="plan-right">
-                  <div className="plan-amount">{r.amount}</div>
-                  <div className="plan-period"><span className={`badge badge-${r.badge}`}>{r.badgeText}</span></div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -310,25 +434,23 @@ export default function QuyBaoTriPage() {
       <div className="block-card">
         <div className="block-card-hd">
           <div className="block-card-title">Tình hình thu quỹ theo Block</div>
-          <span className="block-card-meta">Cập nhật: 25/05/2024 • Tổng 856 / 868 căn hộ</span>
+          <span className="block-card-meta">
+            Cập nhật: {lastUpdated} • Tổng {formatNumber(overview?.unitsPaid)} / {formatNumber(overview?.unitsTotal)} căn hộ
+          </span>
         </div>
         <div className="block-grid">
-          {[
-            { name: "Block A", count: "236 / 240 căn hộ", width: "98.3%", pct: "98.3%", missing: "Còn 4 căn chưa đóng" },
-            { name: "Block B", count: "218 / 220 căn hộ", width: "99.1%", pct: "99.1%", missing: "Còn 2 căn chưa đóng" },
-            { name: "Block C", count: "402 / 408 căn hộ", width: "98.5%", pct: "98.5%", missing: "Còn 6 căn chưa đóng" },
-          ].map((b) => (
-            <div className="block-item" key={b.name}>
+          {(blocks ?? []).map((b) => (
+            <div className="block-item" key={b.block}>
               <div className="block-item-hd">
-                <span className="block-name">{b.name}</span>
-                <span className="block-count">{b.count}</span>
+                <span className="block-name">{b.block}</span>
+                <span className="block-count">{formatNumber(b.unitsPaid)} / {formatNumber(b.unitsTotal)} căn hộ</span>
               </div>
               <div className="block-track">
-                <div className="block-fill" style={{ width: b.width, background: "linear-gradient(90deg,#22c08a,#1c9d5f)" }}></div>
+                <div className="block-fill" style={{ width: `${b.rate}%`, background: "linear-gradient(90deg,#22c08a,#1c9d5f)" }}></div>
               </div>
               <div className="block-foot">
-                <span className="block-pct">{b.pct}</span>
-                <span className="block-missing">{b.missing}</span>
+                <span className="block-pct">{b.rate}%</span>
+                <span className="block-missing">Còn {formatNumber(b.unitsUnpaid)} căn chưa đóng</span>
               </div>
             </div>
           ))}

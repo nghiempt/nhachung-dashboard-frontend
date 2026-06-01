@@ -7,30 +7,40 @@ import styles from "./auth.module.css";
 import { BrandLogo } from "./BrandLogo";
 import { SupportBox } from "./SupportBox";
 import { PasswordField, SubmitArrowIcon } from "./PasswordField";
-
-const AUTH_COOKIE = "nc_auth";
+import { signIn } from "@/lib/auth";
+import { hasSession, ApiError } from "@/lib/api";
 
 export function SignInForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Already signed in → go straight to the dashboard.
+  // Already signed in (token + cookie agree, matching the middleware) → dashboard.
   useEffect(() => {
-    if (document.cookie.split("; ").some((c) => c === `${AUTH_COOKIE}=1`)) {
+    if (hasSession()) {
       router.replace("/dashboard");
     }
   }, [router]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (email === "default@gmail.com" && password === "Default@123") {
-      document.cookie = `${AUTH_COOKIE}=1; path=/; SameSite=Lax`;
+    if (loading) return;
+    setError("");
+    setLoading(true);
+    try {
+      await signIn(email.trim(), password);
       const from = new URLSearchParams(window.location.search).get("from");
       router.replace(from && from.startsWith("/") ? from : "/dashboard");
-    } else {
-      setError("Sai tài khoản hoặc mật khẩu. Vui lòng thử lại.");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Không kết nối được máy chủ. Vui lòng thử lại.",
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -75,8 +85,8 @@ export function SignInForm() {
               }
             />
 
-            <button type="submit" className={styles.submitBtn}>
-              <span>Đăng nhập</span>
+            <button type="submit" className={styles.submitBtn} disabled={loading}>
+              <span>{loading ? "Đang đăng nhập..." : "Đăng nhập"}</span>
               <SubmitArrowIcon />
             </button>
 

@@ -2,18 +2,56 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import styles from "./auth.module.css";
 import { BrandLogo } from "./BrandLogo";
 import { SupportBox } from "./SupportBox";
 import { PasswordField, SubmitArrowIcon } from "./PasswordField";
+import { signUp } from "@/lib/auth";
+import { ApiError } from "@/lib/api";
 
 export function SignUpForm() {
+  const router = useRouter();
   const [bizName, setBizName] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [referral, setReferral] = useState("");
   const [agree, setAgree] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (loading) return;
+    setError("");
+
+    if (!fullName.trim()) return setError("Vui lòng nhập họ và tên.");
+    if (!email.trim()) return setError("Vui lòng nhập email.");
+    if (password.length < 8) return setError("Mật khẩu cần tối thiểu 8 ký tự.");
+    if (!agree) return setError("Vui lòng đồng ý với điều khoản dịch vụ.");
+
+    setLoading(true);
+    try {
+      await signUp({
+        email: email.trim(),
+        password,
+        fullName: fullName.trim(),
+        companyName: bizName.trim() || undefined,
+        referralCode: referral.trim() || undefined,
+        agree,
+      });
+      router.replace("/dashboard");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Không kết nối được máy chủ. Vui lòng thử lại.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className={styles.loginPage}>
@@ -26,7 +64,7 @@ export function SignUpForm() {
             <p>Bắt đầu với 500 tin AI mỗi tháng</p>
           </div>
 
-          <form className={styles.loginForm} onSubmit={(e) => e.preventDefault()}>
+          <form className={styles.loginForm} onSubmit={handleSubmit}>
             <div className={styles.field}>
               <label htmlFor="biz-name">Tên doanh nghiệp / cửa hàng</label>
               <input
@@ -110,10 +148,12 @@ export function SignUpForm() {
               </label>
             </div>
 
-            <button type="submit" className={styles.submitBtn}>
-              <span>Tạo tài khoản</span>
+            <button type="submit" className={styles.submitBtn} disabled={loading}>
+              <span>{loading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}</span>
               <SubmitArrowIcon />
             </button>
+
+            {error ? <div className={styles.loginError}>{error}</div> : null}
           </form>
 
           <p className={styles.registerLink}>

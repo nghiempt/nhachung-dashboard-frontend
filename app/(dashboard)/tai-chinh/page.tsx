@@ -1,5 +1,158 @@
 /* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { useApiData } from "@/lib/hooks";
+import { formatVnd, formatNumber, formatDate } from "@/lib/format";
+
+const UP_IMG = "https://www.figma.com/api/mcp/asset/07b679db-3ec2-4a70-acb0-a92326a51f04";
+const DOWN_IMG = "https://www.figma.com/api/mcp/asset/39450053-803f-485d-803e-0750a3c14591";
+
+interface LineItem {
+  id: string;
+  name: string;
+  category: string;
+  amount: number;
+  pctOfTotal: number;
+  comparisonPct: number | null;
+  comparisonDirection: string;
+  subInfo: string;
+  color: string | null;
+}
+
+interface FinancialOverview {
+  period: string;
+  totalIncome: number;
+  totalExpense: number;
+  surplus: number;
+  incomeChangePct: number;
+  expenseChangePct: number;
+  surplusChangePct: number;
+  ratios: {
+    collectionRate: number;
+    expenseRatio: number;
+    fundUsageRate: number;
+    collectionRateChangePct: number;
+    expenseRatioChangePct: number;
+  };
+  unitsPaid: number;
+  unitsTotal: number;
+  lineItems: { income: LineItem[]; expense: LineItem[] };
+  maintenanceFund: { balance: number; balanceChangePct: number };
+  latestReport: {
+    title: string;
+    fileType: string;
+    sizeBytes: number;
+    sizeLabel: string;
+    publishedAt: string;
+    viewCount: number;
+    responsibleName: string | null;
+  } | null;
+}
+
+interface Period {
+  period: string;
+  totalIncome: number;
+  totalExpense: number;
+  surplus: number;
+}
+
+// "2026-05" -> { m: 5, y: 2026 }
+function parsePeriod(p?: string): { m: number; y: number } {
+  if (!p) return { m: 0, y: 0 };
+  const [y, m] = p.split("-").map((v) => parseInt(v, 10));
+  return { m, y };
+}
+// "2026-05" -> "tháng 5/2026"
+function periodLong(p?: string): string {
+  const { m, y } = parsePeriod(p);
+  return m ? `tháng ${m}/${y}` : "";
+}
+// previous month label "so với tháng 4/2026"
+function prevPeriodLong(p?: string): string {
+  const { m, y } = parsePeriod(p);
+  if (!m) return "";
+  const pm = m === 1 ? 12 : m - 1;
+  const py = m === 1 ? y - 1 : y;
+  return `tháng ${pm}/${py}`;
+}
+// "2026-05" -> "T5/26"
+function periodShort(p?: string): string {
+  const { m, y } = parsePeriod(p);
+  return m ? `T${m}/${String(y).slice(2)}` : "";
+}
+// previous month short label e.g. "T4/26"
+function prevPeriodShort(p?: string): string {
+  const { m, y } = parsePeriod(p);
+  if (!m) return "";
+  const pm = m === 1 ? 12 : m - 1;
+  const py = m === 1 ? y - 1 : y;
+  return `T${pm}/${String(py).slice(2)}`;
+}
+
+function pctLabel(pct?: number | null): string {
+  if (pct == null) return "0%";
+  return `${Math.abs(pct).toFixed(1)}%`;
+}
+function signedPct(pct?: number | null): string {
+  if (pct == null) return "+0%";
+  const sign = pct > 0 ? "+" : pct < 0 ? "-" : "+";
+  return `${sign}${Math.abs(pct)}%`;
+}
+function dirClass(direction?: string, pct?: number | null): "up" | "down" | "neu" {
+  if (direction === "up") return "up";
+  if (direction === "down") return "down";
+  if (direction === "neutral") return "neu";
+  if (pct == null || pct === 0) return "neu";
+  return pct > 0 ? "up" : "down";
+}
+
 export default function FinanceOverviewPage() {
+  const { data } = useApiData<FinancialOverview>("/financial/overview");
+  const { data: periods } = useApiData<Period[]>("/financial/periods?months=6");
+
+  const period = data?.period;
+  const longLabel = periodLong(period);
+  const prevLabel = prevPeriodLong(period);
+  const expenseItems = data?.lineItems?.expense ?? [];
+  const list = periods ?? [];
+
+  // ── Chart geometry (matches original viewBox 0 0 700 285) ──
+  // y=8 (top) .. y=260 (baseline, value 0). Plot height = 252.
+  const PLOT_TOP = 8;
+  const PLOT_BOTTOM = 260;
+  const PLOT_H = PLOT_BOTTOM - PLOT_TOP; // 252
+  // Max scale: round up to a "nice" billion so y-axis labels stay sensible.
+  const rawMax = list.reduce(
+    (mx, p) => Math.max(mx, p.totalIncome, p.totalExpense),
+    0,
+  );
+  const axisMax = rawMax > 0 ? Math.ceil(rawMax / 1e9) * 1e9 : 4e9; // e.g. 4B
+  const yTicks = 4; // 4 gridlines above baseline
+  const valToY = (v: number) => PLOT_BOTTOM - (v / axisMax) * PLOT_H;
+  // Group x positions taken from original (income bar x, +26 for expense bar).
+  const groupX = [72, 180, 288, 396, 504, 612];
+  const BAR_W = 22;
+  const surplusMax = list.reduce((mx, p) => Math.max(mx, p.surplus), 0) || 1;
+  // Surplus line sits in lower band (original points span ~216-235 over y).
+  // Map surplus proportionally into a band near the baseline for visual parity.
+  const SURPLUS_TOP = 210;
+  const SURPLUS_BOTTOM = 248;
+  const surplusY = (v: number) =>
+    SURPLUS_BOTTOM - (v / surplusMax) * (SURPLUS_BOTTOM - SURPLUS_TOP);
+
+  const incomeTrend = dirClass(undefined, data?.incomeChangePct);
+  const expenseTrend = dirClass(undefined, data?.expenseChangePct);
+  const surplusTrend = dirClass(undefined, data?.surplusChangePct);
+  const fundTrend = dirClass(undefined, data?.maintenanceFund?.balanceChangePct);
+
+  const fundDelta = data
+    ? Math.round((data.maintenanceFund.balance * data.maintenanceFund.balanceChangePct) /
+        (100 + data.maintenanceFund.balanceChangePct))
+    : 0;
+  const fundStart = data ? data.maintenanceFund.balance - fundDelta : 0;
+
+  const ratios = data?.ratios;
+
   return (
     <div className="fin-page">
       {/* ── Page header ── */}
@@ -11,7 +164,7 @@ export default function FinanceOverviewPage() {
         <div className="fin-actions">
           <button className="fin-btn">
             <img src="https://www.figma.com/api/mcp/asset/bb824f87-1b0e-4c71-ba99-09a0e1da7f1e" alt="" width="16" height="16" />
-            Tháng 5/2024
+            {longLabel ? `Tháng ${parsePeriod(period).m}/${parsePeriod(period).y}` : "Đang tải..."}
             <img src="https://www.figma.com/api/mcp/asset/68ffcd0e-3438-4ca4-9d64-847b5ccf5b79" alt="" width="14" height="14" />
           </button>
           <button className="fin-btn">
@@ -29,11 +182,11 @@ export default function FinanceOverviewPage() {
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tổng thu trong tháng</div>
-            <div className="kpi-value">2.845.600.000 đ</div>
+            <div className="kpi-value">{data ? formatVnd(data.totalIncome) : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <img src="https://www.figma.com/api/mcp/asset/07b679db-3ec2-4a70-acb0-a92326a51f04" alt="" width="11" height="11" />
-              <span className="kpi-pct up">12.4%</span>
-              <span className="kpi-tlabel">so với tháng 4/2024</span>
+              <img src={incomeTrend === "down" ? DOWN_IMG : UP_IMG} alt="" width="11" height="11" />
+              <span className={`kpi-pct ${incomeTrend === "neu" ? "up" : incomeTrend}`}>{pctLabel(data?.incomeChangePct)}</span>
+              <span className="kpi-tlabel">so với {prevLabel}</span>
             </div>
           </div>
         </div>
@@ -43,11 +196,11 @@ export default function FinanceOverviewPage() {
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tổng chi trong tháng</div>
-            <div className="kpi-value">2.138.900.000 đ</div>
+            <div className="kpi-value">{data ? formatVnd(data.totalExpense) : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <img src="https://www.figma.com/api/mcp/asset/39450053-803f-485d-803e-0750a3c14591" alt="" width="11" height="11" />
-              <span className="kpi-pct down">8.7%</span>
-              <span className="kpi-tlabel">so với tháng 4/2024</span>
+              <img src={expenseTrend === "down" ? DOWN_IMG : UP_IMG} alt="" width="11" height="11" />
+              <span className={`kpi-pct ${expenseTrend === "neu" ? "up" : expenseTrend}`}>{pctLabel(data?.expenseChangePct)}</span>
+              <span className="kpi-tlabel">so với {prevLabel}</span>
             </div>
           </div>
         </div>
@@ -57,11 +210,11 @@ export default function FinanceOverviewPage() {
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Thặng dư/thâm hụt</div>
-            <div className="kpi-value">706.700.000 đ</div>
+            <div className="kpi-value">{data ? formatVnd(data.surplus) : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <img src="https://www.figma.com/api/mcp/asset/07b679db-3ec2-4a70-acb0-a92326a51f04" alt="" width="11" height="11" />
-              <span className="kpi-pct up">28.6%</span>
-              <span className="kpi-tlabel">so với tháng 4/2024</span>
+              <img src={surplusTrend === "down" ? DOWN_IMG : UP_IMG} alt="" width="11" height="11" />
+              <span className={`kpi-pct ${surplusTrend === "neu" ? "up" : surplusTrend}`}>{pctLabel(data?.surplusChangePct)}</span>
+              <span className="kpi-tlabel">so với {prevLabel}</span>
             </div>
           </div>
         </div>
@@ -71,11 +224,11 @@ export default function FinanceOverviewPage() {
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Quỹ bảo trì hiện tại</div>
-            <div className="kpi-value">8.265.000.000 đ</div>
+            <div className="kpi-value">{data ? formatVnd(data.maintenanceFund.balance) : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <img src="https://www.figma.com/api/mcp/asset/07b679db-3ec2-4a70-acb0-a92326a51f04" alt="" width="11" height="11" />
-              <span className="kpi-pct up">3.2%</span>
-              <span className="kpi-tlabel">so với tháng 4/2024</span>
+              <img src={fundTrend === "down" ? DOWN_IMG : UP_IMG} alt="" width="11" height="11" />
+              <span className={`kpi-pct ${fundTrend === "neu" ? "up" : fundTrend}`}>{pctLabel(data?.maintenanceFund?.balanceChangePct)}</span>
+              <span className="kpi-tlabel">so với {prevLabel}</span>
             </div>
           </div>
         </div>
@@ -108,67 +261,83 @@ export default function FinanceOverviewPage() {
               <line x1="42" y1="197" x2="692" y2="197" stroke="#eaecf4" strokeWidth="1" />
               <line x1="42" y1="260" x2="692" y2="260" stroke="#eaecf4" strokeWidth="1" />
 
-              <rect x="612" y="8" width="52" height="252" rx="4" fill="#f5f4ff" opacity="0.6" />
+              {list.length > 0 && (
+                <rect x={groupX[list.length - 1] - 0} y="8" width="52" height="252" rx="4" fill="#f5f4ff" opacity="0.6" />
+              )}
 
-              <rect x="72" y="128" width="22" height="132" rx="3" fill="#8b80f9" />
-              <rect x="98" y="156" width="22" height="104" rx="3" fill="#ef6b7c" />
-              <rect x="180" y="135" width="22" height="125" rx="3" fill="#8b80f9" />
-              <rect x="206" y="161" width="22" height="99" rx="3" fill="#ef6b7c" />
-              <rect x="288" y="118" width="22" height="142" rx="3" fill="#8b80f9" />
-              <rect x="314" y="147" width="22" height="113" rx="3" fill="#ef6b7c" />
-              <rect x="396" y="115" width="22" height="145" rx="3" fill="#8b80f9" />
-              <rect x="422" y="148" width="22" height="112" rx="3" fill="#ef6b7c" />
-              <rect x="504" y="100" width="22" height="160" rx="3" fill="#8b80f9" />
-              <rect x="530" y="136" width="22" height="124" rx="3" fill="#ef6b7c" />
-              <rect x="612" y="81" width="22" height="179" rx="3" fill="#8b80f9" />
-              <rect x="638" y="125" width="22" height="135" rx="3" fill="#ef6b7c" />
+              {list.map((p, i) => {
+                const x = groupX[i];
+                const incY = valToY(p.totalIncome);
+                const expY = valToY(p.totalExpense);
+                return (
+                  <g key={p.period}>
+                    <rect x={x} y={incY} width={BAR_W} height={Math.max(0, PLOT_BOTTOM - incY)} rx="3" fill="#8b80f9" />
+                    <rect x={x + 26} y={expY} width={BAR_W} height={Math.max(0, PLOT_BOTTOM - expY)} rx="3" fill="#ef6b7c" />
+                  </g>
+                );
+              })}
 
-              <polyline
-                points="96,232 204,235 312,232 420,227 528,224 636,216"
-                fill="none"
-                stroke="#22c08a"
-                strokeWidth="2.5"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
+              {list.length > 0 && (
+                <polyline
+                  points={list
+                    .map((p, i) => `${groupX[i] + 24},${surplusY(p.surplus).toFixed(1)}`)
+                    .join(" ")}
+                  fill="none"
+                  stroke="#22c08a"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              )}
 
-              <circle cx="96" cy="232" r="4" fill="white" stroke="#22c08a" strokeWidth="2" />
-              <circle cx="204" cy="235" r="4" fill="white" stroke="#22c08a" strokeWidth="2" />
-              <circle cx="312" cy="232" r="4" fill="white" stroke="#22c08a" strokeWidth="2" />
-              <circle cx="420" cy="227" r="4" fill="white" stroke="#22c08a" strokeWidth="2" />
-              <circle cx="528" cy="224" r="4" fill="white" stroke="#22c08a" strokeWidth="2" />
-              <circle cx="636" cy="216" r="5" fill="#22c08a" stroke="white" strokeWidth="2" />
+              {list.map((p, i) => {
+                const last = i === list.length - 1;
+                return (
+                  <circle
+                    key={p.period}
+                    cx={groupX[i] + 24}
+                    cy={surplusY(p.surplus)}
+                    r={last ? 5 : 4}
+                    fill={last ? "#22c08a" : "white"}
+                    stroke={last ? "white" : "#22c08a"}
+                    strokeWidth="2"
+                  />
+                );
+              })}
             </svg>
 
-            <div className="chart-y-lbl" style={{ top: "8px" }}>4B</div>
-            <div className="chart-y-lbl" style={{ top: "71px" }}>3B</div>
-            <div className="chart-y-lbl" style={{ top: "134px" }}>2B</div>
-            <div className="chart-y-lbl" style={{ top: "197px" }}>1B</div>
+            <div className="chart-y-lbl" style={{ top: "8px" }}>{(axisMax / 1e9).toFixed(0)}B</div>
+            <div className="chart-y-lbl" style={{ top: "71px" }}>{((axisMax * 3) / 4 / 1e9).toFixed(axisMax / 4e9 >= 1 ? 0 : 1)}B</div>
+            <div className="chart-y-lbl" style={{ top: "134px" }}>{((axisMax * 2) / 4 / 1e9).toFixed(axisMax / 4e9 >= 1 ? 0 : 1)}B</div>
+            <div className="chart-y-lbl" style={{ top: "197px" }}>{((axisMax * 1) / 4 / 1e9).toFixed(axisMax / 4e9 >= 1 ? 0 : 1)}B</div>
             <div className="chart-y-lbl" style={{ top: "260px" }}>0</div>
 
-            <div className="chart-x-lbl" style={{ left: "13.71%" }}>T12/23</div>
-            <div className="chart-x-lbl" style={{ left: "29.14%" }}>T1/24</div>
-            <div className="chart-x-lbl" style={{ left: "44.57%" }}>T2/24</div>
-            <div className="chart-x-lbl" style={{ left: "60%" }}>T3/24</div>
-            <div className="chart-x-lbl" style={{ left: "75.43%" }}>T4/24</div>
-            <div className="chart-x-lbl" style={{ left: "90.86%" }}>T5/24</div>
+            {list.map((p, i) => (
+              <div
+                key={p.period}
+                className="chart-x-lbl"
+                style={{ left: `${13.71 + i * 15.43}%` }}
+              >
+                {periodShort(p.period)}
+              </div>
+            ))}
 
             <div className="chart-tooltip">
-              <div className="tt-title">Tháng 5/2024</div>
+              <div className="tt-title">{longLabel ? `Tháng ${parsePeriod(period).m}/${parsePeriod(period).y}` : ""}</div>
               <div className="tt-row">
                 <div className="tt-dot" style={{ background: "#8b80f9" }}></div>
                 <div className="tt-name">Tổng thu</div>
-                <div className="tt-val">2.845.600.000 đ</div>
+                <div className="tt-val">{data ? formatVnd(data.totalIncome) : "—"}</div>
               </div>
               <div className="tt-row">
                 <div className="tt-dot" style={{ background: "#ef6b7c" }}></div>
                 <div className="tt-name">Tổng chi</div>
-                <div className="tt-val">2.138.900.000 đ</div>
+                <div className="tt-val">{data ? formatVnd(data.totalExpense) : "—"}</div>
               </div>
               <div className="tt-row">
                 <div className="tt-dot" style={{ background: "#22c08a" }}></div>
                 <div className="tt-name">Thặng dư</div>
-                <div className="tt-val">706.700.000 đ</div>
+                <div className="tt-val">{data ? formatVnd(data.surplus) : "—"}</div>
               </div>
             </div>
           </div>
@@ -191,68 +360,54 @@ export default function FinanceOverviewPage() {
 
         {/* Donut chart */}
         <div className="donut-card">
-          <div className="donut-title">Cơ cấu chi phí tháng 5/2024</div>
+          <div className="donut-title">Cơ cấu chi phí {longLabel}</div>
           <div className="donut-wrap">
-            <img
-              src="https://www.figma.com/api/mcp/asset/56447ff4-2e26-402d-8cd5-bfc42189cdd1"
-              alt="Cơ cấu chi phí"
-              width="205"
-              height="205"
-            />
+            <svg width="205" height="205" viewBox="0 0 205 205" xmlns="http://www.w3.org/2000/svg">
+              {(() => {
+                const cx = 102.5;
+                const cy = 102.5;
+                const r = 82;
+                const sw = 30;
+                const circ = 2 * Math.PI * r;
+                let offset = 0;
+                return expenseItems.map((item) => {
+                  const frac = (item.pctOfTotal ?? 0) / 100;
+                  const dash = frac * circ;
+                  const seg = (
+                    <circle
+                      key={item.id}
+                      cx={cx}
+                      cy={cy}
+                      r={r}
+                      fill="none"
+                      stroke={item.color ?? "#c7d3ff"}
+                      strokeWidth={sw}
+                      strokeDasharray={`${dash} ${circ - dash}`}
+                      strokeDashoffset={-offset}
+                      transform={`rotate(-90 ${cx} ${cy})`}
+                    />
+                  );
+                  offset += dash;
+                  return seg;
+                });
+              })()}
+            </svg>
             <div className="donut-center">
-              <div className="donut-cval">2.138.900.000 đ</div>
+              <div className="donut-cval">{data ? formatVnd(data.totalExpense) : "—"}</div>
               <div className="donut-clbl">Tổng chi</div>
             </div>
           </div>
           <div className="donut-legend">
-            <div className="donut-row">
-              <div className="donut-left">
-                <div className="donut-dot" style={{ background: "#7a6dff" }}></div>
-                <span className="donut-name">Vận hành & quản lý</span>
+            {expenseItems.map((item) => (
+              <div className="donut-row" key={item.id}>
+                <div className="donut-left">
+                  <div className="donut-dot" style={{ background: item.color ?? "#c7d3ff" }}></div>
+                  <span className="donut-name">{item.name}</span>
+                </div>
+                <div className="donut-pct">{item.pctOfTotal}%</div>
+                <div className="donut-amt">{formatVnd(item.amount)}</div>
               </div>
-              <div className="donut-pct">35%</div>
-              <div className="donut-amt">748.600.000 đ</div>
-            </div>
-            <div className="donut-row">
-              <div className="donut-left">
-                <div className="donut-dot" style={{ background: "#ff9d6a" }}></div>
-                <span className="donut-name">Điện nước chung</span>
-              </div>
-              <div className="donut-pct">22%</div>
-              <div className="donut-amt">470.800.000 đ</div>
-            </div>
-            <div className="donut-row">
-              <div className="donut-left">
-                <div className="donut-dot" style={{ background: "#3ddcb6" }}></div>
-                <span className="donut-name">Bảo trì & sửa chữa</span>
-              </div>
-              <div className="donut-pct">18%</div>
-              <div className="donut-amt">385.200.000 đ</div>
-            </div>
-            <div className="donut-row">
-              <div className="donut-left">
-                <div className="donut-dot" style={{ background: "#a99cff" }}></div>
-                <span className="donut-name">Dịch vụ & tiện ích</span>
-              </div>
-              <div className="donut-pct">12%</div>
-              <div className="donut-amt">256.600.000 đ</div>
-            </div>
-            <div className="donut-row">
-              <div className="donut-left">
-                <div className="donut-dot" style={{ background: "#c7d3ff" }}></div>
-                <span className="donut-name">Nhân sự & lương</span>
-              </div>
-              <div className="donut-pct">8%</div>
-              <div className="donut-amt">171.100.000 đ</div>
-            </div>
-            <div className="donut-row">
-              <div className="donut-left">
-                <div className="donut-dot" style={{ background: "#f5b5d4" }}></div>
-                <span className="donut-name">Khác</span>
-              </div>
-              <div className="donut-pct">5%</div>
-              <div className="donut-amt">106.600.000 đ</div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -267,25 +422,25 @@ export default function FinanceOverviewPage() {
           <div className="sum-grid">
             <div className="sum-main">
               <div className="sum-mlbl">Số dư hiện tại</div>
-              <div className="sum-bigval">8.265.000.000 đ</div>
+              <div className="sum-bigval">{data ? formatVnd(data.maintenanceFund.balance) : "Đang tải..."}</div>
               <div className="sum-trend">
-                <img src="https://www.figma.com/api/mcp/asset/c6a833b5-a6ff-466a-b396-972bb3661f6e" alt="" width="11" height="11" />
-                <span className="sum-tpct">3.2%</span>
-                <span className="sum-tlbl">so với tháng 4/2024</span>
+                <img src={fundTrend === "down" ? DOWN_IMG : "https://www.figma.com/api/mcp/asset/c6a833b5-a6ff-466a-b396-972bb3661f6e"} alt="" width="11" height="11" />
+                <span className="sum-tpct">{pctLabel(data?.maintenanceFund?.balanceChangePct)}</span>
+                <span className="sum-tlbl">so với {prevLabel}</span>
               </div>
             </div>
             <div className="sum-details">
               <div className="sum-drow">
                 <span className="sum-dkey">Số dư đầu kỳ</span>
-                <span className="sum-dval">8.005.000.000 đ</span>
+                <span className="sum-dval">{data ? formatVnd(fundStart) : "—"}</span>
               </div>
               <div className="sum-drow">
                 <span className="sum-dkey">Tăng trong tháng</span>
-                <span className="sum-dval green">260.000.000 đ</span>
+                <span className="sum-dval green">{data ? formatVnd(fundDelta) : "—"}</span>
               </div>
               <div className="sum-drow">
                 <span className="sum-dkey">Đã sử dụng</span>
-                <span className="sum-dval">0 đ</span>
+                <span className="sum-dval">{formatVnd(0)}</span>
               </div>
             </div>
           </div>
@@ -306,24 +461,28 @@ export default function FinanceOverviewPage() {
                 <img src="https://www.figma.com/api/mcp/asset/a1f90758-bdbb-4b40-860d-072060f9689b" alt="" width="16" height="16" />
               </div>
               <div className="metric-name">Tỷ lệ thu phí</div>
-              <div className="metric-val">98.6%</div>
-              <div className="metric-trend up">+2.4% so với T4/2024</div>
+              <div className="metric-val">{ratios ? `${ratios.collectionRate}%` : "—"}</div>
+              <div className={`metric-trend ${dirClass(undefined, ratios?.collectionRateChangePct)}`}>
+                {signedPct(ratios?.collectionRateChangePct)} so với {prevPeriodShort(period)}
+              </div>
             </div>
             <div className="metric-row">
               <div className="metric-icon" style={{ background: "#fff1de" }}>
                 <img src="https://www.figma.com/api/mcp/asset/8911d112-c0c2-45cf-ac1f-829917821964" alt="" width="16" height="16" />
               </div>
               <div className="metric-name">Tỷ lệ chi phí / Thu</div>
-              <div className="metric-val">75.2%</div>
-              <div className="metric-trend down">-3.1% so với T4/2024</div>
+              <div className="metric-val">{ratios ? `${ratios.expenseRatio}%` : "—"}</div>
+              <div className={`metric-trend ${dirClass(undefined, ratios?.expenseRatioChangePct)}`}>
+                {signedPct(ratios?.expenseRatioChangePct)} so với {prevPeriodShort(period)}
+              </div>
             </div>
             <div className="metric-row">
               <div className="metric-icon" style={{ background: "#efeeff" }}>
                 <img src="https://www.figma.com/api/mcp/asset/e88157c5-1b73-4936-a61a-3617cc37163d" alt="" width="16" height="16" />
               </div>
               <div className="metric-name">Tỷ lệ sử dụng quỹ bảo trì</div>
-              <div className="metric-val">0%</div>
-              <div className="metric-trend neu">+0% so với T4/2024</div>
+              <div className="metric-val">{ratios ? `${ratios.fundUsageRate}%` : "—"}</div>
+              <div className="metric-trend neu">+0% so với {prevPeriodShort(period)}</div>
             </div>
           </div>
           <a href="#" className="sum-link">
@@ -344,10 +503,14 @@ export default function FinanceOverviewPage() {
         </div>
         <div className="report-body">
           <div className="report-file">
-            <div className="pdf-badge">PDF</div>
+            <div className="pdf-badge">{(data?.latestReport?.fileType ?? "PDF").toUpperCase()}</div>
             <div>
-              <div className="report-fname">Báo cáo tài chính tháng 5/2024</div>
-              <div className="report-fmeta">PDF • 2.4 MB • Ban quản trị</div>
+              <div className="report-fname">{data?.latestReport?.title ?? "Đang tải..."}</div>
+              <div className="report-fmeta">
+                {data?.latestReport
+                  ? `${data.latestReport.fileType.toUpperCase()} • ${data.latestReport.sizeLabel} • ${data.latestReport.responsibleName ?? "Ban quản trị"}`
+                  : ""}
+              </div>
             </div>
           </div>
           <div className="report-meta">
@@ -355,14 +518,14 @@ export default function FinanceOverviewPage() {
               <img src="https://www.figma.com/api/mcp/asset/62236d98-457d-41ed-b756-7cd5d55209a4" alt="" width="13" height="13" />
               <span className="report-mlbl">Ngày tạo</span>
             </div>
-            <span className="report-mval">01/06/2024</span>
+            <span className="report-mval">{data?.latestReport ? formatDate(data.latestReport.publishedAt) : "—"}</span>
           </div>
           <div className="report-meta">
             <div className="report-mitem">
               <img src="https://www.figma.com/api/mcp/asset/78fa00e8-bbd4-4b35-972e-709ed91f109c" alt="" width="13" height="13" />
               <span className="report-mlbl">Lượt xem</span>
             </div>
-            <span className="report-mval">256</span>
+            <span className="report-mval">{data?.latestReport ? formatNumber(data.latestReport.viewCount) : "—"}</span>
           </div>
           <a href="#" className="report-dl">
             <img src="https://www.figma.com/api/mcp/asset/fb3fce31-7fe7-48a0-bbdd-671441f0b2d4" alt="" width="15" height="15" />
