@@ -20,7 +20,10 @@
       "Bash(perl -pe 's/^data:image\\\\/png;base64,//' /tmp/authimg/signin.uri)",
       "Bash(sips -g pixelWidth -g pixelHeight public/images/auth/preview.png)",
       "Bash(perl -0ne 'if\\(/<style>\\(.*?\\)<\\\\/style>/s\\){my $c=$1; $c=~s/}/}\\\\n/g; print $c}' signup.html)",
-      "Bash(grep -v '^\\\\s*$')"
+      "Bash(grep -v '^\\\\s*$')",
+      "Bash(grep -c figma.com 'app/\\(dashboard\\)/__TRACKED_VAR__/page.tsx')",
+      "Bash(python3 -)",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

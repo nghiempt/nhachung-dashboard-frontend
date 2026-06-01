@@ -150,16 +150,16 @@ export default function ThuChiPage() {
         </div>
         <div className="tc-actions">
           <button className="tc-btn">
-            <img src="https://www.figma.com/api/mcp/asset/bb824f87-1b0e-4c71-ba99-09a0e1da7f1e" alt="" width="16" height="16" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNjY2NyAyLjY2Njk5SDMuMzMzMzNDMi41OTY5NSAyLjY2Njk5IDIgMy4yNjM5NSAyIDQuMDAwMzNWMTMuMzMzN0MyIDE0LjA3IDIuNTk2OTUgMTQuNjY3IDMuMzMzMzMgMTQuNjY3SDEyLjY2NjdDMTMuNDAzIDE0LjY2NyAxNCAxNC4wNyAxNCAxMy4zMzM3VjQuMDAwMzNDMTQgMy4yNjM5NSAxMy40MDMgMi42NjY5OSAxMi42NjY3IDIuNjY2OTlaIiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEwLjY2NyAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNS4zMzMwMSAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMiA2LjY2Njk5SDE0IiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="16" height="16" />
             {periodLabel ? `Tháng ${periodLabel.slice(1)}` : "Tháng này"}
-            <img src="https://www.figma.com/api/mcp/asset/f68a73a3-66a4-4714-b40e-bd14e282faef" alt="" width="14" height="14" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMy41IDUuMjVMNyA4Ljc1TDEwLjUgNS4yNSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="14" height="14" />
           </button>
           <button className="tc-btn">
-            <img src="https://www.figma.com/api/mcp/asset/690e85bc-cb14-4eb3-931b-790db95c8d26" alt="" width="16" height="16" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBWMTIuNjY2N0MxNCAxMy4wMjAzIDEzLjg1OTUgMTMuMzU5NCAxMy42MDk1IDEzLjYwOTVDMTMuMzU5NCAxMy44NTk1IDEzLjAyMDMgMTQgMTIuNjY2NyAxNEgzLjMzMzMzQzIuOTc5NzEgMTQgMi42NDA1NyAxMy44NTk1IDIuMzkwNTIgMTMuNjA5NUMyLjE0MDQ4IDEzLjM1OTQgMiAxMy4wMjAzIDIgMTIuNjY2N1YxMCIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00LjY2Njk5IDYuNjY2OTlMOC4wMDAzMyAxMC4wMDAzTDExLjMzMzcgNi42NjY5OSIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDEwVjIiIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" />
             Bộ lọc
           </button>
           <button className="tc-btn-primary">
-            <img src="https://www.figma.com/api/mcp/asset/690e85bc-cb14-4eb3-931b-790db95c8d26" alt="" width="16" height="16" style={{ filter: "brightness(0) invert(1)" }} />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBWMTIuNjY2N0MxNCAxMy4wMjAzIDEzLjg1OTUgMTMuMzU5NCAxMy42MDk1IDEzLjYwOTVDMTMuMzU5NCAxMy44NTk1IDEzLjAyMDMgMTQgMTIuNjY2NyAxNEgzLjMzMzMzQzIuOTc5NzEgMTQgMi42NDA1NyAxMy44NTk1IDIuMzkwNTIgMTMuNjA5NUMyLjE0MDQ4IDEzLjM1OTQgMiAxMy4wMjAzIDIgMTIuNjY2N1YxMCIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00LjY2Njk5IDYuNjY2OTlMOC4wMDAzMyAxMC4wMDAzTDExLjMzMzcgNi42NjY5OSIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDEwVjIiIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" style={{ filter: "brightness(0) invert(1)" }} />
             Xuất báo cáo
           </button>
         </div>
@@ -169,13 +169,13 @@ export default function ThuChiPage() {
       <div className="kpi-row">
         <div className="kpi-card">
           <div className="kpi-icon-bg" style={{ background: "#e3fbed" }}>
-            <img src="https://www.figma.com/api/mcp/asset/044401e8-31a2-4319-baba-dea119cc37a0" alt="" width="22" height="22" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHZpZXdCb3g9IjAgMCAyMiAyMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjAuMTY3IDYuNDE3TDEyLjM3NSAxNC4yMDhMNy43OTIgOS42MjVMMS44MzMgMTUuNTgzIiBzdHJva2U9IiM0MTM3RjkiIHN0cm9rZS13aWR0aD0iMS44MzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNC42NjcgNi40MTdIMjAuMTY3VjExLjkxNyIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuODMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="22" height="22" />
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tổng thu trong tháng</div>
             <div className="kpi-value">{overview ? formatVnd(overview.totalIncome) : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <img src="https://www.figma.com/api/mcp/asset/533d51cd-ada2-4e1e-9195-c963cd036668" alt="" width="11" height="11" />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEiIGhlaWdodD0iMTEiIHZpZXdCb3g9IjAgMCAxMSAxMSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMi43NSA2Ljg3NUw1LjUgNC4xMjVMOC4yNSA2Ljg3NSIgc3Ryb2tlPSIjMUM5RDVGIiBzdHJva2Utd2lkdGg9IjEuMzc1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="11" height="11" />
               <span className={`kpi-pct ${overview && overview.incomeChangePct < 0 ? "down" : "up"}`}>{overview ? pctChip(overview.incomeChangePct) : ""}</span>
               <span className="kpi-tlabel">{cmpLabel}</span>
             </div>
@@ -183,13 +183,13 @@ export default function ThuChiPage() {
         </div>
         <div className="kpi-card">
           <div className="kpi-icon-bg" style={{ background: "#ffeded" }}>
-            <img src="https://www.figma.com/api/mcp/asset/426729a8-7cb5-4d21-88af-4a84e9722dd9" alt="" width="22" height="22" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHZpZXdCb3g9IjAgMCAyMiAyMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTYuNSAxMy43NUwxMSAxOS4yNUw1LjUgMTMuNzUiIHN0cm9rZT0iI0Y1MjIyRCIgc3Ryb2tlLXdpZHRoPSIxLjgzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTEgMi43NVYxOS4yNSIgc3Ryb2tlPSIjRjUyMjJEIiBzdHJva2Utd2lkdGg9IjEuODMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width="22" height="22" />
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tổng chi trong tháng</div>
             <div className="kpi-value">{overview ? formatVnd(overview.totalExpense) : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <img src="https://www.figma.com/api/mcp/asset/7e266243-494f-485c-afcc-77d8e7a3f69a" alt="" width="11" height="11" />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEiIGhlaWdodD0iMTEiIHZpZXdCb3g9IjAgMCAxMSAxMSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMi43NSA0LjEyNUw1LjUgNi44NzVMOC4yNSA0LjEyNSIgc3Ryb2tlPSIjRjUyMjJEIiBzdHJva2Utd2lkdGg9IjEuMzc1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="11" height="11" />
               <span className={`kpi-pct ${overview && overview.expenseChangePct <= 0 ? "up" : "down"}`}>{overview ? pctChip(overview.expenseChangePct) : ""}</span>
               <span className="kpi-tlabel">{cmpLabel}</span>
             </div>
@@ -197,13 +197,13 @@ export default function ThuChiPage() {
         </div>
         <div className="kpi-card">
           <div className="kpi-icon-bg" style={{ background: "#efeeff" }}>
-            <img src="https://www.figma.com/api/mcp/asset/74172d89-4a1b-4dbd-b7c1-6c2ea57ab41c" alt="" width="22" height="22" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHZpZXdCb3g9IjAgMCAyMiAyMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS41IDguMjVMMTEgMi43NUwxNi41IDguMjUiIHN0cm9rZT0iIzFDOUQ1RiIgc3Ryb2tlLXdpZHRoPSIxLjgzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTEgMi43NVYxOS4yNSIgc3Ryb2tlPSIjMUM5RDVGIiBzdHJva2Utd2lkdGg9IjEuODMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width="22" height="22" />
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Thặng dư / thâm hụt</div>
             <div className="kpi-value">{overview ? formatVnd(overview.surplus) : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <img src="https://www.figma.com/api/mcp/asset/533d51cd-ada2-4e1e-9195-c963cd036668" alt="" width="11" height="11" />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEiIGhlaWdodD0iMTEiIHZpZXdCb3g9IjAgMCAxMSAxMSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMi43NSA2Ljg3NUw1LjUgNC4xMjVMOC4yNSA2Ljg3NSIgc3Ryb2tlPSIjMUM5RDVGIiBzdHJva2Utd2lkdGg9IjEuMzc1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="11" height="11" />
               <span className={`kpi-pct ${overview && overview.surplusChangePct < 0 ? "down" : "up"}`}>{overview ? pctChip(overview.surplusChangePct) : ""}</span>
               <span className="kpi-tlabel">{cmpLabel}</span>
             </div>
@@ -211,13 +211,13 @@ export default function ThuChiPage() {
         </div>
         <div className="kpi-card">
           <div className="kpi-icon-bg" style={{ background: "#e4f1ff" }}>
-            <img src="https://www.figma.com/api/mcp/asset/06413164-378f-45dc-a373-944256292fb7" alt="" width="22" height="22" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHZpZXdCb3g9IjAgMCAyMiAyMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTEgMjAuMTY3QzE2LjA2MyAyMC4xNjcgMjAuMTY3IDE2LjA2MyAyMC4xNjcgMTFDMjAuMTY3IDUuOTM3IDE2LjA2MyAxLjgzMyAxMSAxLjgzM0M1LjkzNyAxLjgzMyAxLjgzMyA1LjkzNyAxLjgzMyAxMUMxLjgzMyAxNi4wNjMgNS45MzcgMjAuMTY3IDExIDIwLjE2N1oiIHN0cm9rZT0iIzJGN0JGNiIgc3Ryb2tlLXdpZHRoPSIxLjgzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTExIDUuNVYxMSIgc3Ryb2tlPSIjMkY3QkY2IiBzdHJva2Utd2lkdGg9IjEuODMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTEgMTFMMTQuNjY3IDEyLjgzMyIgc3Ryb2tlPSIjMkY3QkY2IiBzdHJva2Utd2lkdGg9IjEuODMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="22" height="22" />
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tỉ lệ chi / thu</div>
             <div className="kpi-value">{overview ? `${overview.ratios.expenseRatio}%` : "Đang tải..."}</div>
             <div className="kpi-trend">
-              <img src="https://www.figma.com/api/mcp/asset/7e266243-494f-485c-afcc-77d8e7a3f69a" alt="" width="11" height="11" />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEiIGhlaWdodD0iMTEiIHZpZXdCb3g9IjAgMCAxMSAxMSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMi43NSA0LjEyNUw1LjUgNi44NzVMOC4yNSA0LjEyNSIgc3Ryb2tlPSIjRjUyMjJEIiBzdHJva2Utd2lkdGg9IjEuMzc1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="11" height="11" />
               <span className={`kpi-pct ${overview && overview.ratios.expenseRatioChangePct <= 0 ? "up" : "down"}`}>{overview ? pctChip(overview.ratios.expenseRatioChangePct) : ""}</span>
               <span className="kpi-tlabel">{cmpLabel}</span>
             </div>
@@ -228,7 +228,7 @@ export default function ThuChiPage() {
       {/* ── AI Summary Banner ── */}
       <div className="ai-sum-banner">
         <div className="ai-sum-icon-wrap">
-          <img src="https://www.figma.com/api/mcp/asset/25958985-3347-42bb-be2a-fd5ff8597dd2" alt="" width="24" height="24" />
+          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgM0wxMy41IDguNUgxOUwxNC41IDExLjVMMTYgMTdMMTIgMTRMOCAxN0w5LjUgMTEuNUw1IDguNUgxMC41TDEyIDNaIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3N2Zz4=" alt="" width="24" height="24" />
         </div>
         <div className="ai-sum-body">
           <div className="ai-sum-label">AI Phân tích nhanh</div>
@@ -238,7 +238,7 @@ export default function ThuChiPage() {
         </div>
         <button className="ai-sum-btn">
           Xem chi tiết
-          <img src="https://www.figma.com/api/mcp/asset/1fe2686f-14e9-4794-99b2-6091479ae9d6" alt="" width="14" height="14" />
+          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yNSAxMC41TDguNzUgN0w1LjI1IDMuNSIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="14" height="14" />
         </button>
       </div>
 
@@ -252,7 +252,7 @@ export default function ThuChiPage() {
             </div>
             <div className="chart-period">
               6 tháng gần nhất
-              <img src="https://www.figma.com/api/mcp/asset/f68a73a3-66a4-4714-b40e-bd14e282faef" alt="" width="13" height="13" />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMy41IDUuMjVMNyA4Ljc1TDEwLjUgNS4yNSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="13" height="13" />
             </div>
           </div>
 
@@ -366,7 +366,7 @@ export default function ThuChiPage() {
         <div className="donut-card">
           <div className="donut-title">Cơ cấu chi phí</div>
           <div className="donut-wrap">
-            <img src="https://www.figma.com/api/mcp/asset/b5288dca-c5ba-442d-9c20-ddaf75ae7faf" alt="Cơ cấu chi phí" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI3MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjN2E2ZGZmIiBzdHJva2Utd2lkdGg9IjMwIiBzdHJva2UtZGFzaGFycmF5PSIxNTguMzQgMjk0LjA1IiBzdHJva2UtZGFzaG9mZnNldD0iLTAuMDAiIHRyYW5zZm9ybT0icm90YXRlKC05MCAxMDAgMTAwKSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iNzIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmOWQ2YSIgc3Ryb2tlLXdpZHRoPSIzMCIgc3Ryb2tlLWRhc2hhcnJheT0iOTkuNTMgMzUyLjg2IiBzdHJva2UtZGFzaG9mZnNldD0iLTE1OC4zNCIgdHJhbnNmb3JtPSJyb3RhdGUoLTkwIDEwMCAxMDApIi8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI3MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2RkY2I2IiBzdHJva2Utd2lkdGg9IjMwIiBzdHJva2UtZGFzaGFycmF5PSI4MS40MyAzNzAuOTYiIHN0cm9rZS1kYXNob2Zmc2V0PSItMjU3Ljg2IiB0cmFuc2Zvcm09InJvdGF0ZSgtOTAgMTAwIDEwMCkiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjcyIiBmaWxsPSJub25lIiBzdHJva2U9IiNhOTljZmYiIHN0cm9rZS13aWR0aD0iMzAiIHN0cm9rZS1kYXNoYXJyYXk9IjU4LjgxIDM5My41OCIgc3Ryb2tlLWRhc2hvZmZzZXQ9Ii0zMzkuMjkiIHRyYW5zZm9ybT0icm90YXRlKC05MCAxMDAgMTAwKSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iNzIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M3ZDNmZiIgc3Ryb2tlLXdpZHRoPSIzMCIgc3Ryb2tlLWRhc2hhcnJheT0iMzYuMTkgNDE2LjIwIiBzdHJva2UtZGFzaG9mZnNldD0iLTM5OC4xMCIgdHJhbnNmb3JtPSJyb3RhdGUoLTkwIDEwMCAxMDApIi8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI3MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjViNWQ0IiBzdHJva2Utd2lkdGg9IjMwIiBzdHJva2UtZGFzaGFycmF5PSIxOC4xMCA0MzQuMjkiIHN0cm9rZS1kYXNob2Zmc2V0PSItNDM0LjI5IiB0cmFuc2Zvcm09InJvdGF0ZSgtOTAgMTAwIDEwMCkiLz48L3N2Zz4=" alt="Cơ cấu chi phí" />
             <div className="donut-center">
               <div className="donut-cval">{toMillionLabel(expenseTotal)}</div>
               <div className="donut-clbl">Tổng chi</div>
@@ -460,7 +460,7 @@ export default function ThuChiPage() {
           <div className="txn-title">Giao dịch gần đây</div>
           <span className="txn-link">
             Xem tất cả
-            <img src="https://www.figma.com/api/mcp/asset/1fe2686f-14e9-4794-99b2-6091479ae9d6" alt="" width="13" height="13" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yNSAxMC41TDguNzUgN0w1LjI1IDMuNSIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="13" height="13" />
           </span>
         </div>
 
@@ -488,8 +488,8 @@ export default function ThuChiPage() {
                 <div className="txn-type-icon" style={{ background: isIncome ? "#e3fbed" : "#ffeded" }}>
                   <img
                     src={isIncome
-                      ? "https://www.figma.com/api/mcp/asset/47f9e73d-0043-419f-8ee5-ba6a7ecba22e"
-                      : "https://www.figma.com/api/mcp/asset/608266b7-1e25-4466-a5f3-68a8ebf94ae6"}
+                      ? "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNOSAzLjc1VjE0LjI1IiBzdHJva2U9IiMxQzlENUYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNNC41IDguMjVMOSAzLjc1TDEzLjUgOC4yNSIgc3Ryb2tlPSIjMUM5RDVGIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+"
+                      : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNOSAzLjc1VjE0LjI1IiBzdHJva2U9IiNGNTIyMkQiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMTMuNSA5Ljc1TDkgMTQuMjVMNC41IDkuNzUiIHN0cm9rZT0iI0Y1MjIyRCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg=="}
                     alt=""
                     width="18"
                     height="18"
@@ -543,13 +543,13 @@ export default function ThuChiPage() {
 
       {/* ── Bottom AI Banner ── */}
       <div className="ai-bot-banner">
-        <img className="ai-bot-bg" src="https://www.figma.com/api/mcp/asset/e1803480-f04b-45ee-b55c-9cd83b6024a7" alt="" />
+        <img className="ai-bot-bg" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyMiIgaGVpZ2h0PSIxMjAiIHZpZXdCb3g9IjAgMCAxMTIyIDEyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTEyMiIgaGVpZ2h0PSIxMjAiIHJ4PSIxNiIgZmlsbD0iIzFhMGE1ZSIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iNjAiIHI9IjM1IiBmaWxsPSIjNDEzN0Y5IiBvcGFjaXR5PSIwLjMiLz48Y2lyY2xlIGN4PSI4MCIgY3k9IjYwIiByPSIyMCIgZmlsbD0iIzQxMzdGOSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMTYwIiB5PSI0NSIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiPkFJIEFzc2lzdGFudCAtIE5oYSBDaHVuZzwvdGV4dD48dGV4dCB4PSIxNjAiIHk9Ijc1IiBmb250LXNpemU9IjEzIiBmaWxsPSIjY2NiYmZmIj5Ib2kgYmF0IGN1IGRpZXUgZ2kgdmUgdG9hIG5oYSBjdWEgYmFuPC90ZXh0Pjwvc3ZnPg==" alt="" />
         <div className="ai-bot-content">
           <div className="ai-bot-tag">AI Assistant</div>
           <div className="ai-bot-title">Trợ lý AI tài chính<br />thông minh</div>
           <button className="ai-bot-cta">
             Hỏi ngay
-            <img src="https://www.figma.com/api/mcp/asset/2d5f6eb3-da7c-4c55-b3e3-3e94dcef4928" alt="" width="16" height="16" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBDMTQgMTAuMzU0IDEzLjg2IDEwLjY5MyAxMy42MSAxMC45NDNDMTMuMzU5IDExLjE5MyAxMy4wMiAxMS4zMzMgMTIuNjY3IDExLjMzM0g0LjY2N0wyIDE0VjMuMzMzQzIgMi45OCAyLjE0IDIuNjQxIDIuMzkgMi4zOTFDMi42NDEgMi4xNCAyLjk4IDIgMy4zMzMgMkgxMi42NjdDMTMuMDIgMiAxMy4zNTkgMi4xNCAxMy42MSAyLjM5MUMxMy44NiAyLjY0MSAxNCAyLjk4IDE0IDMuMzMzVjEwWiIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMTI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" />
           </button>
         </div>
       </div>

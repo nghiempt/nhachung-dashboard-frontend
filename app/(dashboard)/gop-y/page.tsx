@@ -184,11 +184,11 @@ export default function GopYPage() {
           {/* Search + filter */}
           <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
             <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px", border: "1px solid #d4d7e5", borderRadius: "10px", padding: "0 15px", height: "44px", background: "#ffffff" }}>
-              <img src="https://www.figma.com/api/mcp/asset/715b105e-116c-4950-a349-27462ff6de3e" alt="" width={16} height={16} style={{ flex: "0 0 16px" }} />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNy4zMzMgMTJDOS45MSAxMiAxMiA5LjkxIDEyIDcuMzMzQzEyIDQuNzU2IDkuOTEgMi42NjcgNy4zMzMgMi42NjdDNC43NTYgMi42NjcgMi42NjcgNC43NTYgMi42NjcgNy4zMzNDMi42NjcgOS45MSA0Ljc1NiAxMiA3LjMzMyAxMloiIHN0cm9rZT0iI0I0QjdDOSIgc3Ryb2tlLXdpZHRoPSIxLjMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEzLjMzMyAxMy4zMzNMMTEuMSAxMS4xIiBzdHJva2U9IiNCNEI3QzkiIHN0cm9rZS13aWR0aD0iMS4zMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width={16} height={16} style={{ flex: "0 0 16px" }} />
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm kiếm phản ánh..." style={{ flex: 1, border: 0, outline: 0, fontSize: "14px", background: "transparent", color: "#222" }} />
             </div>
             <button style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "0 16px", height: "44px", background: "#ffffff", border: "1px solid #d4d7e5", borderRadius: "10px", fontSize: "13.5px", fontWeight: 400, color: "#272727", cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
-              <img src="https://www.figma.com/api/mcp/asset/02a58ae9-cd99-47a3-838d-c5dfab7af5ef" alt="" width={16} height={16} />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNOCAzLjMzM1YxMi42NjciIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS40NTgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zLjMzMyA4SDEyLjY2NyIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjQ1OCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width={16} height={16} />
               Bộ lọc
             </button>
           </div>
@@ -207,7 +207,7 @@ export default function GopYPage() {
               <div key={card.id} onClick={() => setSelectedId(card.id)} style={{ background: active ? "#f7f5ff" : "#ffffff", border: `1px solid ${active ? "#d3c5fd" : "#e2e5f1"}`, borderRadius: "20px", padding: "16px", cursor: "pointer", boxShadow: active ? "0 2px 5px rgba(65,55,249,.12)" : "none" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
                   <div style={{ width: "44px", height: "44px", borderRadius: "10px", background: active ? "#ffffff" : "#f7f8fc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <img src="https://www.figma.com/api/mcp/asset/ec541bd5-fad0-4e4f-8433-b90771929e65" alt="" width={22} height={22} />
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHZpZXdCb3g9IjAgMCAyMiAyMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTEgMkM2LjAyOSAyIDIgNi4wMjkgMiAxMUMyIDE1Ljk3MSA2LjAyOSAyMCAxMSAyMEMxNS45NzEgMjAgMjAgMTUuOTcxIDIwIDExQzIwIDYuMDI5IDE1Ljk3MSAyIDExIDJaIiBmaWxsPSIjRkZFREVEIiBzdHJva2U9IiNGNTIyMkQiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTE0LjI1IDguNzVMNy43NSAxNS4yNU03Ljc1IDguNzVMMTQuMjUgMTUuMjUiIHN0cm9rZT0iI0Y1MjIyRCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width={22} height={22} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "11.5px", color: "#585c7b", marginBottom: "4px" }}>{card.category}</div>
@@ -232,13 +232,13 @@ export default function GopYPage() {
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} style={{ minWidth: "32px", height: "32px", borderRadius: "8px", display: "inline-flex", alignItems: "center", justifyContent: "center", border: "1px solid #d4d7e5", background: "#ffffff", cursor: page <= 1 ? "default" : "pointer", opacity: page <= 1 ? 0.5 : 1 }}>
-                <img src="https://www.figma.com/api/mcp/asset/f1006bab-257c-4f10-9b0f-708a766e554a" alt="" width={10} height={10} />
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAxMCAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMy43NSA3LjVMNi4yNSA1TDMuNzUgMi41IiBzdHJva2U9IiMzRTQyNjUiIHN0cm9rZS13aWR0aD0iMS4wNDIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width={10} height={10} />
               </button>
               {pageNumbers.map((n) => (
                 <button key={n} onClick={() => setPage(n)} style={{ minWidth: "32px", height: "32px", borderRadius: "8px", display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 8px", fontSize: "13px", color: n === page ? "#fff" : "#3e4265", border: n === page ? "1px solid #4137f9" : "1px solid #d4d7e5", background: n === page ? "#4137f9" : "#ffffff", cursor: "pointer", fontWeight: n === page ? 600 : 400 }}>{n}</button>
               ))}
               <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} style={{ minWidth: "32px", height: "32px", borderRadius: "8px", display: "inline-flex", alignItems: "center", justifyContent: "center", border: "1px solid #d4d7e5", background: "#ffffff", cursor: page >= totalPages ? "default" : "pointer", opacity: page >= totalPages ? 0.5 : 1 }}>
-                <img src="https://www.figma.com/api/mcp/asset/553ef640-5114-42f4-b632-43b7aba10442" alt="" width={10} height={10} />
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAxMCAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNi4yNSA3LjVMMy43NSA1TDYuMjUgMi41IiBzdHJva2U9IiMzRTQyNjUiIHN0cm9rZS13aWR0aD0iMS4wNDIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width={10} height={10} />
               </button>
             </div>
           </div>
@@ -249,16 +249,16 @@ export default function GopYPage() {
           {/* Topbar */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <a href="#" onClick={(e) => { e.preventDefault(); setSelectedId(null); }} style={{ display: "inline-flex", alignItems: "center", gap: "8px", color: "#3e4265", textDecoration: "none" }}>
-              <img src="https://www.figma.com/api/mcp/asset/d061fb6b-8fc1-4ecd-9bdb-a8a976365cf6" alt="" width={15} height={15} />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTEuODc1IDcuNUgzLjEyNSIgc3Ryb2tlPSIjM0U0MjY1IiBzdHJva2Utd2lkdGg9IjEuMjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik03LjUgMTEuODc1TDMuMTI1IDcuNUw3LjUgMy4xMjUiIHN0cm9rZT0iIzNFNDI2NSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width={15} height={15} />
               <span style={{ fontSize: "13.5px" }}>Quay lại danh sách</span>
             </a>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <button style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "9px 15px", background: "#ffffff", border: "1px solid #d4d7e5", borderRadius: "10px", fontSize: "13px", fontWeight: 500, color: "#272727", cursor: "pointer" }}>
-                <img src="https://www.figma.com/api/mcp/asset/6dd5d7dd-0213-4d29-8a4d-c8369df012e7" alt="" width={14} height={14} />
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yNSAxMC41TDguNzUgN0w1LjI1IDMuNSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width={14} height={14} />
                 Theo dõi
               </button>
               <button style={{ width: "34px", height: "34px", background: "#ffffff", border: "1px solid #d4d7e5", borderRadius: "10px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                <img src="https://www.figma.com/api/mcp/asset/705aaa04-0fba-4a62-9c13-a4ff3a3a1975" alt="" width={15} height={15} />
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIzLjEyNSIgY3k9IjcuNSIgcj0iMC45Mzc1IiBmaWxsPSIjM0U0MjY1Ii8+PGNpcmNsZSBjeD0iNy41IiBjeT0iNy41IiByPSIwLjkzNzUiIGZpbGw9IiMzRTQyNjUiLz48Y2lyY2xlIGN4PSIxMS44NzUiIGN5PSI3LjUiIHI9IjAuOTM3NSIgZmlsbD0iIzNFNDI2NSIvPjwvc3ZnPg==" alt="" width={15} height={15} />
               </button>
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function GopYPage() {
                       <span style={{ fontSize: "11.5px", color: "#585c7b" }}>{formatTime(detail.metadata.createdAt)}</span>
                       <div style={{ width: "3px", height: "3px", borderRadius: "50%", background: "#b4b7c9" }} />
                       <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        <img src="https://www.figma.com/api/mcp/asset/2fa24cfe-7563-4730-822f-99db41075e63" alt="" width={11} height={11} />
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEiIGhlaWdodD0iMTEiIHZpZXdCb3g9IjAgMCAxMSAxMSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNOC43MDggMS44MzNIMi4yOTJDMS43ODUgMS44MzMgMS4zNzUgMi4yNDMgMS4zNzUgMi43NVY5LjE2N0MxLjM3NSA5LjY3MyAxLjc4NSAxMC4wODMgMi4yOTIgMTAuMDgzSDguNzA4QzkuMjE1IDEwLjA4MyA5LjYyNSA5LjY3MyA5LjYyNSA5LjE2N1YyLjc1QzkuNjI1IDIuMjQzIDkuMjE1IDEuODMzIDguNzA4IDEuODMzWiIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjAuOTE3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNy4zMzMgMC45MTdWMi43NSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjAuOTE3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMy42NjcgMC45MTdWMi43NSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjAuOTE3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMS4zNzUgNC41ODNIOS42MjUiIHN0cm9rZT0iIzU4NUM3QiIgc3Ryb2tlLXdpZHRoPSIwLjkxNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width={11} height={11} />
                         <span style={{ fontSize: "11.5px", color: "#585c7b" }}>{formatDate(detail.metadata.createdAt)}</span>
                       </div>
                     </div>
@@ -341,7 +341,7 @@ export default function GopYPage() {
                           return (
                             <div key={step.id} style={{ position: "relative", paddingLeft: "36px", paddingBottom: last ? 0 : "22px", display: "flex", flexDirection: "column", gap: "4px" }}>
                               <div style={{ position: "absolute", left: 0, top: 0, width: "24px", height: "24px", borderRadius: "12px", border: `2px solid ${stStyle.dot}`, background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
-                                <img src="https://www.figma.com/api/mcp/asset/3feab6cf-60ec-4e5b-adff-84aa994169bc" alt="" width={12} height={12} />
+                                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTAgM0w0LjUgOC41TDIgNiIgc3Ryb2tlPSIjMUNCRjZBIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width={12} height={12} />
                               </div>
                               {hasLine && <div style={{ position: "absolute", left: "11px", top: "26px", bottom: "-6px", width: "2px", background: "#e2e5f1" }} />}
                               <div style={{ display: "flex", alignItems: "baseline", gap: "20px" }}>
@@ -377,7 +377,7 @@ export default function GopYPage() {
                     <input placeholder="Viết bình luận..." style={{ flex: 1, border: 0, outline: 0, fontSize: "16px", background: "transparent", color: "#222", minWidth: 0 }} />
                   </div>
                   <button style={{ width: "44px", height: "44px", background: "#4137f9", borderRadius: "10px", border: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
-                    <img src="https://www.figma.com/api/mcp/asset/e8ea7b01-bd93-42b6-968b-6b6f97ebe7e6" alt="" width={18} height={18} />
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMS41IDE1Ljc1TDE3LjI1IDlMMS41IDIuMjVWNy41TDEyLjc1IDlMMS41IDEwLjVWMTUuNzVaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==" alt="" width={18} height={18} />
                   </button>
                 </div>
               </>
@@ -416,14 +416,14 @@ export default function GopYPage() {
           <div style={{ background: "#ffffff", border: "1px solid #e2e5f1", borderRadius: "20px", padding: "17px 19px" }}>
             <div style={{ fontSize: "14.5px", fontWeight: 700, color: "#272727", marginBottom: "14px" }}>Thao tác nhanh</div>
             {[
-              { icon: "https://www.figma.com/api/mcp/asset/25de301b-b7d7-4fa8-9cbc-d698f3caefd3", label: "Cập nhật thông tin", danger: false },
-              { icon: "https://www.figma.com/api/mcp/asset/a92c0573-5529-487b-975a-9aef1e1a753c", label: "Bổ sung hình ảnh", danger: false },
-              { icon: "https://www.figma.com/api/mcp/asset/ed0b617a-a42c-4678-959a-5c7a8ca90908", label: "Hủy phản ánh", danger: true },
+              { icon: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTAgMkM1LjU4IDIgMiA1LjU4IDIgMTBDMiAxNC40MiA1LjU4IDE4IDEwIDE4QzE0LjQyIDE4IDE4IDE0LjQyIDE4IDEwQzE4IDUuNTggMTQuNDIgMiAxMCAyWk0xMCAxMy41QzkuMTcgMTMuNSA4LjUgMTIuODMgOC41IDEyQzguNSAxMS4xNyA5LjE3IDEwLjUgMTAgMTAuNUMxMC44MyAxMC41IDExLjUgMTEuMTcgMTEuNSAxMkMxMS41IDEyLjgzIDEwLjgzIDEzLjUgMTAgMTMuNVpNMTEuNSA5SDguNVY2LjVIMTEuNVY5WiIgZmlsbD0iIzQxMzdGOSIvPjwvc3ZnPg==", label: "Cập nhật thông tin", danger: false },
+              { icon: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTAgMkM1LjU4IDIgMiA1LjU4IDIgMTBDMiAxNC40MiA1LjU4IDE4IDEwIDE4QzE0LjQyIDE4IDE4IDE0LjQyIDE4IDEwQzE4IDUuNTggMTQuNDIgMiAxMCAyWiIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuNSIvPjxwYXRoIGQ9Ik03IDEwTDkuNSAxMi41TDE0IDcuNSIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+", label: "Bổ sung hình ảnh", danger: false },
+              { icon: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNOSAxNUgxNS43NU0xMi4zNzUgMi42MjVDMTIuNjczIDIuMzI3IDEzLjA3OCAyLjE1OSAxMy41IDIuMTU5QzEzLjcwOSAyLjE1OSAxMy45MTYgMi4yIDE0LjEwOSAyLjI4QzE0LjMwMiAyLjM2IDE0LjQ3NyAyLjQ3NyAxNC42MjUgMi42MjVDMTQuNzczIDIuNzczIDE0Ljg5IDIuOTQ4IDE0Ljk3IDMuMTQxQzE1LjA1IDMuMzM0IDE1LjA5MSAzLjU0MSAxNS4wOTEgMy43NUMxNS4wOTEgMy45NTkgMTUuMDUgNC4xNjYgMTQuOTcgNC4zNTlDMTQuODkgNC41NTIgMTQuNzczIDQuNzI3IDE0LjYyNSA0Ljg3NUw1LjI1IDE0LjI1TDIuMjUgMTVMMyAxMkwxMi4zNzUgMi42MjVaIiBzdHJva2U9IiM1ODVDN0IiIHN0cm9rZS13aWR0aD0iMS4zNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+", label: "Hủy phản ánh", danger: true },
             ].map((item, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0", cursor: "pointer", borderTop: i > 0 ? "1px solid #eff2fc" : "none" }}>
                 <img src={item.icon} alt="" width={18} height={18} style={{ flexShrink: 0 }} />
                 <span style={{ flex: 1, fontSize: "13px", color: item.danger ? "#f5222d" : "#272727", minWidth: 0 }}>{item.label}</span>
-                <img src="https://www.figma.com/api/mcp/asset/cc8a571d-04d1-4aef-a765-86c99b4bb7a2" alt="" width={14} height={14} style={{ flexShrink: 0, opacity: 0.5 }} />
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yNSAxMC41TDguNzUgN0w1LjI1IDMuNSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width={14} height={14} style={{ flexShrink: 0, opacity: 0.5 }} />
               </div>
             ))}
           </div>
@@ -432,7 +432,7 @@ export default function GopYPage() {
 
       {/* AI Banner */}
       <div style={{ position: "relative", overflow: "hidden", border: "1px solid #d3c5fd", borderRadius: "10px", padding: "23px 24px 23px 220px", flexShrink: 0 }}>
-        <img src="https://www.figma.com/api/mcp/asset/e1803480-f04b-45ee-b55c-9cd83b6024a7" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px", pointerEvents: "none" }} />
+        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyMiIgaGVpZ2h0PSIxMjAiIHZpZXdCb3g9IjAgMCAxMTIyIDEyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTEyMiIgaGVpZ2h0PSIxMjAiIHJ4PSIxNiIgZmlsbD0iIzFhMGE1ZSIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iNjAiIHI9IjM1IiBmaWxsPSIjNDEzN0Y5IiBvcGFjaXR5PSIwLjMiLz48Y2lyY2xlIGN4PSI4MCIgY3k9IjYwIiByPSIyMCIgZmlsbD0iIzQxMzdGOSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMTYwIiB5PSI0NSIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiPkFJIEFzc2lzdGFudCAtIE5oYSBDaHVuZzwvdGV4dD48dGV4dCB4PSIxNjAiIHk9Ijc1IiBmb250LXNpemU9IjEzIiBmaWxsPSIjY2NiYmZmIj5Ib2kgYmF0IGN1IGRpZXUgZ2kgdmUgdG9hIG5oYSBjdWEgYmFuPC90ZXh0Pjwvc3ZnPg==" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px", pointerEvents: "none" }} />
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div>
@@ -447,7 +447,7 @@ export default function GopYPage() {
           </div>
           <button style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#4137f9", color: "#fff", padding: "8px 10px", borderRadius: "12px", border: 0, fontSize: "14px", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, lineHeight: "22px" }}>
             Chat với AI
-            <img src="https://www.figma.com/api/mcp/asset/2d5f6eb3-da7c-4c55-b3e3-3e94dcef4928" alt="" width={18} height={18} />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBDMTQgMTAuMzU0IDEzLjg2IDEwLjY5MyAxMy42MSAxMC45NDNDMTMuMzU5IDExLjE5MyAxMy4wMiAxMS4zMzMgMTIuNjY3IDExLjMzM0g0LjY2N0wyIDE0VjMuMzMzQzIgMi45OCAyLjE0IDIuNjQxIDIuMzkgMi4zOTFDMi42NDEgMi4xNCAyLjk4IDIgMy4zMzMgMkgxMi42NjdDMTMuMDIgMiAxMy4zNTkgMi4xNCAxMy42MSAyLjM5MUMxMy44NiAyLjY0MSAxNCAyLjk4IDE0IDMuMzMzVjEwWiIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMTI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width={18} height={18} />
           </button>
         </div>
       </div>

@@ -119,7 +119,7 @@ export default function KhoTaiLieuPage() {
             fontSize: "14px", fontWeight: 500, color: "#272727",
             cursor: "pointer", whiteSpace: "nowrap", lineHeight: "22px",
           }}>
-            <img src="https://www.figma.com/api/mcp/asset/5b1fb34b-3241-4c29-a762-611ab592e0d4" alt="" width={16} height={16} />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE0IDEwQzE0IDEwLjM1MzYgMTMuODU5NSAxMC42OTI4IDEzLjYwOTUgMTAuOTQyOEMxMy4zNTk0IDExLjE5MjkgMTMuMDIwMyAxMS4zMzMzIDEyLjY2NjcgMTEuMzMzM0g0LjY2NjY3TDIgMTRWMy4zMzMzM0MyIDIuOTc5NzEgMi4xNDA0OCAyLjY0MDU3IDIuMzkwNTIgMi4zOTA1MkMyLjY0MDU3IDIuMTQwNDggMi45Nzk3MSAyIDMuMzMzMzMgMkgxMi42NjY3QzEzLjAyMDMgMiAxMy4zNTk0IDIuMTQwNDggMTMuNjA5NSAyLjM5MDUyQzEzLjg1OTUgMi42NDA1NyAxNCAyLjk3OTcxIDE0IDMuMzMzMzNWMTBaIiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4xMjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K" alt="" width={16} height={16} />
             Yêu cầu tài liệu
           </button>
           <button style={{
@@ -129,7 +129,7 @@ export default function KhoTaiLieuPage() {
             fontSize: "14px", fontWeight: 500, color: "#fff",
             cursor: "pointer", whiteSpace: "nowrap", lineHeight: "22px",
           }}>
-            <img src="https://www.figma.com/api/mcp/asset/f7d9b813-c0e2-4951-80fc-4f2b8e0286bf" alt="" width={16} height={16} />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE0IDEwVjEyLjY2NjdDMTQgMTMuMDIwMyAxMy44NTk1IDEzLjM1OTQgMTMuNjA5NSAxMy42MDk1QzEzLjM1OTQgMTMuODU5NSAxMy4wMjAzIDE0IDEyLjY2NjcgMTRIMy4zMzMzM0MyLjk3OTcxIDE0IDIuNjQwNTcgMTMuODU5NSAyLjM5MDUyIDEzLjYwOTVDMi4xNDA0OCAxMy4zNTk0IDIgMTMuMDIwMyAyIDEyLjY2NjdWMTAiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMS4zMzM3IDUuMzMzMzNMOC4wMDAzMyAyTDQuNjY2OTkgNS4zMzMzMyIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTggMlYxMCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" alt="" width={16} height={16} />
             Tải lên tài liệu
           </button>
         </div>
@@ -142,7 +142,7 @@ export default function KhoTaiLieuPage() {
           border: "1px solid #d4d7e5", borderRadius: "10px",
           padding: "0 15px", height: "44px", background: "#ffffff",
         }}>
-          <img src="https://www.figma.com/api/mcp/asset/e5e84f39-43bf-47b7-8e50-b816879b3bfc" alt="" width={16} height={16} style={{ flex: "0 0 16px" }} />
+          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTcuMzMzNjYgMTIuMDAwM0M5LjkxMDk5IDEyLjAwMDMgMTIuMDAwMyA5LjkxMDk5IDEyLjAwMDMgNy4zMzM2NkMxMi4wMDAzIDQuNzU2MzMgOS45MTA5OSAyLjY2Njk5IDcuMzMzNjYgMi42NjY5OUM0Ljc1NjMzIDIuNjY2OTkgMi42NjY5OSA0Ljc1NjMzIDIuNjY2OTkgNy4zMzM2NkMyLjY2Njk5IDkuOTEwOTkgNC43NTYzMyAxMi4wMDAzIDcuMzMzNjYgMTIuMDAwM1oiIHN0cm9rZT0iI0I0QjdDOSIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTEzLjMzMjkgMTMuMzMyOUwxMS4wOTk2IDExLjA5OTYiIHN0cm9rZT0iI0I0QjdDOSIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" alt="" width={16} height={16} style={{ flex: "0 0 16px" }} />
           <input
             placeholder="Tìm kiếm tài liệu..."
             value={searchInput}
@@ -163,7 +163,7 @@ export default function KhoTaiLieuPage() {
             fontSize: "13.5px", fontWeight: 400, color: "#272727",
             cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
           }}>
-          <img src="https://www.figma.com/api/mcp/asset/0dab6af6-554e-4f6e-b014-b2ca135de172" alt="" width={15} height={15} />
+          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzU4NTk0XzkxMTUpIj4KPHBhdGggZD0iTTEzLjc1IDEuODc1SDEuMjVMNi4yNSA3Ljc4NzVWMTEuODc1TDguNzUgMTMuMTI1VjcuNzg3NUwxMy43NSAxLjg3NVoiIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9nPgo8ZGVmcz4KPGNsaXBQYXRoIGlkPSJjbGlwMF81ODU5NF85MTE1Ij4KPHJlY3Qgd2lkdGg9IjE1IiBoZWlnaHQ9IjE1IiBmaWxsPSJ3aGl0ZSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=" alt="" width={15} height={15} />
           Bộ lọc
         </button>
       </div>
@@ -193,7 +193,7 @@ export default function KhoTaiLieuPage() {
                 background: "#f7f5ff", display: "inline-flex",
                 alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}>
-                <img src={folder.iconUrl ?? "https://www.figma.com/api/mcp/asset/430b1f39-fd7a-43af-8049-f1a595a7eb12"} alt="" width={20} height={20} />
+                <img src={folder.iconUrl ?? "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIuNSA1LjgzMzY2QzIuNSA1LjM5MTYzIDIuNjc1NTkgNC45Njc3MSAyLjk4ODE2IDQuNjU1MTVDMy4zMDA3MiA0LjM0MjU5IDMuNzI0NjQgNC4xNjY5OSA0LjE2NjY3IDQuMTY2OTlINy41TDkuMTY2NjcgNS44MzM2NkgxNS44MzMzQzE2LjI3NTQgNS44MzM2NiAxNi42OTkzIDYuMDA5MjUgMTcuMDExOCA2LjMyMTgxQzE3LjMyNDQgNi42MzQzNyAxNy41IDcuMDU4MyAxNy41IDcuNTAwMzNWMTUuMDAwM0MxNy41IDE1LjQ0MjQgMTcuMzI0NCAxNS44NjYzIDE3LjAxMTggMTYuMTc4OEMxNi42OTkzIDE2LjQ5MTQgMTYuMjc1NCAxNi42NjcgMTUuODMzMyAxNi42NjdINC4xNjY2N0MzLjcyNDY0IDE2LjY2NyAzLjMwMDcyIDE2LjQ5MTQgMi45ODgxNiAxNi4xNzg4QzIuNjc1NTkgMTUuODY2MyAyLjUgMTUuNDQyNCAyLjUgMTUuMDAwM1Y1LjgzMzY2WiIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo="} alt="" width={20} height={20} />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
                 <div style={{ fontSize: "13.5px", color: "#272727", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: 400 }}>
@@ -293,7 +293,7 @@ export default function KhoTaiLieuPage() {
                           display: "inline-flex", alignItems: "center", justifyContent: "center",
                           cursor: "pointer", flexShrink: 0,
                         }} title="Xem">
-                        <img src="https://www.figma.com/api/mcp/asset/11233af8-3ea8-42c5-9f66-042e59f01659" alt="Xem" width={15} height={15} />
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzU4NTk0XzkyMjIpIj4KPHBhdGggZD0iTTAuNjI1IDcuNUMwLjYyNSA3LjUgMy4xMjUgMi41IDcuNSAyLjVDMTEuODc1IDIuNSAxNC4zNzUgNy41IDE0LjM3NSA3LjVDMTQuMzc1IDcuNSAxMS44NzUgMTIuNSA3LjUgMTIuNUMzLjEyNSAxMi41IDAuNjI1IDcuNSAwLjYyNSA3LjVaIiBzdHJva2U9IiMzRTQyNjUiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik03LjUgOS4zNzVDOC41MzU1MyA5LjM3NSA5LjM3NSA4LjUzNTUzIDkuMzc1IDcuNUM5LjM3NSA2LjQ2NDQ3IDguNTM1NTMgNS42MjUgNy41IDUuNjI1QzYuNDY0NDcgNS42MjUgNS42MjUgNi40NjQ0NyA1LjYyNSA3LjVDNS42MjUgOC41MzU1MyA2LjQ2NDQ3IDkuMzc1IDcuNSA5LjM3NVoiIHN0cm9rZT0iIzNFNDI2NSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9nPgo8ZGVmcz4KPGNsaXBQYXRoIGlkPSJjbGlwMF81ODU5NF85MjIyIj4KPHJlY3Qgd2lkdGg9IjE1IiBoZWlnaHQ9IjE1IiBmaWxsPSJ3aGl0ZSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=" alt="Xem" width={15} height={15} />
                       </button>
                       <button
                         onClick={() => handleOpenDoc(row)}
@@ -303,7 +303,7 @@ export default function KhoTaiLieuPage() {
                           display: "inline-flex", alignItems: "center", justifyContent: "center",
                           cursor: "pointer", flexShrink: 0,
                         }} title="Tải xuống">
-                        <img src="https://www.figma.com/api/mcp/asset/4d6f8621-fb91-4e73-b77f-00e312bdce48" alt="Tải xuống" width={15} height={15} />
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEzLjEyNSA5LjM3NVYxMS44NzVDMTMuMTI1IDEyLjIwNjUgMTIuOTkzMyAxMi41MjQ1IDEyLjc1ODkgMTIuNzU4OUMxMi41MjQ1IDEyLjk5MzMgMTIuMjA2NSAxMy4xMjUgMTEuODc1IDEzLjEyNUgzLjEyNUMyLjc5MzQ4IDEzLjEyNSAyLjQ3NTU0IDEyLjk5MzMgMi4yNDExMiAxMi43NTg5QzIuMDA2NyAxMi41MjQ1IDEuODc1IDEyLjIwNjUgMS44NzUgMTEuODc1VjkuMzc1IiBzdHJva2U9IiMzRTQyNjUiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik00LjM3NSA2LjI1TDcuNSA5LjM3NUwxMC42MjUgNi4yNSIgc3Ryb2tlPSIjM0U0MjY1IiBzdHJva2Utd2lkdGg9IjEuMjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cGF0aCBkPSJNNy41IDkuMzc1VjEuODc1IiBzdHJva2U9IiMzRTQyNjUiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=" alt="Tải xuống" width={15} height={15} />
                       </button>
                     </div>
                   </td>
@@ -331,7 +331,7 @@ export default function KhoTaiLieuPage() {
                 border: "1px solid #d4d7e5", background: "#ffffff",
                 cursor: currentPage <= 1 ? "default" : "pointer",
               }}>
-              <img src="https://www.figma.com/api/mcp/asset/ba478cc3-0b5e-44ca-a131-55ba84ff73b8" alt="Trang trước" width={11} height={11} />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEiIGhlaWdodD0iMTEiIHZpZXdCb3g9IjAgMCAxMSAxMSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTYuODc1IDguMjVMNC4xMjUgNS41TDYuODc1IDIuNzUiIHN0cm9rZT0iIzNFNDI2NSIgc3Ryb2tlLXdpZHRoPSIxLjE0NTgzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" alt="Trang trước" width={11} height={11} />
             </button>
             {pageNumbers.map((n) => (
               <button
@@ -378,7 +378,7 @@ export default function KhoTaiLieuPage() {
                 border: "1px solid #d4d7e5", background: "#ffffff",
                 cursor: currentPage >= totalPages ? "default" : "pointer",
               }}>
-              <img src="https://www.figma.com/api/mcp/asset/3d0c597c-faf7-4f24-bfdf-9f6e9954f120" alt="Trang sau" width={11} height={11} />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEiIGhlaWdodD0iMTEiIHZpZXdCb3g9IjAgMCAxMSAxMSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuMTI1IDguMjVMNi44NzUgNS41TDQuMTI1IDIuNzUiIHN0cm9rZT0iIzNFNDI2NSIgc3Ryb2tlLXdpZHRoPSIxLjE0NTgzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" alt="Trang sau" width={11} height={11} />
             </button>
           </div>
         </div>

@@ -4,8 +4,8 @@
 import { useApiData } from "@/lib/hooks";
 import { formatVnd, formatNumber, formatDate } from "@/lib/format";
 
-const UP_IMG = "https://www.figma.com/api/mcp/asset/07b679db-3ec2-4a70-acb0-a92326a51f04";
-const DOWN_IMG = "https://www.figma.com/api/mcp/asset/39450053-803f-485d-803e-0750a3c14591";
+const UP_IMG = "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDExIDExIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iU1ZHIj4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTIuNzUgNi44NzVMNS41IDQuMTI1TDguMjUgNi44NzUiIHN0cm9rZT0idmFyKC0tc3Ryb2tlLTAsICM1MkM0MUEpIiBzdHJva2Utd2lkdGg9IjEuMzc1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9nPgo8L3N2Zz4K";
+const DOWN_IMG = "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDExIDExIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iU1ZHIj4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTIuNzUgNi44NzVMNS41IDQuMTI1TDguMjUgNi44NzUiIHN0cm9rZT0idmFyKC0tc3Ryb2tlLTAsICNGNTIyMkQpIiBzdHJva2Utd2lkdGg9IjEuMzc1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9nPgo8L3N2Zz4K";
 
 interface LineItem {
   id: string;
@@ -163,12 +163,12 @@ export default function FinanceOverviewPage() {
         </div>
         <div className="fin-actions">
           <button className="fin-btn">
-            <img src="https://www.figma.com/api/mcp/asset/bb824f87-1b0e-4c71-ba99-09a0e1da7f1e" alt="" width="16" height="16" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNjY2NyAyLjY2Njk5SDMuMzMzMzNDMi41OTY5NSAyLjY2Njk5IDIgMy4yNjM5NSAyIDQuMDAwMzNWMTMuMzMzN0MyIDE0LjA3IDIuNTk2OTUgMTQuNjY3IDMuMzMzMzMgMTQuNjY3SDEyLjY2NjdDMTMuNDAzIDE0LjY2NyAxNCAxNC4wNyAxNCAxMy4zMzM3VjQuMDAwMzNDMTQgMy4yNjM5NSAxMy40MDMgMi42NjY5OSAxMi42NjY3IDIuNjY2OTlaIiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEwLjY2NyAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNS4zMzMwMSAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMiA2LjY2Njk5SDE0IiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="16" height="16" />
             {longLabel ? `Tháng ${parsePeriod(period).m}/${parsePeriod(period).y}` : "Đang tải..."}
-            <img src="https://www.figma.com/api/mcp/asset/68ffcd0e-3438-4ca4-9d64-847b5ccf5b79" alt="" width="14" height="14" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMy41IDUuMjVMNyA4Ljc1TDEwLjUgNS4yNSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjEuMTY2NjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width="14" height="14" />
           </button>
           <button className="fin-btn">
-            <img src="https://www.figma.com/api/mcp/asset/690e85bc-cb14-4eb3-931b-790db95c8d26" alt="" width="16" height="16" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBWMTIuNjY2N0MxNCAxMy4wMjAzIDEzLjg1OTUgMTMuMzU5NCAxMy42MDk1IDEzLjYwOTVDMTMuMzU5NCAxMy44NTk1IDEzLjAyMDMgMTQgMTIuNjY2NyAxNEgzLjMzMzMzQzIuOTc5NzEgMTQgMi42NDA1NyAxMy44NTk1IDIuMzkwNTIgMTMuNjA5NUMyLjE0MDQ4IDEzLjM1OTQgMiAxMy4wMjAzIDIgMTIuNjY2N1YxMCIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00LjY2Njk5IDYuNjY2OTlMOC4wMDAzMyAxMC4wMDAzTDExLjMzMzcgNi42NjY5OSIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDEwVjIiIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" />
             Xuất báo cáo
           </button>
         </div>
@@ -178,7 +178,7 @@ export default function FinanceOverviewPage() {
       <div className="kpi-row">
         <div className="kpi-card">
           <div className="kpi-icon-bg" style={{ background: "#efeeff" }}>
-            <img src="https://www.figma.com/api/mcp/asset/76a8ace0-d7c2-4074-bf26-caa39551254e" alt="" width="22" height="22" />
+            <img src="data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDIyIDIyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iU1ZHIj4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTE5LjI1IDExVjYuNDE2NjdINC41ODMzM0M0LjA5NzEgNi40MTY2NyAzLjYzMDc5IDYuMjIzNTEgMy4yODY5NyA1Ljg3OTdDMi45NDMxNSA1LjUzNTg4IDIuNzUgNS4wNjk1NiAyLjc1IDQuNTgzMzNDMi43NSA0LjA5NzEgMi45NDMxNSAzLjYzMDc5IDMuMjg2OTcgMy4yODY5N0MzLjYzMDc5IDIuOTQzMTUgNC4wOTcxIDIuNzUgNC41ODMzMyAyLjc1SDE3LjQxNjdWNi40MTY2NyIgc3Ryb2tlPSJ2YXIoLS1zdHJva2UtMCwgIzQxMzdGOSkiIHN0cm9rZS13aWR0aD0iMS44MzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGlkPSJWZWN0b3JfMiIgZD0iTTIuNzUgNC41ODMzM1YxNy40MTY3QzIuNzUgMTcuOTAyOSAyLjk0MzE1IDE4LjM2OTIgMy4yODY5NyAxOC43MTNDMy42MzA3OSAxOS4wNTY4IDQuMDk3MSAxOS4yNSA0LjU4MzMzIDE5LjI1SDE5LjI1VjE0LjY2NjciIHN0cm9rZT0idmFyKC0tc3Ryb2tlLTAsICM0MTM3RjkpIiBzdHJva2Utd2lkdGg9IjEuODMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cGF0aCBpZD0iVmVjdG9yXzMiIGQ9Ik0xNi41IDExQzE2LjAxMzggMTEgMTUuNTQ3NSAxMS4xOTMyIDE1LjIwMzYgMTEuNTM3QzE0Ljg1OTggMTEuODgwOCAxNC42NjY3IDEyLjM0NzEgMTQuNjY2NyAxMi44MzMzQzE0LjY2NjcgMTMuMzE5NiAxNC44NTk4IDEzLjc4NTkgMTUuMjAzNiAxNC4xMjk3QzE1LjU0NzUgMTQuNDczNSAxNi4wMTM4IDE0LjY2NjcgMTYuNSAxNC42NjY3SDIwLjE2NjdWMTFIMTYuNVoiIHN0cm9rZT0idmFyKC0tc3Ryb2tlLTAsICM0MTM3RjkpIiBzdHJva2Utd2lkdGg9IjEuODMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=" alt="" width="22" height="22" />
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tổng thu trong tháng</div>
@@ -192,7 +192,7 @@ export default function FinanceOverviewPage() {
         </div>
         <div className="kpi-card">
           <div className="kpi-icon-bg" style={{ background: "#ffeded" }}>
-            <img src="https://www.figma.com/api/mcp/asset/3eec0cf0-a93a-4dba-b3a1-d0a31d498f64" alt="" width="22" height="22" />
+            <img src="data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDIyIDIyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iU1ZHIj4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTExIDQuNTgzMzNWMTcuNDE2NyIgc3Ryb2tlPSJ2YXIoLS1zdHJva2UtMCwgI0Y1MjIyRCkiIHN0cm9rZS13aWR0aD0iMS44MzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGlkPSJWZWN0b3JfMiIgZD0iTTE3LjQxNjcgMTFMMTEgMTcuNDE2N0w0LjU4MzMzIDExIiBzdHJva2U9InZhcigtLXN0cm9rZS0wLCAjRjUyMjJEKSIgc3Ryb2tlLXdpZHRoPSIxLjgzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9nPgo8L3N2Zz4K" alt="" width="22" height="22" />
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Tổng chi trong tháng</div>
@@ -206,7 +206,7 @@ export default function FinanceOverviewPage() {
         </div>
         <div className="kpi-card">
           <div className="kpi-icon-bg" style={{ background: "#efffe7" }}>
-            <img src="https://www.figma.com/api/mcp/asset/1351b03a-eb8f-4a37-b663-cac5b38c302c" alt="" width="22" height="22" />
+            <img src="data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDIyIDIyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iU1ZHIj4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTIwLjE2NjcgNi40MTY2N0wxMi4zNzUgMTQuMjA4M0w3Ljc5MTY3IDkuNjI1TDEuODMzMzMgMTUuNTgzMyIgc3Ryb2tlPSJ2YXIoLS1zdHJva2UtMCwgIzUyQzQxQSkiIHN0cm9rZS13aWR0aD0iMS44MzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGlkPSJWZWN0b3JfMiIgZD0iTTE0LjY2NjcgNi40MTY2N0gyMC4xNjY3VjExLjkxNjciIHN0cm9rZT0idmFyKC0tc3Ryb2tlLTAsICM1MkM0MUEpIiBzdHJva2Utd2lkdGg9IjEuODMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=" alt="" width="22" height="22" />
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Thặng dư/thâm hụt</div>
@@ -220,7 +220,7 @@ export default function FinanceOverviewPage() {
         </div>
         <div className="kpi-card">
           <div className="kpi-icon-bg" style={{ background: "#e4f1ff" }}>
-            <img src="https://www.figma.com/api/mcp/asset/0daa5a59-6d8f-431c-bc64-893e8920578d" alt="" width="22" height="22" />
+            <img src="data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDIyIDIyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iU1ZHIj4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTExIDcuMzMzMzNDMTUuNTU2MyA3LjMzMzMzIDE5LjI1IDYuMTAyMTIgMTkuMjUgNC41ODMzM0MxOS4yNSAzLjA2NDU1IDE1LjU1NjMgMS44MzMzMyAxMSAxLjgzMzMzQzYuNDQzNjUgMS44MzMzMyAyLjc1IDMuMDY0NTUgMi43NSA0LjU4MzMzQzIuNzUgNi4xMDIxMiA2LjQ0MzY1IDcuMzMzMzMgMTEgNy4zMzMzM1oiIHN0cm9rZT0idmFyKC0tc3Ryb2tlLTAsICMyRjdCRjYpIiBzdHJva2Utd2lkdGg9IjEuODMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cGF0aCBpZD0iVmVjdG9yXzIiIGQ9Ik0yLjc1IDQuNTgzMzNWMTAuMDgzM0MyLjc1IDExLjYwNSA2LjQxNjY3IDEyLjgzMzMgMTEgMTIuODMzM0MxNS41ODMzIDEyLjgzMzMgMTkuMjUgMTEuNjA1IDE5LjI1IDEwLjA4MzNWNC41ODMzMyIgc3Ryb2tlPSJ2YXIoLS1zdHJva2UtMCwgIzJGN0JGNikiIHN0cm9rZS13aWR0aD0iMS44MzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGlkPSJWZWN0b3JfMyIgZD0iTTIuNzUgMTAuMDgzM1YxNS41ODMzQzIuNzUgMTcuMTA1IDYuNDE2NjcgMTguMzMzMyAxMSAxOC4zMzMzQzE1LjU4MzMgMTguMzMzMyAxOS4yNSAxNy4xMDUgMTkuMjUgMTUuNTgzM1YxMC4wODMzIiBzdHJva2U9InZhcigtLXN0cm9rZS0wLCAjMkY3QkY2KSIgc3Ryb2tlLXdpZHRoPSIxLjgzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9nPgo8L3N2Zz4K" alt="" width="22" height="22" />
           </div>
           <div className="kpi-body">
             <div className="kpi-label">Quỹ bảo trì hiện tại</div>
@@ -244,7 +244,7 @@ export default function FinanceOverviewPage() {
             </div>
             <button className="chart-period">
               6 tháng gần nhất
-              <img src="https://www.figma.com/api/mcp/asset/9ca275cd-9232-4f52-ae8d-87092e85d00e" alt="" width="12" height="12" />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMyA0LjVMNiA3LjVMOSA0LjUiIHN0cm9rZT0iIzNFNDI2NSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="12" height="12" />
             </button>
           </div>
 
@@ -416,7 +416,7 @@ export default function FinanceOverviewPage() {
       <div className="summary-row">
         <div className="sum-card">
           <div className="sum-title">
-            <img src="https://www.figma.com/api/mcp/asset/2692c8e7-b548-4b0f-9156-69077c30d015" alt="" width="18" height="18" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNOSAwLjc1TDE1Ljc1IDMuNzVWOC4yNUMxNS43NSAxMi40MTI1IDEyLjg3IDE2LjMwNSA5IDE3LjI1QzUuMTMgMTYuMzA1IDIuMjUgMTIuNDEyNSAyLjI1IDguMjVWMy43NUw5IDAuNzVaIiBmaWxsPSIjNDEzN0Y5Ii8+PC9zdmc+" alt="" width="18" height="18" />
             <span>Quỹ bảo trì</span>
           </div>
           <div className="sum-grid">
@@ -424,7 +424,7 @@ export default function FinanceOverviewPage() {
               <div className="sum-mlbl">Số dư hiện tại</div>
               <div className="sum-bigval">{data ? formatVnd(data.maintenanceFund.balance) : "Đang tải..."}</div>
               <div className="sum-trend">
-                <img src={fundTrend === "down" ? DOWN_IMG : "https://www.figma.com/api/mcp/asset/c6a833b5-a6ff-466a-b396-972bb3661f6e"} alt="" width="11" height="11" />
+                <img src={fundTrend === "down" ? DOWN_IMG : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEiIGhlaWdodD0iMTEiIHZpZXdCb3g9IjAgMCAxMSAxMSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMi43NSA2Ljg3NUw1LjUgNC4xMjVMOC4yNSA2Ljg3NSIgc3Ryb2tlPSIjNTJDNDFBIiBzdHJva2Utd2lkdGg9IjEuMzc1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4="} alt="" width="11" height="11" />
                 <span className="sum-tpct">{pctLabel(data?.maintenanceFund?.balanceChangePct)}</span>
                 <span className="sum-tlbl">so với {prevLabel}</span>
               </div>
@@ -446,19 +446,19 @@ export default function FinanceOverviewPage() {
           </div>
           <a href="#" className="sum-link">
             Xem lịch sử quỹ bảo trì
-            <img src="https://www.figma.com/api/mcp/asset/2182cf16-c606-4a8d-8028-0a377971172b" alt="" width="13" height="13" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMi43MDgwMSA2LjVIMTAuMjkxMyIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMDgzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik02LjUgMi43MDgwMUwxMC4yOTE3IDYuNDk5NjdMNi41IDEwLjI5MTMiIHN0cm9rZT0iIzQxMzdGOSIgc3Ryb2tlLXdpZHRoPSIxLjA4MzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="13" height="13" />
           </a>
         </div>
 
         <div className="sum-card">
           <div className="sum-title">
-            <img src="https://www.figma.com/api/mcp/asset/67e99264-b523-43a0-8dcf-bb73fa9b811b" alt="" width="18" height="18" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTYuNSA5SDEzLjVMMTEuMjUgMTUuNzVMNi43NSAyLjI1TDQuNSA5SDEuNSIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuNjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width="18" height="18" />
             <span>Chỉ số tài chính</span>
           </div>
           <div className="metric-list">
             <div className="metric-row">
               <div className="metric-icon" style={{ background: "#efffe7" }}>
-                <img src="https://www.figma.com/api/mcp/asset/a1f90758-bdbb-4b40-860d-072060f9689b" alt="" width="16" height="16" />
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQuNjY2MyA0LjY2Njk5TDguOTk5NjcgMTAuMzMzN0w1LjY2NjM0IDcuMDAwMzNMMS4zMzMwMSAxMS4zMzM3IiBzdHJva2U9IiM1MkM0MUEiIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEwLjY2NyA0LjY2Njk5SDE0LjY2N1Y4LjY2Njk5IiBzdHJva2U9IiM1MkM0MUEiIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="16" height="16" />
               </div>
               <div className="metric-name">Tỷ lệ thu phí</div>
               <div className="metric-val">{ratios ? `${ratios.collectionRate}%` : "—"}</div>
@@ -468,7 +468,7 @@ export default function FinanceOverviewPage() {
             </div>
             <div className="metric-row">
               <div className="metric-icon" style={{ background: "#fff1de" }}>
-                <img src="https://www.figma.com/api/mcp/asset/8911d112-c0c2-45cf-ac1f-829917821964" alt="" width="16" height="16" />
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQuNjY2MyAxMS4zMzNMOC45OTk2NyA1LjY2Njk5TDUuNjY2MzQgOS4wMDAzM0wxLjMzMzAxIDQuNjY2OTkiIHN0cm9rZT0iI0U4OUEyQyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTAuNjY3IDExLjMzM0gxNC42NjdWNy4zMzMiIHN0cm9rZT0iI0U4OUEyQyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" />
               </div>
               <div className="metric-name">Tỷ lệ chi phí / Thu</div>
               <div className="metric-val">{ratios ? `${ratios.expenseRatio}%` : "—"}</div>
@@ -478,7 +478,7 @@ export default function FinanceOverviewPage() {
             </div>
             <div className="metric-row">
               <div className="metric-icon" style={{ background: "#efeeff" }}>
-                <img src="https://www.figma.com/api/mcp/asset/e88157c5-1b73-4936-a61a-3617cc37163d" alt="" width="16" height="16" />
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNy45OTk2NyAxNC42NjYzQzExLjY4MTYgMTQuNjY2MyAxNC42NjYzIDExLjY4MTYgMTQuNjY2MyA3Ljk5OTY3QzE0LjY2NjMgNC4zMTc3OCAxMS42ODE2IDEuMzMzMDEgNy45OTk2NyAxLjMzMzAxQzQuMzE3NzggMS4zMzMwMSAxLjMzMzAxIDQuMzE3NzggMS4zMzMwMSA3Ljk5OTY3QzEuMzMzMDEgMTEuNjgxNiA0LjMxNzc4IDE0LjY2NjMgNy45OTk2NyAxNC42NjYzWiIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDRWOEwxMC42NjY3IDkuMzMzMzMiIHN0cm9rZT0iIzQxMzdGOSIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" />
               </div>
               <div className="metric-name">Tỷ lệ sử dụng quỹ bảo trì</div>
               <div className="metric-val">{ratios ? `${ratios.fundUsageRate}%` : "—"}</div>
@@ -487,7 +487,7 @@ export default function FinanceOverviewPage() {
           </div>
           <a href="#" className="sum-link">
             Xem tất cả chỉ số
-            <img src="https://www.figma.com/api/mcp/asset/2182cf16-c606-4a8d-8028-0a377971172b" alt="" width="13" height="13" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMi43MDgwMSA2LjVIMTAuMjkxMyIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMDgzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik02LjUgMi43MDgwMUwxMC4yOTE3IDYuNDk5NjdMNi41IDEwLjI5MTMiIHN0cm9rZT0iIzQxMzdGOSIgc3Ryb2tlLXdpZHRoPSIxLjA4MzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="13" height="13" />
           </a>
         </div>
       </div>
@@ -498,7 +498,7 @@ export default function FinanceOverviewPage() {
           <div className="report-title">Báo cáo tài chính mới nhất</div>
           <a href="#" className="report-link">
             Xem tất cả
-            <img src="https://www.figma.com/api/mcp/asset/5a506401-e463-4a1b-bf42-3f1fa881b635" alt="" width="13" height="13" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNC44NzUgOS43NUw4LjEyNSA2LjVMNC44NzUgMy4yNSIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMDgzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width="13" height="13" />
           </a>
         </div>
         <div className="report-body">
@@ -515,20 +515,20 @@ export default function FinanceOverviewPage() {
           </div>
           <div className="report-meta">
             <div className="report-mitem">
-              <img src="https://www.figma.com/api/mcp/asset/62236d98-457d-41ed-b756-7cd5d55209a4" alt="" width="13" height="13" />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTAuMjkxNyAyLjE2Njk5SDIuNzA4MzNDMi4xMTAwMiAyLjE2Njk5IDEuNjI1IDIuNjUyMDIgMS42MjUgMy4yNTAzM1YxMC44MzM3QzEuNjI1IDExLjQzMiAyLjExMDAyIDExLjkxNyAyLjcwODMzIDExLjkxN0gxMC4yOTE3QzEwLjg5IDExLjkxNyAxMS4zNzUgMTEuNDMyIDExLjM3NSAxMC44MzM3VjMuMjUwMzNDMTEuMzc1IDIuNjUyMDIgMTAuODkgMi4xNjY5OSAxMC4yOTE3IDIuMTY2OTlaIiBzdHJva2U9IiM1ODVDN0IiIHN0cm9rZS13aWR0aD0iMS4wODMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTguNjY2OTkgMS4wODMwMVYzLjI0OTY3IiBzdHJva2U9IiM1ODVDN0IiIHN0cm9rZS13aWR0aD0iMS4wODMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTQuMzMzMDEgMS4wODMwMVYzLjI0OTY3IiBzdHJva2U9IiM1ODVDN0IiIHN0cm9rZS13aWR0aD0iMS4wODMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEuNjI1IDUuNDE2OTlIMTEuMzc1IiBzdHJva2U9IiM1ODVDN0IiIHN0cm9rZS13aWR0aD0iMS4wODMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="13" height="13" />
               <span className="report-mlbl">Ngày tạo</span>
             </div>
             <span className="report-mval">{data?.latestReport ? formatDate(data.latestReport.publishedAt) : "—"}</span>
           </div>
           <div className="report-meta">
             <div className="report-mitem">
-              <img src="https://www.figma.com/api/mcp/asset/78fa00e8-bbd4-4b35-972e-709ed91f109c" alt="" width="13" height="13" />
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMC41NDIgNi41QzAuNTQyIDYuNSAyLjcwOCAyLjE2NyA2LjUgMi4xNjdDMTAuMjkyIDIuMTY3IDEyLjQ1OCA2LjUgMTIuNDU4IDYuNUMxMi40NTggNi41IDEwLjI5MiAxMC44MzMgNi41IDEwLjgzM0MyLjcwOCAxMC44MzMgMC41NDIgNi41IDAuNTQyIDYuNVoiIHN0cm9rZT0iIzU4NUM3QiIgc3Ryb2tlLXdpZHRoPSIxLjA4MzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNi41IDguMTI1QzcuMzk3NDYgOC4xMjUgOC4xMjUgNy4zOTc0NiA4LjEyNSA2LjVDOC4xMjUgNS42MDI1NCA3LjM5NzQ2IDQuODc1IDYuNSA0Ljg3NUM1LjYwMjU0IDQuODc1IDQuODc1IDUuNjAyNTQgNC44NzUgNi41QzQuODc1IDcuMzk3NDYgNS42MDI1NCA4LjEyNSA2LjUgOC4xMjVaIiBzdHJva2U9IiM1ODVDN0IiIHN0cm9rZS13aWR0aD0iMS4wODMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="13" height="13" />
               <span className="report-mlbl">Lượt xem</span>
             </div>
             <span className="report-mval">{data?.latestReport ? formatNumber(data.latestReport.viewCount) : "—"}</span>
           </div>
           <a href="#" className="report-dl">
-            <img src="https://www.figma.com/api/mcp/asset/fb3fce31-7fe7-48a0-bbdd-671441f0b2d4" alt="" width="15" height="15" />
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTMuMTI1IDkuMzc1VjExLjg3NUMxMy4xMjUgMTIuMjA2NSAxMi45OTMzIDEyLjUyNDUgMTIuNzU4OSAxMi43NTg5QzEyLjUyNDUgMTIuOTkzMyAxMi4yMDY1IDEzLjEyNSAxMS44NzUgMTMuMTI1SDMuMTI1QzIuNzkzNDggMTMuMTI1IDIuNDc1NTQgMTIuOTkzMyAyLjI0MTEyIDEyLjc1ODlDMi4wMDY3IDEyLjUyNDUgMS44NzUgMTIuMjA2NSAxLjg3NSAxMS44NzVWOS4zNzUiIHN0cm9rZT0iIzQxMzdGOSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNC4zNzUgNi4yNUw3LjUgOS4zNzVMMTAuNjI1IDYuMjUiIHN0cm9rZT0iIzQxMzdGOSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNy41IDkuMzc1VjEuODc1IiBzdHJva2U9IiM0MTM3RjkiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="15" height="15" />
             Tải xuống
           </a>
         </div>
