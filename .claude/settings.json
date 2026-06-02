@@ -23,7 +23,22 @@
       "Bash(grep -v '^\\\\s*$')",
       "Bash(grep -c figma.com 'app/\\(dashboard\\)/__TRACKED_VAR__/page.tsx')",
       "Bash(python3 -)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Read(//Users/nghiempt/Workspace/Tino/nhachung/nhachung-dashboard/**)",
+      "Bash(grep -rhoE '`?[\"/][a-z][^\"`,\\)]*`?' --include=\"*.tsx\" --include=\"*.ts\" -e 'useApiData<[^>]*>\\\\\\(' .)",
+      "Bash(grep -oE '[\"\\\\`][/][a-zA-Z0-9/_?=$&{}.-]*')",
+      "Bash(ls src *)",
+      "Bash(find . -path ./node_modules -prune -o -name \"*.controller.ts\" -print)",
+      "Bash(sed -n '100,130p' news/news.service.ts)",
+      "Bash(sed -n '1,200p' events/events.service.ts)",
+      "Bash(grep -rIno \"content: [\\\\\"'\\\\`][^\\\\\"'\\\\`]\\\\{0,80\\\\}\" prisma)",
+      "Bash(npx next *)",
+      "Bash(npx eslint *)",
+      "Bash(grep -nE '<button|className=\"[^\"]*\\(link|btn|cta\\)[^\"]*\"' 'app/\\(dashboard\\)/__TRACKED_VAR__/page.tsx')",
+      "Bash(grep -nE '<button|<span className=\"[^\"]*link|<a href=\"#\"|<a className|<a onClick|Xuất báo cáo|Tháng 5/2024|Cập nhật KPI|Xem tất cả|Xem lịch|btn-primary|btn-outline' 'app/\\(dashboard\\)/__TRACKED_VAR__/page.tsx')",
+      "Bash(sed -n '372,386p' \"app/\\(dashboard\\)/gop-y/page.tsx\")",
+      "Bash(sed -n '186,192p' \"app/\\(dashboard\\)/gop-y/page.tsx\")",
+      "Bash(sed -n '366,372p;612,618p' \"app/\\(dashboard\\)/ho-so/page.tsx\")"
     ]
   }
 }

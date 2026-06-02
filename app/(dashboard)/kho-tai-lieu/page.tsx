@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useApiData } from "@/lib/hooks";
+import { useApiData, useAction } from "@/lib/hooks";
 import { apiPost } from "@/lib/api";
 import { formatDate, formatNumber } from "@/lib/format";
 import { docColor, docTypeLabel, DOC_CATEGORY_CLASS } from "@/lib/ui-maps";
+import { Modal } from "@/components/ui/Modal";
 
 interface DocCategory {
   id: string;
@@ -52,6 +53,7 @@ export default function KhoTaiLieuPage() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [showRequest, setShowRequest] = useState(false);
 
   const { data: categories } = useApiData<DocCategory[]>("/documents/categories");
 
@@ -112,25 +114,15 @@ export default function KhoTaiLieuPage() {
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center", flexShrink: 0, paddingTop: "4px" }}>
-          <button style={{
+          <button onClick={() => setShowRequest(true)} style={{
             display: "inline-flex", alignItems: "center", gap: "8px",
-            padding: "11px 19px", background: "#ffffff",
-            border: "1px solid #d4d7e5", borderRadius: "10px",
-            fontSize: "14px", fontWeight: 500, color: "#272727",
-            cursor: "pointer", whiteSpace: "nowrap", lineHeight: "22px",
-          }}>
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE0IDEwQzE0IDEwLjM1MzYgMTMuODU5NSAxMC42OTI4IDEzLjYwOTUgMTAuOTQyOEMxMy4zNTk0IDExLjE5MjkgMTMuMDIwMyAxMS4zMzMzIDEyLjY2NjcgMTEuMzMzM0g0LjY2NjY3TDIgMTRWMy4zMzMzM0MyIDIuOTc5NzEgMi4xNDA0OCAyLjY0MDU3IDIuMzkwNTIgMi4zOTA1MkMyLjY0MDU3IDIuMTQwNDggMi45Nzk3MSAyIDMuMzMzMzMgMkgxMi42NjY3QzEzLjAyMDMgMiAxMy4zNTk0IDIuMTQwNDggMTMuNjA5NSAyLjM5MDUyQzEzLjg1OTUgMi42NDA1NyAxNCAyLjk3OTcxIDE0IDMuMzMzMzNWMTBaIiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4xMjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K" alt="" width={16} height={16} />
-            Yêu cầu tài liệu
-          </button>
-          <button style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            padding: "11px 18px", background: "#4137f9",
-            borderRadius: "10px", border: 0,
+            padding: "11px 19px", background: "#4137f9",
+            border: 0, borderRadius: "10px",
             fontSize: "14px", fontWeight: 500, color: "#fff",
             cursor: "pointer", whiteSpace: "nowrap", lineHeight: "22px",
           }}>
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE0IDEwVjEyLjY2NjdDMTQgMTMuMDIwMyAxMy44NTk1IDEzLjM1OTQgMTMuNjA5NSAxMy42MDk1QzEzLjM1OTQgMTMuODU5NSAxMy4wMjAzIDE0IDEyLjY2NjcgMTRIMy4zMzMzM0MyLjk3OTcxIDE0IDIuNjQwNTcgMTMuODU5NSAyLjM5MDUyIDEzLjYwOTVDMi4xNDA0OCAxMy4zNTk0IDIgMTMuMDIwMyAyIDEyLjY2NjdWMTAiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMS4zMzM3IDUuMzMzMzNMOC4wMDAzMyAyTDQuNjY2OTkgNS4zMzMzMyIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTggMlYxMCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" alt="" width={16} height={16} />
-            Tải lên tài liệu
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE0IDEwQzE0IDEwLjM1MzYgMTMuODU5NSAxMC42OTI4IDEzLjYwOTUgMTAuOTQyOEMxMy4zNTk0IDExLjE5MjkgMTMuMDIwMyAxMS4zMzMzIDEyLjY2NjcgMTEuMzMzM0g0LjY2NjY3TDIgMTRWMy4zMzMzM0MyIDIuOTc5NzEgMi4xNDA0OCAyLjY0MDU3IDIuMzkwNTIgMi4zOTA1MkMyLjY0MDU3IDIuMTQwNDggMi45Nzk3MSAyIDMuMzMzMzMgMkgxMi42NjY3QzEzLjAyMDMgMiAxMy4zNTk0IDIuMTQwNDggMTMuNjA5NSAyLjM5MDUyQzEzLjg1OTUgMi42NDA1NyAxNCAyLjk3OTcxIDE0IDMuMzMzMzNWMTBaIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuMTI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==" alt="" width={16} height={16} />
+            Yêu cầu tài liệu
           </button>
         </div>
       </div>
@@ -164,7 +156,7 @@ export default function KhoTaiLieuPage() {
             cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
           }}>
           <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzU4NTk0XzkxMTUpIj4KPHBhdGggZD0iTTEzLjc1IDEuODc1SDEuMjVMNi4yNSA3Ljc4NzVWMTEuODc1TDguNzUgMTMuMTI1VjcuNzg3NUwxMy43NSAxLjg3NVoiIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9nPgo8ZGVmcz4KPGNsaXBQYXRoIGlkPSJjbGlwMF81ODU5NF85MTE1Ij4KPHJlY3Qgd2lkdGg9IjE1IiBoZWlnaHQ9IjE1IiBmaWxsPSJ3aGl0ZSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=" alt="" width={15} height={15} />
-          Bộ lọc
+          Tìm kiếm
         </button>
       </div>
 
@@ -384,6 +376,74 @@ export default function KhoTaiLieuPage() {
         </div>
       </div>
 
+      {showRequest && <RequestDocumentModal onClose={() => setShowRequest(false)} />}
     </div>
+  );
+}
+
+// ── Request document popup ─────────────────────────────────────
+function RequestDocumentModal({ onClose }: { onClose: () => void }) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [done, setDone] = useState(false);
+
+  const { run, loading, error } = useAction(async () =>
+    apiPost("/feedbacks", {
+      title: `Yêu cầu tài liệu: ${title}`,
+      category: "Yêu cầu tài liệu",
+      description: description || undefined,
+      priority: "medium",
+    }),
+  );
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", boxSizing: "border-box", border: "1px solid #d4d7e5", borderRadius: "10px",
+    padding: "10px 14px", fontSize: "14px", color: "#272727", background: "#ffffff", outline: "none",
+  };
+  const labelStyle: React.CSSProperties = { fontSize: "12px", fontWeight: 600, color: "#585c7b", marginBottom: "6px", display: "block" };
+
+  const onSubmit = async () => {
+    if (!title.trim()) return;
+    const res = await run();
+    if (res) setDone(true);
+  };
+
+  return (
+    <Modal onClose={onClose} width={500} title="Yêu cầu tài liệu" subtitle="Gửi yêu cầu tới Ban quản trị về tài liệu bạn cần">
+      <div style={{ padding: "16px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        {done ? (
+          <>
+            <div style={{ textAlign: "center", padding: "12px 0" }}>
+              <div style={{ fontSize: "40px", marginBottom: "8px" }}>✅</div>
+              <div style={{ fontSize: "15px", fontWeight: 600, color: "#272727" }}>Đã gửi yêu cầu</div>
+              <div style={{ fontSize: "13px", color: "#585c7b", marginTop: "4px" }}>
+                Ban quản trị sẽ phản hồi qua mục Góp ý / Phản ánh.
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={onClose} style={{ padding: "10px 18px", borderRadius: "10px", border: 0, background: "#4137f9", fontSize: "14px", fontWeight: 500, color: "#fff", cursor: "pointer" }}>Đóng</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <label style={labelStyle}>Tên tài liệu cần</label>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="VD: Biên bản họp tháng 5/2026" style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Lý do / Ghi chú</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="Mô tả thêm về tài liệu bạn cần..." style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit" }} />
+            </div>
+            {error && <div style={{ fontSize: "13px", color: "#ef4444" }}>{error}</div>}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button onClick={onClose} style={{ padding: "10px 18px", borderRadius: "10px", border: "1px solid #d4d7e5", background: "#fff", fontSize: "14px", fontWeight: 500, color: "#272727", cursor: "pointer" }}>Hủy</button>
+              <button onClick={onSubmit} disabled={loading || !title.trim()} style={{ padding: "10px 18px", borderRadius: "10px", border: 0, background: "#4137f9", fontSize: "14px", fontWeight: 500, color: "#fff", cursor: loading || !title.trim() ? "default" : "pointer", opacity: loading || !title.trim() ? 0.6 : 1 }}>
+                {loading ? "Đang gửi..." : "Gửi yêu cầu"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
   );
 }

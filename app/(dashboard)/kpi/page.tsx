@@ -2,6 +2,7 @@
 
 import { useApiData } from "@/lib/hooks";
 import { KPI_GRADE, KPI_RESULT } from "@/lib/ui-maps";
+import { exportCsv } from "@/lib/export-csv";
 
 type KpiMetric = {
   name: string;
@@ -116,6 +117,28 @@ export default function KpiPage() {
   const lastPt = trendPts.length ? trendPts[trendPts.length - 1] : undefined;
   const growth = lastPt && prevPt ? +(lastPt.totalScore - prevPt.totalScore).toFixed(1) : 0;
 
+  const handleExport = () => {
+    const rows: (string | number)[][] = [];
+    for (const cat of categories) {
+      for (const m of cat.metrics) {
+        rows.push([
+          cat.name,
+          m.name,
+          `${m.targetValue}${m.unit}`,
+          `${m.actualValue}${m.unit}`,
+          `${m.achievementPct}%`,
+          `${m.pointsEarned}/${m.pointsMax}`,
+          KPI_RESULT[m.resultBadge]?.label ?? m.resultBadge,
+        ]);
+      }
+    }
+    exportCsv(
+      `kpi-ban-quan-tri${kpi?.period ? `-${kpi.period}` : ""}`,
+      ["Nhóm", "Chỉ tiêu", "Mục tiêu", "Thực tế", "Đạt được", "Điểm", "Kết quả"],
+      rows,
+    );
+  };
+
   return (
     <div className="kpi-page">
       {/* ── Page Header ── */}
@@ -125,7 +148,7 @@ export default function KpiPage() {
           <p className="page-sub">Đánh giá hiệu quả hoạt động Ban quản trị theo chỉ tiêu đề ra</p>
         </div>
         <div className="page-actions">
-          <button className="btn-outline">
+          <span className="btn-outline" style={{ cursor: "default" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
@@ -133,24 +156,14 @@ export default function KpiPage() {
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
             {kpi?.periodLabel ?? "Đang tải..."}
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-          <button className="btn-outline">
+          </span>
+          <button className="btn-primary" onClick={handleExport}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             Xuất báo cáo
-          </button>
-          <button className="btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-            Cập nhật KPI
           </button>
         </div>
       </div>
@@ -374,7 +387,7 @@ export default function KpiPage() {
         <div className="detail-card">
           <div className="card-hd">
             <div className="card-title">Chi tiết chỉ tiêu KPI</div>
-            <span className="card-link">Xem tất cả →</span>
+            <span className="card-link" onClick={handleExport} style={{ cursor: "pointer" }}>Xuất CSV →</span>
           </div>
 
           <div className="kpi-table">

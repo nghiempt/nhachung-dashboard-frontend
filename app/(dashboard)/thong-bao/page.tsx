@@ -66,6 +66,7 @@ export default function ThongBaoPage() {
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Debounce the search input
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function ThongBaoPage() {
   // Load detail when an item is selected; marks it read server-side, then refresh
   async function selectItem(id: string) {
     setSelectedId(id);
+    setShareCopied(false);
     try {
       const d = await apiGet<Detail>(`/notifications/${id}`);
       setDetail(d);
@@ -232,12 +234,16 @@ export default function ThongBaoPage() {
                   Quay lại danh sách
                 </div>
                 <div className="top-actions">
-                  <button className="share-btn">
+                  <button className="share-btn" onClick={() => {
+                    const text = `${detail?.title ?? "Thông báo"} — ${typeof window !== "undefined" ? window.location.href : ""}`;
+                    if (typeof navigator !== "undefined" && navigator.share) {
+                      navigator.share({ title: detail?.title ?? "Thông báo", url: typeof window !== "undefined" ? window.location.href : undefined }).catch(() => {});
+                    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+                      navigator.clipboard.writeText(text).then(() => setShareCopied(true)).catch(() => {});
+                    }
+                  }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                    Chia sẻ
-                  </button>
-                  <button className="more-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+                    {shareCopied ? "Đã sao chép" : "Chia sẻ"}
                   </button>
                 </div>
               </div>
@@ -373,14 +379,14 @@ export default function ThongBaoPage() {
             <div className="field-label">Khoảng thời gian</div>
             <div className="select">Tất cả thời gian <svg className="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
           </div>
-          <button className="btn-apply">Áp dụng</button>
-          <button className="btn-reset">Đặt lại</button>
+          <button className="btn-apply" onClick={() => { setPage(1); refetchList(); }}>Áp dụng</button>
+          <button className="btn-reset" onClick={() => { setTab("all"); setSearchInput(""); setSearch(""); setPage(1); }}>Đặt lại</button>
         </section>
 
         <section className="panel">
           <div className="panel-head">
             <div className="panel-title">Thông báo nổi bật</div>
-            <a href="#" className="link">Xem tất cả <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a onClick={() => { setTab("urgent"); setPage(1); }} className="link" style={{ cursor: "pointer" }}>Xem tất cả <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
           </div>
           <div className="featured-list">
             {items.filter((n) => n.isUrgent).slice(0, 2).map((n) => {
@@ -428,7 +434,7 @@ export default function ThongBaoPage() {
               </div>
             ))}
           </div>
-          <a href="#" className="cat-link">
+          <a onClick={() => setTab("all")} className="cat-link" style={{ cursor: "pointer" }}>
             Xem tất cả danh mục
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>

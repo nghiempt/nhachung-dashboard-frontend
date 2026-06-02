@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useApiData } from "@/lib/hooks";
 import { formatVnd, formatDate, formatNumber } from "@/lib/format";
 import { trendDir, MAINTENANCE_STATUS } from "@/lib/ui-maps";
+import { Modal, ModalField, ModalBadge } from "@/components/ui/Modal";
+import { exportCsv } from "@/lib/export-csv";
 
 interface FundOverview {
   balance: number;
@@ -69,6 +72,7 @@ function periodLabel(period: string): string {
 }
 
 export default function QuyBaoTriPage() {
+  const [selectedJob, setSelectedJob] = useState<FundJob | null>(null);
   const { data: overview } = useApiData<FundOverview>("/fund/overview");
   const { data: movements } = useApiData<FundMovement[]>("/fund/movements");
   const { data: blocks } = useApiData<FundBlock[]>("/fund/blocks");
@@ -112,6 +116,23 @@ export default function QuyBaoTriPage() {
 
   const lastUpdated = overview ? formatDate(overview.updatedAt) : "—";
 
+  const handleExport = () => {
+    const all = [...(completed ?? []), ...(planned ?? []), ...(tentative ?? [])];
+    const rows = all.map((j) => [
+      j.name,
+      j.contractor,
+      MAINTENANCE_STATUS[j.status]?.label ?? j.status,
+      j.amount ?? j.estimatedCost ?? "",
+      j.scheduledPeriod ?? "",
+      j.actualDate ? formatDate(j.actualDate) : "",
+    ]);
+    exportCsv(
+      "quy-bao-tri-hang-muc",
+      ["Hạng mục", "Nhà thầu", "Trạng thái", "Số tiền (VND)", "Kỳ kế hoạch", "Ngày thực hiện"],
+      rows,
+    );
+  };
+
   return (
     <div className="qbt-page">
       {/* ── Page Header ── */}
@@ -121,19 +142,16 @@ export default function QuyBaoTriPage() {
           <p className="page-sub">Thông tin quỹ bảo trì tòa nhà và kế hoạch sử dụng</p>
         </div>
         <div className="page-actions">
-          <button className="btn-outline">
+          <span className="btn-outline" style={{ cursor: "default" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            Tháng 5/2024
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-          <button className="btn-primary">
+            Cập nhật: {lastUpdated}
+          </span>
+          <button className="btn-primary" onClick={handleExport}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
@@ -371,7 +389,7 @@ export default function QuyBaoTriPage() {
         <div className="table-card">
           <div className="table-hd">
             <div className="table-title">Chi phí bảo trì gần đây</div>
-            <span className="table-link">Xem tất cả →</span>
+            <span className="table-link" onClick={handleExport} style={{ cursor: "pointer" }}>Xuất CSV →</span>
           </div>
           <div className="exp-table">
             <div className="exp-hd">
@@ -383,7 +401,7 @@ export default function QuyBaoTriPage() {
             {(completed ?? []).map((r) => {
               const st = MAINTENANCE_STATUS[r.status] ?? MAINTENANCE_STATUS.completed;
               return (
-                <div className="exp-row" key={r.id}>
+                <div className="exp-row" key={r.id} onClick={() => setSelectedJob(r)} style={{ cursor: "pointer" }}>
                   <div>
                     <div className="exp-name">{r.name}</div>
                     <div style={{ fontSize: "11px", color: "#585c7b" }}>{formatDate(r.actualDate)}</div>
@@ -402,7 +420,6 @@ export default function QuyBaoTriPage() {
         <div className="table-card">
           <div className="table-hd">
             <div className="table-title">Kế hoạch bảo trì sắp tới</div>
-            <span className="table-link">Chi tiết →</span>
           </div>
           <div className="plan-list">
             {planRows.map(({ job }) => {
@@ -411,7 +428,7 @@ export default function QuyBaoTriPage() {
               const badge = job.status === "tentative" ? "gray" : "blue";
               const metaPrefix = job.status === "tentative" ? "Đang chọn nhà thầu" : job.contractor;
               return (
-                <div className="plan-row" key={job.id}>
+                <div className="plan-row" key={job.id} onClick={() => setSelectedJob(job)} style={{ cursor: "pointer" }}>
                   <div className="plan-dot-col"><div className={`plan-dot ${dot}`}></div></div>
                   <div className="plan-body">
                     <div className="plan-name">{job.name}</div>
@@ -456,6 +473,32 @@ export default function QuyBaoTriPage() {
           ))}
         </div>
       </div>
+
+      {selectedJob && (
+        <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
+      )}
     </div>
+  );
+}
+
+// ── Maintenance job detail popup ───────────────────────────────
+function JobDetailModal({ job, onClose }: { job: FundJob; onClose: () => void }) {
+  const st = MAINTENANCE_STATUS[job.status] ?? MAINTENANCE_STATUS.planned;
+  const isTentative = job.status === "tentative";
+  return (
+    <Modal
+      onClose={onClose}
+      width={500}
+      title={job.name}
+      headerAccent={<ModalBadge label={st.label} bg={st.bg} color={st.color} />}
+    >
+      <div style={{ padding: "16px 24px 24px" }}>
+        <ModalField label="Nhà thầu" value={isTentative ? "Đang chọn nhà thầu" : (job.contractor || "—")} />
+        {job.amount != null && <ModalField label="Số tiền đã chi" value={formatVnd(job.amount)} valueColor="#f5222d" />}
+        {job.estimatedCost != null && <ModalField label="Chi phí dự kiến" value={formatVnd(job.estimatedCost)} />}
+        {job.scheduledPeriod && <ModalField label="Kỳ kế hoạch" value={job.scheduledPeriod} />}
+        {job.actualDate && <ModalField label="Ngày thực hiện" value={formatDate(job.actualDate)} />}
+      </div>
+    </Modal>
   );
 }

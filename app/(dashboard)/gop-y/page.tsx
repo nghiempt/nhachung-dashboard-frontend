@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApiData, useAction } from "@/lib/hooks";
 import { apiPost } from "@/lib/api";
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
@@ -57,6 +58,7 @@ const TAB_KEYS = ["all", "processing", "awaiting", "completed", "rejected"];
 const PAGE_LIMIT = 5;
 
 export default function GopYPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -445,7 +447,7 @@ export default function GopYPage() {
               ))}
             </div>
           </div>
-          <button style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#4137f9", color: "#fff", padding: "8px 10px", borderRadius: "12px", border: 0, fontSize: "14px", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, lineHeight: "22px" }}>
+          <button onClick={() => router.push("/ai-assistant")} style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#4137f9", color: "#fff", padding: "8px 10px", borderRadius: "12px", border: 0, fontSize: "14px", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, lineHeight: "22px" }}>
             Chat với AI
             <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBDMTQgMTAuMzU0IDEzLjg2IDEwLjY5MyAxMy42MSAxMC45NDNDMTMuMzU5IDExLjE5MyAxMy4wMiAxMS4zMzMgMTIuNjY3IDExLjMzM0g0LjY2N0wyIDE0VjMuMzMzQzIgMi45OCAyLjE0IDIuNjQxIDIuMzkgMi4zOTFDMi42NDEgMi4xNCAyLjk4IDIgMy4zMzMgMkgxMi42NjdDMTMuMDIgMiAxMy4zNTkgMi4xNCAxMy42MSAyLjM5MUMxMy44NiAyLjY0MSAxNCAyLjk4IDE0IDMuMzMzVjEwWiIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMTI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width={18} height={18} />
           </button>

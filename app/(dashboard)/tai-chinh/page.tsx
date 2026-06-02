@@ -1,8 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApiData } from "@/lib/hooks";
 import { formatVnd, formatNumber, formatDate } from "@/lib/format";
+import { Dropdown, dropdownItem, dropdownEmpty } from "@/components/ui/Dropdown";
+import { exportCsv } from "@/lib/export-csv";
 
 const UP_IMG = "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDExIDExIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iU1ZHIj4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTIuNzUgNi44NzVMNS41IDQuMTI1TDguMjUgNi44NzUiIHN0cm9rZT0idmFyKC0tc3Ryb2tlLTAsICM1MkM0MUEpIiBzdHJva2Utd2lkdGg9IjEuMzc1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9nPgo8L3N2Zz4K";
 const DOWN_IMG = "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDExIDExIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBpZD0iU1ZHIj4KPHBhdGggaWQ9IlZlY3RvciIgZD0iTTIuNzUgNi44NzVMNS41IDQuMTI1TDguMjUgNi44NzUiIHN0cm9rZT0idmFyKC0tc3Ryb2tlLTAsICNGNTIyMkQpIiBzdHJva2Utd2lkdGg9IjEuMzc1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9nPgo8L3N2Zz4K";
@@ -107,10 +111,32 @@ function dirClass(direction?: string, pct?: number | null): "up" | "down" | "neu
 }
 
 export default function FinanceOverviewPage() {
-  const { data } = useApiData<FinancialOverview>("/financial/overview");
-  const { data: periods } = useApiData<Period[]>("/financial/periods?months=6");
+  const router = useRouter();
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
+  const [showPeriodMenu, setShowPeriodMenu] = useState(false);
+
+  const { data } = useApiData<FinancialOverview>(
+    `/financial/overview${selectedPeriod ? `?period=${selectedPeriod}` : ""}`,
+    [selectedPeriod],
+  );
+  const { data: periods } = useApiData<Period[]>("/financial/periods?months=12");
 
   const period = data?.period;
+  const periodOptions = (periods ?? []).slice().reverse();
+
+  const handleExport = () => {
+    const inc = data?.lineItems?.income ?? [];
+    const exp = data?.lineItems?.expense ?? [];
+    const rows = [
+      ...inc.map((it) => ["Thu", it.name, it.amount, `${it.pctOfTotal}%`]),
+      ...exp.map((it) => ["Chi", it.name, it.amount, `${it.pctOfTotal}%`]),
+    ];
+    exportCsv(
+      `tong-quan-tai-chinh${period ? `-${period}` : ""}`,
+      ["Loại", "Khoản mục", "Số tiền (VND)", "Tỉ trọng"],
+      rows,
+    );
+  };
   const longLabel = periodLong(period);
   const prevLabel = prevPeriodLong(period);
   const expenseItems = data?.lineItems?.expense ?? [];
@@ -162,12 +188,27 @@ export default function FinanceOverviewPage() {
           <p className="fin-sub">Cập nhật tình hình thu chi, quỹ và các chỉ số tài chính của tòa nhà</p>
         </div>
         <div className="fin-actions">
-          <button className="fin-btn">
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNjY2NyAyLjY2Njk5SDMuMzMzMzNDMi41OTY5NSAyLjY2Njk5IDIgMy4yNjM5NSAyIDQuMDAwMzNWMTMuMzMzN0MyIDE0LjA3IDIuNTk2OTUgMTQuNjY3IDMuMzMzMzMgMTQuNjY3SDEyLjY2NjdDMTMuNDAzIDE0LjY2NyAxNCAxNC4wNyAxNCAxMy4zMzM3VjQuMDAwMzNDMTQgMy4yNjM5NSAxMy40MDMgMi42NjY5OSAxMi42NjY3IDIuNjY2OTlaIiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEwLjY2NyAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNS4zMzMwMSAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMiA2LjY2Njk5SDE0IiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="16" height="16" />
-            {longLabel ? `Tháng ${parsePeriod(period).m}/${parsePeriod(period).y}` : "Đang tải..."}
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMy41IDUuMjVMNyA4Ljc1TDEwLjUgNS4yNSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjEuMTY2NjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width="14" height="14" />
-          </button>
-          <button className="fin-btn">
+          <div style={{ position: "relative" }}>
+            <button className="fin-btn" onClick={() => setShowPeriodMenu((v) => !v)}>
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNjY2NyAyLjY2Njk5SDMuMzMzMzNDMi41OTY5NSAyLjY2Njk5IDIgMy4yNjM5NSAyIDQuMDAwMzNWMTMuMzMzN0MyIDE0LjA3IDIuNTk2OTUgMTQuNjY3IDMuMzMzMzMgMTQuNjY3SDEyLjY2NjdDMTMuNDAzIDE0LjY2NyAxNCAxNC4wNyAxNCAxMy4zMzM3VjQuMDAwMzNDMTQgMy4yNjM5NSAxMy40MDMgMi42NjY5OSAxMi42NjY3IDIuNjY2OTlaIiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEwLjY2NyAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNS4zMzMwMSAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMiA2LjY2Njk5SDE0IiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="16" height="16" />
+              {longLabel ? `Tháng ${parsePeriod(period).m}/${parsePeriod(period).y}` : "Đang tải..."}
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMy41IDUuMjVMNyA4Ljc1TDEwLjUgNS4yNSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjEuMTY2NjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width="14" height="14" />
+            </button>
+            {showPeriodMenu && (
+              <Dropdown onClose={() => setShowPeriodMenu(false)}>
+                {periodOptions.length === 0 && <div style={dropdownEmpty}>Đang tải...</div>}
+                {periodOptions.map((p) => {
+                  const { m, y } = parsePeriod(p.period);
+                  return (
+                    <button key={p.period} style={dropdownItem(p.period === period)} onClick={() => { setSelectedPeriod(p.period); setShowPeriodMenu(false); }}>
+                      Tháng {m}/{y}
+                    </button>
+                  );
+                })}
+              </Dropdown>
+            )}
+          </div>
+          <button className="fin-btn" onClick={handleExport}>
             <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBWMTIuNjY2N0MxNCAxMy4wMjAzIDEzLjg1OTUgMTMuMzU5NCAxMy42MDk1IDEzLjYwOTVDMTMuMzU5NCAxMy44NTk1IDEzLjAyMDMgMTQgMTIuNjY2NyAxNEgzLjMzMzMzQzIuOTc5NzEgMTQgMi42NDA1NyAxMy44NTk1IDIuMzkwNTIgMTMuNjA5NUMyLjE0MDQ4IDEzLjM1OTQgMiAxMy4wMjAzIDIgMTIuNjY2N1YxMCIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00LjY2Njk5IDYuNjY2OTlMOC4wMDAzMyAxMC4wMDAzTDExLjMzMzcgNi42NjY5OSIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDEwVjIiIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" />
             Xuất báo cáo
           </button>
@@ -242,10 +283,10 @@ export default function FinanceOverviewPage() {
               Thu chi theo tháng
               <span className="chart-info">i</span>
             </div>
-            <button className="chart-period">
+            <span className="chart-period" style={{ cursor: "default" }}>
               6 tháng gần nhất
               <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMyA0LjVMNiA3LjVMOSA0LjUiIHN0cm9rZT0iIzNFNDI2NSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="12" height="12" />
-            </button>
+            </span>
           </div>
 
           <div className="chart-svg-area">
@@ -444,7 +485,7 @@ export default function FinanceOverviewPage() {
               </div>
             </div>
           </div>
-          <a href="#" className="sum-link">
+          <a onClick={() => router.push("/quy-bao-tri")} className="sum-link" style={{ cursor: "pointer" }}>
             Xem lịch sử quỹ bảo trì
             <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMi43MDgwMSA2LjVIMTAuMjkxMyIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMDgzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik02LjUgMi43MDgwMUwxMC4yOTE3IDYuNDk5NjdMNi41IDEwLjI5MTMiIHN0cm9rZT0iIzQxMzdGOSIgc3Ryb2tlLXdpZHRoPSIxLjA4MzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="13" height="13" />
           </a>
@@ -485,7 +526,7 @@ export default function FinanceOverviewPage() {
               <div className="metric-trend neu">+0% so với {prevPeriodShort(period)}</div>
             </div>
           </div>
-          <a href="#" className="sum-link">
+          <a onClick={() => router.push("/thu-chi")} className="sum-link" style={{ cursor: "pointer" }}>
             Xem tất cả chỉ số
             <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMi43MDgwMSA2LjVIMTAuMjkxMyIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMDgzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik02LjUgMi43MDgwMUwxMC4yOTE3IDYuNDk5NjdMNi41IDEwLjI5MTMiIHN0cm9rZT0iIzQxMzdGOSIgc3Ryb2tlLXdpZHRoPSIxLjA4MzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="13" height="13" />
           </a>
@@ -496,7 +537,7 @@ export default function FinanceOverviewPage() {
       <div className="report-card">
         <div className="report-hd">
           <div className="report-title">Báo cáo tài chính mới nhất</div>
-          <a href="#" className="report-link">
+          <a onClick={() => router.push("/bao-cao")} className="report-link" style={{ cursor: "pointer" }}>
             Xem tất cả
             <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNC44NzUgOS43NUw4LjEyNSA2LjVMNC44NzUgMy4yNSIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMDgzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" alt="" width="13" height="13" />
           </a>
@@ -527,7 +568,7 @@ export default function FinanceOverviewPage() {
             </div>
             <span className="report-mval">{data?.latestReport ? formatNumber(data.latestReport.viewCount) : "—"}</span>
           </div>
-          <a href="#" className="report-dl">
+          <a onClick={() => router.push("/bao-cao")} className="report-dl" style={{ cursor: "pointer" }}>
             <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTMuMTI1IDkuMzc1VjExLjg3NUMxMy4xMjUgMTIuMjA2NSAxMi45OTMzIDEyLjUyNDUgMTIuNzU4OSAxMi43NTg5QzEyLjUyNDUgMTIuOTkzMyAxMi4yMDY1IDEzLjEyNSAxMS44NzUgMTMuMTI1SDMuMTI1QzIuNzkzNDggMTMuMTI1IDIuNDc1NTQgMTIuOTkzMyAyLjI0MTEyIDEyLjc1ODlDMi4wMDY3IDEyLjUyNDUgMS44NzUgMTIuMjA2NSAxLjg3NSAxMS44NzVWOS4zNzUiIHN0cm9rZT0iIzQxMzdGOSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNC4zNzUgNi4yNUw3LjUgOS4zNzVMMTAuNjI1IDYuMjUiIHN0cm9rZT0iIzQxMzdGOSIgc3Ryb2tlLXdpZHRoPSIxLjI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNy41IDkuMzc1VjEuODc1IiBzdHJva2U9IiM0MTM3RjkiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="15" height="15" />
             Tải xuống
           </a>

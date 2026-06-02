@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useApiData } from "@/lib/hooks";
 import { formatDateLong, formatTime, timeAgo, formatNumber } from "@/lib/format";
 import { notifIconColor, type IconColor } from "@/lib/ui-maps";
@@ -76,6 +77,7 @@ function statDisplayValue(stat: OverviewStat): string {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { data, loading } = useApiData<DashboardOverview>("/dashboard/overview");
 
   const hero = data?.hero;
@@ -128,7 +130,7 @@ export default function DashboardPage() {
               <span className="weather-desc">Trời nắng</span>
             </div>
           </div>
-          <button className="weather-btn">
+          <button className="weather-btn" onClick={() => window.open('https://nchmf.gov.vn/Kttv/vi-VN/1/index.html', '_blank', 'noopener,noreferrer')}>
             Xem dự báo
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/dashboard/img_6.svg" alt="" />
@@ -147,7 +149,7 @@ export default function DashboardPage() {
             <div className="db-section-title">Thao tác nhanh</div>
             <div className="quick-actions-grid">
 
-              <div className="qa-card">
+              <div className="qa-card" onClick={() => router.push('/gop-y')} style={{ cursor: 'pointer' }}>
                 <div className="qa-icon-box" style={{ background: '#4137f9' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
                     <path fillRule="evenodd" clipRule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 19.052 3.895 20 5 20h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144a2.46 2.46 0 0 1-1.276.67l-3.114.733a2.46 2.46 0 0 1-2.638-1.659l-.537-1.518a2.46 2.46 0 0 1 .538-2.44l5.17-5.47-.908-.47Z" />
@@ -162,7 +164,7 @@ export default function DashboardPage() {
                 <img className="qa-arrow" src="/images/dashboard/qa-arrow.svg" alt="" />
               </div>
 
-              <div className="qa-card">
+              <div className="qa-card" onClick={() => router.push('/tai-chinh')} style={{ cursor: 'pointer' }}>
                 <div className="qa-icon-box" style={{ background: '#41c69c' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/images/dashboard/img_8.svg" alt="" style={{ width: '20px', height: '20px' }} />
@@ -175,7 +177,7 @@ export default function DashboardPage() {
                 <img className="qa-arrow" src="/images/dashboard/qa-arrow.svg" alt="" />
               </div>
 
-              <div className="qa-card">
+              <div className="qa-card" onClick={() => router.push('/ai-assistant')} style={{ cursor: 'pointer' }}>
                 <div className="qa-icon-box" style={{ background: '#6c90fa' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/images/dashboard/img_10.svg" alt="" style={{ width: '20px', height: '20px' }} />
@@ -195,11 +197,11 @@ export default function DashboardPage() {
           <div>
             <div className="db-section-header">
               <div className="db-section-title">Tổng quan minh bạch</div>
-              <button className="db-filter-btn">
+              <span className="db-filter-btn" style={{ cursor: 'default' }}>
                 Tháng 5/2026
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/images/dashboard/img_24.svg" alt="" />
-              </button>
+              </span>
             </div>
             <div className="stats-grid">
               {[0, 2].map((rowStart) => (
@@ -238,7 +240,7 @@ export default function DashboardPage() {
           <div>
             <div className="db-section-header">
               <div className="db-section-title">Hoạt động cộng đồng</div>
-              <a href="#" className="db-section-link">
+              <a onClick={() => router.push('/tin-tuc')} className="db-section-link" style={{ cursor: 'pointer' }}>
                 Xem tất cả
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/images/dashboard/img_6.svg" alt="" />
@@ -280,7 +282,7 @@ export default function DashboardPage() {
           <div>
             <div className="db-section-header">
               <div className="db-section-title">Thông báo mới</div>
-              <a href="#" className="db-section-link">
+              <a onClick={() => router.push('/thong-bao')} className="db-section-link" style={{ cursor: 'pointer' }}>
                 Xem tất cả
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/images/dashboard/img_6.svg" alt="" />
@@ -311,7 +313,7 @@ export default function DashboardPage() {
           <div>
             <div className="db-section-header">
               <div className="db-section-title">Lịch sự kiện</div>
-              <a href="#" className="db-section-link">
+              <a onClick={() => router.push('/tin-tuc')} className="db-section-link" style={{ cursor: 'pointer' }}>
                 Xem lịch đầy đủ
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/images/dashboard/img_6.svg" alt="" />
@@ -321,22 +323,19 @@ export default function DashboardPage() {
             <div className="calendar-card">
               {/* Calendar header */}
               <div className="cal-header">
-                <button className="cal-nav-btn">
+                <span className="cal-nav-btn" style={{ opacity: 0.4, cursor: 'default' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3e4265" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6" />
                   </svg>
-                </button>
+                </span>
                 <div className="cal-month-btn">
                   <span className="cal-month-text">Tháng 5, 2026</span>
-                  <svg width="12" height="8" viewBox="0 0 12 8" fill="#3e4265">
-                    <path d="M1 1l5 5 5-5" stroke="#3e4265" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                  </svg>
                 </div>
-                <button className="cal-nav-btn">
+                <span className="cal-nav-btn" style={{ opacity: 0.4, cursor: 'default' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3e4265" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
-                </button>
+                </span>
               </div>
 
               {/* Day-of-week headers */}
@@ -436,12 +435,12 @@ export default function DashboardPage() {
             <div className="ai-banner-subtitle">Tôi có thể giúp gì cho bạn hôm nay?</div>
           </div>
           <div className="ai-chips">
-            <button className="ai-chip">Quy định về việc nuôi thú cưng?</button>
-            <button className="ai-chip">Hướng dẫn đăng ký xe</button>
-            <button className="ai-chip">Tìm tài liệu nội quy</button>
+            <button className="ai-chip" onClick={() => router.push('/ai-assistant')}>Quy định về việc nuôi thú cưng?</button>
+            <button className="ai-chip" onClick={() => router.push('/ai-assistant')}>Hướng dẫn đăng ký xe</button>
+            <button className="ai-chip" onClick={() => router.push('/ai-assistant')}>Tìm tài liệu nội quy</button>
           </div>
         </div>
-        <button className="ai-chat-btn">
+        <button className="ai-chat-btn" onClick={() => router.push('/ai-assistant')}>
           Chat với AI
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/dashboard/img_35.svg" alt="" />

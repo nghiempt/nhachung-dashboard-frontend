@@ -1,9 +1,13 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApiData } from "@/lib/hooks";
-import { formatVnd, formatDate } from "@/lib/format";
+import { formatVnd, formatDate, formatDateTime } from "@/lib/format";
 import { trendDir } from "@/lib/ui-maps";
+import { Modal, ModalField, ModalBadge } from "@/components/ui/Modal";
+import { Dropdown, dropdownItem, dropdownEmpty } from "@/components/ui/Dropdown";
+import { exportCsv } from "@/lib/export-csv";
 
 interface LineItem {
   id: string;
@@ -70,16 +74,55 @@ function pctChip(pct: number | null): string {
   return `${pct > 0 ? "+" : ""}${pct}%`;
 }
 
+const TYPE_FILTERS = [
+  { value: "", label: "Tất cả giao dịch" },
+  { value: "income", label: "Chỉ khoản thu" },
+  { value: "expense", label: "Chỉ khoản chi" },
+];
+
 export default function ThuChiPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
+  const [period, setPeriod] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [showPeriodMenu, setShowPeriodMenu] = useState(false);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [selectedTxn, setSelectedTxn] = useState<Txn | null>(null);
   const LIMIT = 8;
 
-  const { data: overview } = useApiData<FinancialOverview>("/financial/overview");
-  const { data: periods } = useApiData<PeriodPoint[]>("/financial/periods?months=6");
-  const { data: txnData } = useApiData<TxnResp>(
-    `/financial/transactions?page=${page}&limit=${LIMIT}`,
-    [page],
+  const periodQs = period ? `&period=${period}` : "";
+  const { data: overview } = useApiData<FinancialOverview>(
+    `/financial/overview${period ? `?period=${period}` : ""}`,
+    [period],
   );
+  const { data: periods } = useApiData<PeriodPoint[]>("/financial/periods?months=12");
+  const { data: txnData } = useApiData<TxnResp>(
+    `/financial/transactions?page=${page}&limit=${LIMIT}${typeFilter ? `&type=${typeFilter}` : ""}${periodQs}`,
+    [page, typeFilter, period],
+  );
+
+  const periodOptions = (periods ?? []).slice().reverse();
+  const selectPeriod = (p: string) => { setPeriod(p); setPage(1); setShowPeriodMenu(false); };
+  const selectType = (t: string) => { setTypeFilter(t); setPage(1); setShowFilterMenu(false); };
+  const resetFilters = () => { setPeriod(""); setTypeFilter(""); setPage(1); };
+
+  const handleExport = () => {
+    const rows = (txnData?.items ?? []).map((t) => [
+      t.code,
+      t.type === "income" ? "Thu" : "Chi",
+      t.category,
+      t.description,
+      t.vendorName ?? "",
+      t.paymentMethod,
+      formatDate(t.occurredAt),
+      t.amount,
+    ]);
+    exportCsv(
+      `giao-dich-thu-chi${period ? `-${period}` : ""}`,
+      ["Mã giao dịch", "Loại", "Danh mục", "Mô tả", "Đối tác", "Hình thức", "Ngày", "Số tiền (VND)"],
+      rows,
+    );
+  };
 
   const periodLabel = overview ? PERIOD_LABELS(overview.period) : "";
   const prevPeriodLabel =
@@ -149,16 +192,39 @@ export default function ThuChiPage() {
           <p className="tc-sub">Chi tiết các khoản thu, chi và biến động dòng tiền của tòa nhà</p>
         </div>
         <div className="tc-actions">
-          <button className="tc-btn">
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNjY2NyAyLjY2Njk5SDMuMzMzMzNDMi41OTY5NSAyLjY2Njk5IDIgMy4yNjM5NSAyIDQuMDAwMzNWMTMuMzMzN0MyIDE0LjA3IDIuNTk2OTUgMTQuNjY3IDMuMzMzMzMgMTQuNjY3SDEyLjY2NjdDMTMuNDAzIDE0LjY2NyAxNCAxNC4wNyAxNCAxMy4zMzM3VjQuMDAwMzNDMTQgMy4yNjM5NSAxMy40MDMgMi42NjY5OSAxMi42NjY3IDIuNjY2OTlaIiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEwLjY2NyAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNS4zMzMwMSAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMiA2LjY2Njk5SDE0IiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="16" height="16" />
-            {periodLabel ? `Tháng ${periodLabel.slice(1)}` : "Tháng này"}
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMy41IDUuMjVMNyA4Ljc1TDEwLjUgNS4yNSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="14" height="14" />
-          </button>
-          <button className="tc-btn">
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBWMTIuNjY2N0MxNCAxMy4wMjAzIDEzLjg1OTUgMTMuMzU5NCAxMy42MDk1IDEzLjYwOTVDMTMuMzU5NCAxMy44NTk1IDEzLjAyMDMgMTQgMTIuNjY2NyAxNEgzLjMzMzMzQzIuOTc5NzEgMTQgMi42NDA1NyAxMy44NTk1IDIuMzkwNTIgMTMuNjA5NUMyLjE0MDQ4IDEzLjM1OTQgMiAxMy4wMjAzIDIgMTIuNjY2N1YxMCIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00LjY2Njk5IDYuNjY2OTlMOC4wMDAzMyAxMC4wMDAzTDExLjMzMzcgNi42NjY5OSIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDEwVjIiIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" />
-            Bộ lọc
-          </button>
-          <button className="tc-btn-primary">
+          <div style={{ position: "relative" }}>
+            <button className="tc-btn" onClick={() => { setShowPeriodMenu((v) => !v); setShowFilterMenu(false); }}>
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNjY2NyAyLjY2Njk5SDMuMzMzMzNDMi41OTY5NSAyLjY2Njk5IDIgMy4yNjM5NSAyIDQuMDAwMzNWMTMuMzMzN0MyIDE0LjA3IDIuNTk2OTUgMTQuNjY3IDMuMzMzMzMgMTQuNjY3SDEyLjY2NjdDMTMuNDAzIDE0LjY2NyAxNCAxNC4wNyAxNCAxMy4zMzM3VjQuMDAwMzNDMTQgMy4yNjM5NSAxMy40MDMgMi42NjY5OSAxMi42NjY3IDIuNjY2OTlaIiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTEwLjY2NyAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNS4zMzMwMSAxLjMzMzAxVjMuOTk5NjciIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMiA2LjY2Njk5SDE0IiBzdHJva2U9IiMyNzI3MjciIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" alt="" width="16" height="16" />
+              {period ? `Tháng ${PERIOD_LABELS(period).slice(1)}` : (periodLabel ? `Tháng ${periodLabel.slice(1)}` : "Tháng này")}
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMy41IDUuMjVMNyA4Ljc1TDEwLjUgNS4yNSIgc3Ryb2tlPSIjNTg1QzdCIiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="14" height="14" />
+            </button>
+            {showPeriodMenu && (
+              <Dropdown onClose={() => setShowPeriodMenu(false)}>
+                {periodOptions.length === 0 && <div style={dropdownEmpty}>Đang tải...</div>}
+                {periodOptions.map((p) => (
+                  <button key={p.period} style={dropdownItem(p.period === period)} onClick={() => selectPeriod(p.period)}>
+                    Tháng {PERIOD_LABELS(p.period).slice(1)}
+                  </button>
+                ))}
+              </Dropdown>
+            )}
+          </div>
+          <div style={{ position: "relative" }}>
+            <button className="tc-btn" onClick={() => { setShowFilterMenu((v) => !v); setShowPeriodMenu(false); }}>
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBWMTIuNjY2N0MxNCAxMy4wMjAzIDEzLjg1OTUgMTMuMzU5NCAxMy42MDk1IDEzLjYwOTVDMTMuMzU5NCAxMy44NTk1IDEzLjAyMDMgMTQgMTIuNjY2NyAxNEgzLjMzMzMzQzIuOTc5NzEgMTQgMi42NDA1NyAxMy44NTk1IDIuMzkwNTIgMTMuNjA5NUMyLjE0MDQ4IDEzLjM1OTQgMiAxMy4wMjAzIDIgMTIuNjY2N1YxMCIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00LjY2Njk5IDYuNjY2OTlMOC4wMDAzMyAxMC4wMDAzTDExLjMzMzcgNi42NjY5OSIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDEwVjIiIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" />
+              {TYPE_FILTERS.find((f) => f.value === typeFilter)?.label ?? "Bộ lọc"}
+            </button>
+            {showFilterMenu && (
+              <Dropdown onClose={() => setShowFilterMenu(false)}>
+                {TYPE_FILTERS.map((f) => (
+                  <button key={f.value} style={dropdownItem(f.value === typeFilter)} onClick={() => selectType(f.value)}>
+                    {f.label}
+                  </button>
+                ))}
+              </Dropdown>
+            )}
+          </div>
+          <button className="tc-btn-primary" onClick={handleExport}>
             <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBWMTIuNjY2N0MxNCAxMy4wMjAzIDEzLjg1OTUgMTMuMzU5NCAxMy42MDk1IDEzLjYwOTVDMTMuMzU5NCAxMy44NTk1IDEzLjAyMDMgMTQgMTIuNjY2NyAxNEgzLjMzMzMzQzIuOTc5NzEgMTQgMi42NDA1NyAxMy44NTk1IDIuMzkwNTIgMTMuNjA5NUMyLjE0MDQ4IDEzLjM1OTQgMiAxMy4wMjAzIDIgMTIuNjY2N1YxMCIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik00LjY2Njk5IDYuNjY2OTlMOC4wMDAzMyAxMC4wMDAzTDExLjMzMzcgNi42NjY5OSIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik04IDEwVjIiIHN0cm9rZT0iIzI3MjcyNyIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" style={{ filter: "brightness(0) invert(1)" }} />
             Xuất báo cáo
           </button>
@@ -236,7 +302,7 @@ export default function ThuChiPage() {
             Tháng 5/2024, tòa nhà ghi nhận thặng dư <span className="hl-green">dương 706.7 triệu đồng</span>, cải thiện <span className="hl-green">28.6%</span> so với tháng trước. Tỉ lệ thu phí quản lý đạt <span className="hl-green">98.6%</span>, rất tốt. Khoản chi tăng chủ yếu từ <span className="hl-red">Bảo trì & sửa chữa</span> (+14.2%) do thay thế thiết bị PCCC định kỳ.
           </div>
         </div>
-        <button className="ai-sum-btn">
+        <button className="ai-sum-btn" onClick={() => router.push("/ai-assistant")}>
           Xem chi tiết
           <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yNSAxMC41TDguNzUgN0w1LjI1IDMuNSIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="14" height="14" />
         </button>
@@ -458,7 +524,7 @@ export default function ThuChiPage() {
       <div className="txn-card">
         <div className="txn-hd">
           <div className="txn-title">Giao dịch gần đây</div>
-          <span className="txn-link">
+          <span className="txn-link" onClick={resetFilters} style={{ cursor: "pointer" }}>
             Xem tất cả
             <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNS4yNSAxMC41TDguNzUgN0w1LjI1IDMuNSIgc3Ryb2tlPSIjNDEzN0Y5IiBzdHJva2Utd2lkdGg9IjEuMTY3IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="13" height="13" />
           </span>
@@ -480,7 +546,7 @@ export default function ThuChiPage() {
         {txns.map((t) => {
           const isIncome = t.type === "income";
           return (
-            <div className="txn-row" key={t.id}>
+            <div className="txn-row" key={t.id} onClick={() => setSelectedTxn(t)} style={{ cursor: "pointer" }}>
               <div className="txn-id-col">
                 <span className="txn-id">{t.code}</span>
               </div>
@@ -547,12 +613,51 @@ export default function ThuChiPage() {
         <div className="ai-bot-content">
           <div className="ai-bot-tag">AI Assistant</div>
           <div className="ai-bot-title">Trợ lý AI tài chính<br />thông minh</div>
-          <button className="ai-bot-cta">
+          <button className="ai-bot-cta" onClick={() => router.push("/ai-assistant")}>
             Hỏi ngay
             <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMTBDMTQgMTAuMzU0IDEzLjg2IDEwLjY5MyAxMy42MSAxMC45NDNDMTMuMzU5IDExLjE5MyAxMy4wMiAxMS4zMzMgMTIuNjY3IDExLjMzM0g0LjY2N0wyIDE0VjMuMzMzQzIgMi45OCAyLjE0IDIuNjQxIDIuMzkgMi4zOTFDMi42NDEgMi4xNCAyLjk4IDIgMy4zMzMgMkgxMi42NjdDMTMuMDIgMiAxMy4zNTkgMi4xNCAxMy42MSAyLjM5MUMxMy44NiAyLjY0MSAxNCAyLjk4IDE0IDMuMzMzVjEwWiIgc3Ryb2tlPSIjMjcyNzI3IiBzdHJva2Utd2lkdGg9IjEuMTI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" alt="" width="16" height="16" />
           </button>
         </div>
       </div>
+
+      {selectedTxn && (
+        <TxnDetailModal txn={selectedTxn} onClose={() => setSelectedTxn(null)} />
+      )}
     </div>
+  );
+}
+
+// ── Transaction detail popup ───────────────────────────────────
+function TxnDetailModal({ txn, onClose }: { txn: Txn; onClose: () => void }) {
+  const isIncome = txn.type === "income";
+  return (
+    <Modal
+      onClose={onClose}
+      width={520}
+      title="Chi tiết giao dịch"
+      headerAccent={
+        <ModalBadge
+          label={isIncome ? "Khoản thu" : "Khoản chi"}
+          bg={isIncome ? "#e3fbed" : "#ffeded"}
+          color={isIncome ? "#1c9d5f" : "#f5222d"}
+        />
+      }
+    >
+      <div style={{ padding: "16px 24px 24px" }}>
+        <div style={{ textAlign: "center", padding: "8px 0 18px" }}>
+          <div style={{ fontSize: "13px", color: "#585c7b", marginBottom: "4px" }}>{txn.description}</div>
+          <div style={{ fontSize: "26px", fontWeight: 700, color: isIncome ? "#1c9d5f" : "#f5222d" }}>
+            {isIncome ? "+ " : "- "}{formatVnd(txn.amount)}
+          </div>
+        </div>
+        <ModalField label="Mã giao dịch" value={txn.code} />
+        <ModalField label="Danh mục" value={txn.category} />
+        {txn.subInfo && <ModalField label="Thông tin thêm" value={txn.subInfo} />}
+        {txn.vendorName && <ModalField label="Đối tác" value={txn.vendorName} />}
+        {txn.contractRef && <ModalField label="Hợp đồng" value={txn.contractRef} />}
+        <ModalField label="Hình thức" value={txn.paymentMethod} />
+        <ModalField label="Thời gian" value={formatDateTime(txn.occurredAt)} />
+      </div>
+    </Modal>
   );
 }

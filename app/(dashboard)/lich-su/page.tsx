@@ -5,6 +5,7 @@ import { useApiData } from "@/lib/hooks";
 import { apiPost } from "@/lib/api";
 import { formatDate, formatNumber } from "@/lib/format";
 import { ARCHIVE_CATEGORY, docColor, docTypeLabel } from "@/lib/ui-maps";
+import { exportCsv } from "@/lib/export-csv";
 
 const EyeIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -213,6 +214,23 @@ export default function LichSuPage() {
 
   const maxCatCount = Math.max(1, ...(byCategory ?? []).map((c) => c.count));
 
+  const handleExport = () => {
+    const docs = (archive?.years ?? []).flatMap((y) => y.months.flatMap((m) => m.documents));
+    const rows = docs.map((d) => [
+      d.name,
+      docTypeLabel(d.fileType),
+      d.archiveCategory ? (ARCHIVE_CATEGORY[d.archiveCategory]?.label ?? d.archiveCategory) : "",
+      formatDate(d.uploadDate),
+      d.sizeLabel,
+      d.downloadCount,
+    ]);
+    exportCsv(
+      "lich-su-luu-tru",
+      ["Tên tài liệu", "Loại", "Danh mục", "Ngày", "Kích thước", "Lượt tải"],
+      rows,
+    );
+  };
+
   return (
     <div className="lichsu-page">
       {/* ── Page Header ── */}
@@ -222,20 +240,13 @@ export default function LichSuPage() {
           <p className="page-sub">Kho lưu trữ toàn bộ tài liệu hoạt động của Ban quản trị</p>
         </div>
         <div className="page-actions">
-          <button className="btn-outline">
+          <button className="btn-primary" onClick={handleExport}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             Xuất danh sách
-          </button>
-          <button className="btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Tải lên tài liệu
           </button>
         </div>
       </div>

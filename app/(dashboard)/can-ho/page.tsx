@@ -2,10 +2,12 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import { useRouter } from "next/navigation";
 import { useApiData } from "@/lib/hooks";
 import { useUser } from "@/components/providers/UserProvider";
 import { formatDate, formatVnd } from "@/lib/format";
 import { PAYMENT_STATUS } from "@/lib/ui-maps";
+import { exportCsv } from "@/lib/export-csv";
 
 interface Contract {
   contractNumber: string;
@@ -65,6 +67,7 @@ function residenceYears(moveInDate?: string | null): number | null {
 }
 
 export default function CanHoPage() {
+  const router = useRouter();
   const { profile } = useUser();
   const { data: apt, loading: aptLoading, error: aptError } =
     useApiData<Apartment>("/apartment/me");
@@ -102,6 +105,24 @@ export default function CanHoPage() {
   const isActive = apt.status === "active";
   const feeItems = fees?.items ?? [];
 
+  const handleExportApt = () => {
+    const rows: (string | number)[][] = [
+      ["Mã căn hộ", apt.code],
+      ["Tháp / Block", `${apt.block} (${apt.buildingName})`],
+      ["Tầng", `${apt.floor}/${apt.totalFloors}`],
+      ["Diện tích", `${apt.areaSqm} m²`],
+      ["Phòng ngủ", apt.bedrooms],
+      ["Phòng tắm", apt.bathrooms],
+      ["Hướng", apt.orientation],
+      ["Nội thất", apt.furnishingStatus],
+      ["Hình thức sở hữu", apt.ownershipType],
+    ];
+    if (contract) {
+      rows.push(["Số hợp đồng", contract.contractNumber], ["Chủ sở hữu", contract.ownerName]);
+    }
+    exportCsv(`ho-so-can-ho-${apt.code}`, ["Thông tin", "Giá trị"], rows);
+  };
+
   return (
     <div className="canho-page">
       {/* ── Page Header ── */}
@@ -113,13 +134,9 @@ export default function CanHoPage() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button className="btn-outline">
+          <button className="btn-primary" onClick={handleExportApt}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
             Tải hồ sơ căn hộ
-          </button>
-          <button className="btn-primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-            Cập nhật thông tin
           </button>
         </div>
       </div>
@@ -152,9 +169,9 @@ export default function CanHoPage() {
         <div className="apt-hero-right">
           <div className="apt-status-chip"><span className="apt-status-dot" /> {isActive ? "Đang hoạt động" : apt.status}</div>
           <div className="apt-hero-actions" style={{ marginTop: "auto" }}>
-            <button className="btn-hero-outline">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>
-              Sơ đồ mặt bằng
+            <button className="btn-hero-outline" onClick={handleExportApt}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+              Tải hồ sơ
             </button>
           </div>
         </div>
@@ -215,7 +232,6 @@ export default function CanHoPage() {
                 <div className="section-title-icon" style={{ background: "#efeeff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#4137f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg></div>
                 Chi tiết căn hộ
               </div>
-              <button className="section-edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>Cập nhật</button>
             </div>
             <div className="section-body">
               <div className="info-grid">
@@ -238,7 +254,7 @@ export default function CanHoPage() {
                 <div className="section-title-icon" style={{ background: "#e4f1ff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#1870c4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg></div>
                 Hợp đồng &amp; Sở hữu
               </div>
-              <button className="section-edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>Tải HĐ</button>
+              <button className="section-edit" onClick={handleExportApt}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>Tải HĐ</button>
             </div>
             <div className="section-body">
               {contract ? (
@@ -263,7 +279,7 @@ export default function CanHoPage() {
                 <div className="section-title-icon" style={{ background: "#fff8ec" }}><svg viewBox="0 0 24 24" fill="none" stroke="#c8761b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></div>
                 Phí dịch vụ{fees?.period ? ` tháng ${fees.period}` : ""}
               </div>
-              <button className="section-edit">
+              <button className="section-edit" onClick={() => router.push("/thu-chi")}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
                 Lịch sử thanh toán
               </button>

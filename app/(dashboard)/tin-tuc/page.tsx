@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useApiData } from "@/lib/hooks";
-import { formatDateLong, formatTime, formatNumber } from "@/lib/format";
+import { formatDateLong, formatDateTime, formatTime, formatNumber } from "@/lib/format";
 import { newsCategory } from "@/lib/ui-maps";
+import { Modal, ModalBadge } from "@/components/ui/Modal";
 
 interface NewsItem {
   id: string;
@@ -87,6 +88,9 @@ export default function TinTucPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [activeChip, setActiveChip] = useState(0);
   const [page, setPage] = useState(1);
+  const [sortDesc, setSortDesc] = useState(true);
+  const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const category = TABS[activeTab].category;
   const pinned = FILTER_CHIPS[activeChip].pinned;
@@ -108,7 +112,14 @@ export default function TinTucPage() {
   const { data: trending } = useApiData<TrendingItem[]>("/news/trending");
   const { data: events } = useApiData<EventItem[]>("/events?upcoming=true");
 
-  const newsCards = newsData?.items ?? [];
+  const newsCards = useMemo(() => {
+    const items = [...(newsData?.items ?? [])];
+    items.sort((a, b) => {
+      const diff = new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime();
+      return sortDesc ? -diff : diff;
+    });
+    return items;
+  }, [newsData, sortDesc]);
   const meta = newsData?.meta;
   const totalPages = meta?.totalPages ?? 1;
 
@@ -172,9 +183,9 @@ export default function TinTucPage() {
           })}
         </div>
         <div style={{ marginLeft: "auto" }}>
-          <button style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", border: "1px solid #d4d7e5", borderRadius: "8px", fontSize: "12px", fontWeight: 500, color: "#585c7b", background: "#ffffff", cursor: "pointer" }}>
+          <button onClick={() => setSortDesc((v) => !v)} title="Đổi thứ tự sắp xếp" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", border: "1px solid #d4d7e5", borderRadius: "8px", fontSize: "12px", fontWeight: 500, color: "#585c7b", background: "#ffffff", cursor: "pointer" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Mới nhất
+            {sortDesc ? "Mới nhất" : "Cũ nhất"}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         </div>
@@ -187,7 +198,7 @@ export default function TinTucPage() {
         <div>
           {/* Featured article */}
           {featured && (
-            <div style={{ position: "relative", borderRadius: "20px", overflow: "hidden", marginBottom: "20px", cursor: "pointer" }}>
+            <div onClick={() => setSelectedNewsId(featured.id)} style={{ position: "relative", borderRadius: "20px", overflow: "hidden", marginBottom: "20px", cursor: "pointer" }}>
               <img src={featured.thumbnailUrl || FALLBACK_IMG} alt="" style={{ width: "100%", height: "260px", objectFit: "cover", display: "block" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.18) 55%, transparent 100%)" }} />
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "24px 28px" }}>
@@ -225,7 +236,7 @@ export default function TinTucPage() {
             {newsCards.map((card) => {
               const cat = newsCategory(card.category);
               return (
-                <div key={card.id} style={{ background: "#ffffff", border: "1px solid #e2e5f1", borderRadius: "20px", overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column" }}>
+                <div key={card.id} onClick={() => setSelectedNewsId(card.id)} style={{ background: "#ffffff", border: "1px solid #e2e5f1", borderRadius: "20px", overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column" }}>
                   <img src={card.thumbnailUrl || FALLBACK_IMG} alt="" style={{ width: "100%", height: "148px", objectFit: "cover", display: "block", background: "#f7f7f7" }} />
                   <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", flex: 1 }}>
                     <div style={{ display: "flex", gap: "6px", marginBottom: "8px", flexWrap: "wrap" }}>
@@ -274,7 +285,7 @@ export default function TinTucPage() {
               {(trending ?? []).map((item) => {
                 const rs = RANK_STYLES[item.rank - 1] ?? RANK_DEFAULT;
                 return (
-                  <div key={item.id} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "10px 16px", cursor: "pointer" }}>
+                  <div key={item.id} onClick={() => setSelectedNewsId(item.id)} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "10px 16px", cursor: "pointer" }}>
                     <div style={{ width: "22px", height: "22px", borderRadius: "6px", background: rs.rankBg, color: rs.rankColor, fontSize: "11px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>{item.rank}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: "12px", fontWeight: 600, color: "#272727", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>{item.title}</div>
@@ -302,7 +313,7 @@ export default function TinTucPage() {
                 const loc = ev.location ? `${timeRange} · ${ev.location}` : timeRange;
                 const badge = eventStatusBadge(ev.status);
                 return (
-                  <div key={ev.id} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "10px 16px", cursor: "pointer" }}>
+                  <div key={ev.id} onClick={() => setSelectedEventId(ev.id)} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "10px 16px", cursor: "pointer" }}>
                     <div style={{ width: "38px", textAlign: "center", flexShrink: 0 }}>
                       <div style={{ fontSize: "18px", fontWeight: 800, color: "#4137f9", lineHeight: 1 }}>{day}</div>
                       <div style={{ fontSize: "10px", fontWeight: 600, color: "#585c7b", textTransform: "uppercase" }}>{mon}</div>
@@ -320,6 +331,127 @@ export default function TinTucPage() {
 
         </div>
       </div>
+
+      {selectedNewsId && (
+        <NewsDetailModal id={selectedNewsId} onClose={() => setSelectedNewsId(null)} />
+      )}
+      {selectedEventId && (
+        <EventDetailModal id={selectedEventId} onClose={() => setSelectedEventId(null)} />
+      )}
     </div>
+  );
+}
+
+// ── News detail popup ──────────────────────────────────────────
+interface NewsDetail extends NewsItem {
+  content: string;
+}
+
+function NewsDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
+  const { data, loading } = useApiData<NewsDetail>(`/news/${id}`, [id]);
+  const cat = data ? newsCategory(data.category) : null;
+
+  return (
+    <Modal onClose={onClose} width={680}>
+      {loading && !data ? (
+        <div style={{ padding: "60px 24px", textAlign: "center", fontSize: "14px", color: "#585c7b" }}>Đang tải...</div>
+      ) : data ? (
+        <>
+          <img
+            src={data.thumbnailUrl || FALLBACK_IMG}
+            alt=""
+            style={{ width: "100%", height: "260px", objectFit: "cover", display: "block", borderTopLeftRadius: "20px", borderTopRightRadius: "20px" }}
+          />
+          <div style={{ padding: "20px 28px 28px" }}>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
+              {cat && <ModalBadge label={cat.label} bg={cat.bg} color={cat.color} />}
+              {data.isPinned && <ModalBadge label="📌 Ghim" bg="#fff3e0" color="#b45309" />}
+            </div>
+            <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#272727", lineHeight: 1.35, marginBottom: "12px" }}>{data.title}</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "18px", paddingBottom: "18px", borderBottom: "1px solid #eff2fc" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: cat?.color ?? "#4137f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: "#fff" }}>{data.authorLabel}</div>
+                <span style={{ fontSize: "13px", color: "#272727", fontWeight: 600 }}>{data.authorName}</span>
+              </div>
+              <span style={{ fontSize: "12px", color: "#b4b7c9" }}>{formatDateLong(data.publishedAt)}</span>
+              <span style={{ fontSize: "12px", color: "#b4b7c9" }}>· {data.readMinutes} phút đọc</span>
+              <span style={{ fontSize: "12px", color: "#b4b7c9" }}>· {formatNumber(data.viewCount)} lượt xem</span>
+            </div>
+            <div style={{ fontSize: "14px", color: "#3e4265", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
+              {data.content || data.excerpt}
+            </div>
+            {data.tags?.length > 0 && (
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "20px" }}>
+                {data.tags.map((t) => (
+                  <span key={t} style={{ fontSize: "12px", fontWeight: 500, padding: "4px 10px", borderRadius: "20px", background: "#f7f7f7", color: "#585c7b" }}>#{t}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <div style={{ padding: "60px 24px", textAlign: "center", fontSize: "14px", color: "#585c7b" }}>Không tải được nội dung.</div>
+      )}
+    </Modal>
+  );
+}
+
+// ── Event detail popup ─────────────────────────────────────────
+interface EventDetail {
+  id: string;
+  title: string;
+  content: string;
+  startAt: string;
+  endAt: string | null;
+  location: string | null;
+  regulations: string | null;
+  status: string;
+}
+
+function EventDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
+  const { data, loading } = useApiData<EventDetail>(`/events/${id}`, [id]);
+  const badge = data ? eventStatusBadge(data.status) : null;
+
+  return (
+    <Modal
+      onClose={onClose}
+      width={560}
+      title={data?.title}
+      headerAccent={badge ? <ModalBadge label={badge.label} bg={badge.bg} color={badge.color} /> : undefined}
+    >
+      {loading && !data ? (
+        <div style={{ padding: "40px 24px", textAlign: "center", fontSize: "14px", color: "#585c7b" }}>Đang tải...</div>
+      ) : data ? (
+        <div style={{ padding: "16px 24px 24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "13px", color: "#585c7b", width: "92px", flexShrink: 0 }}>Thời gian</span>
+              <span style={{ fontSize: "13.5px", fontWeight: 600, color: "#272727" }}>
+                {formatDateTime(data.startAt)}{data.endAt ? ` – ${formatTime(data.endAt)}` : ""}
+              </span>
+            </div>
+            {data.location && (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "13px", color: "#585c7b", width: "92px", flexShrink: 0 }}>Địa điểm</span>
+                <span style={{ fontSize: "13.5px", fontWeight: 600, color: "#272727" }}>{data.location}</span>
+              </div>
+            )}
+          </div>
+          {data.content && (
+            <div style={{ fontSize: "14px", color: "#3e4265", lineHeight: 1.7, whiteSpace: "pre-wrap", marginBottom: data.regulations ? "16px" : 0 }}>
+              {data.content}
+            </div>
+          )}
+          {data.regulations && (
+            <div style={{ background: "#f9fafe", border: "1px solid #eff2fc", borderRadius: "12px", padding: "14px 16px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#585c7b", textTransform: "uppercase", letterSpacing: ".4px", marginBottom: "8px" }}>Nội quy / Lưu ý</div>
+              <div style={{ fontSize: "13.5px", color: "#3e4265", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{data.regulations}</div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ padding: "40px 24px", textAlign: "center", fontSize: "14px", color: "#585c7b" }}>Không tải được sự kiện.</div>
+      )}
+    </Modal>
   );
 }

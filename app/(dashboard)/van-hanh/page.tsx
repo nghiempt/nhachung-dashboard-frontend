@@ -1,14 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApiData } from "@/lib/hooks";
-import { formatDate, formatTime, timeAgo } from "@/lib/format";
+import { formatDate, formatDateTime, formatTime, timeAgo } from "@/lib/format";
 import {
   WORKORDER_STATUS,
   WORKORDER_PRIORITY,
   WORKORDER_CATEGORY,
   SYSTEM_STATUS,
 } from "@/lib/ui-maps";
+import { Modal, ModalField, ModalBadge } from "@/components/ui/Modal";
+import { exportCsv } from "@/lib/export-csv";
 
 const ArrowUp = () => (
   <svg className="arrow-up" viewBox="0 0 12 12" fill="none">
@@ -19,12 +22,6 @@ const ArrowUp = () => (
 const ArrowDown = () => (
   <svg className="arrow-down" viewBox="0 0 12 12" fill="none">
     <path d="M6 2v8M2 6l4 4 4-4" stroke="#1c9d5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const ChevronDown = ({ size = 13 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="6 9 12 15 18 9" />
   </svg>
 );
 
@@ -138,15 +135,26 @@ const WEEKDAYS = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ N
 type StatusTab = "all" | "processing" | "completed" | "overdue";
 
 export default function VanHanhPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<StatusTab>("all");
   const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [selectedWO, setSelectedWO] = useState<WorkOrderItem | null>(null);
+
+  // debounce the search box → server-side filter
+  useEffect(() => {
+    const t = setTimeout(() => { setSearch(searchInput.trim()); setPage(1); }, 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   const { data: overview } = useApiData<Overview>("/operations/overview");
+  const searchQs = search ? `&search=${encodeURIComponent(search)}` : "";
   const woPath =
     tab === "all"
-      ? `/operations/work-orders?page=${page}&limit=8`
-      : `/operations/work-orders?status=${tab}&page=${page}&limit=8`;
-  const { data: woData } = useApiData<WorkOrdersResponse>(woPath, [tab, page]);
+      ? `/operations/work-orders?page=${page}&limit=8${searchQs}`
+      : `/operations/work-orders?status=${tab}&page=${page}&limit=8${searchQs}`;
+  const { data: woData } = useApiData<WorkOrdersResponse>(woPath, [tab, page, search]);
   const { data: systems } = useApiData<SystemItem[]>("/operations/systems");
   const { data: schedule } = useApiData<ScheduleItem[]>("/operations/schedule");
 
@@ -203,6 +211,23 @@ export default function VanHanhPage() {
     setPage(1);
   }
 
+  const handleExport = () => {
+    const rows = items.map((w) => [
+      w.code,
+      w.name,
+      WORKORDER_CATEGORY[w.category] ?? w.category,
+      WORKORDER_STATUS[w.status]?.label ?? w.status,
+      WORKORDER_PRIORITY[w.priority]?.label ?? w.priority,
+      w.requesterName,
+      formatDate(w.occurredAt),
+    ]);
+    exportCsv(
+      "yeu-cau-bao-tri",
+      ["Mã", "Yêu cầu", "Hạng mục", "Trạng thái", "Ưu tiên", "Người yêu cầu", "Ngày tạo"],
+      rows,
+    );
+  };
+
   return (
     <div className="vhbt-page">
       {/* ── Page Header ── */}
@@ -212,17 +237,16 @@ export default function VanHanhPage() {
           <p className="page-sub">Quản lý yêu cầu bảo trì và tình trạng hệ thống tòa nhà</p>
         </div>
         <div className="page-actions">
-          <button className="btn-outline">
+          <span className="btn-outline" style={{ cursor: "default" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            Tháng 5/2024
-            <ChevronDown />
-          </button>
-          <button className="btn-outline">
+            Tháng này
+          </span>
+          <button className="btn-outline" onClick={handleExport}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
@@ -230,7 +254,7 @@ export default function VanHanhPage() {
             </svg>
             Xuất báo cáo
           </button>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={() => router.push("/gop-y")}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
@@ -411,7 +435,7 @@ export default function VanHanhPage() {
       <div className="wo-card">
         <div className="card-hd">
           <div className="card-title">Danh sách yêu cầu bảo trì</div>
-          <span className="card-link">Xem tất cả →</span>
+          <span className="card-link" onClick={() => { changeTab("all"); setSearchInput(""); }} style={{ cursor: "pointer" }}>Xem tất cả →</span>
         </div>
 
         <div className="wo-filters">
@@ -428,12 +452,17 @@ export default function VanHanhPage() {
             Quá hạn ({stats ? stats.overdue : 0})
           </button>
           <div className="filter-spacer"></div>
-          <div className="search-mini">
+          <div className="search-mini" style={{ gap: "6px" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            Lọc &amp; Tìm kiếm
+            <input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Lọc & Tìm kiếm"
+              style={{ border: 0, outline: 0, background: "transparent", fontSize: "13px", color: "#272727", width: "150px" }}
+            />
           </div>
         </div>
 
@@ -471,7 +500,7 @@ export default function VanHanhPage() {
                 ? "pri-dot pri-low"
                 : "pri-dot pri-medium";
             return (
-              <div className="wo-row" key={w.id} style={isOverdue ? { background: "#fff8f8" } : undefined}>
+              <div className="wo-row" key={w.id} onClick={() => setSelectedWO(w)} style={{ cursor: "pointer", ...(isOverdue ? { background: "#fff8f8" } : {}) }}>
                 <div className="wo-info">
                   <div className="wo-id" style={isOverdue ? { color: "#f5222d" } : undefined}>{idText}</div>
                   <div className="wo-name">{w.name}</div>
@@ -519,7 +548,6 @@ export default function VanHanhPage() {
           <div className="card-title">Lịch bảo trì sắp tới</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span className="card-sub">{periodLabel}</span>
-            <span className="card-link">Xem lịch đầy đủ →</span>
           </div>
         </div>
         <div className="sched-grid">
@@ -556,6 +584,36 @@ export default function VanHanhPage() {
           )}
         </div>
       </div>
+
+      {selectedWO && (
+        <WorkOrderDetailModal wo={selectedWO} onClose={() => setSelectedWO(null)} />
+      )}
     </div>
+  );
+}
+
+// ── Work order detail popup ────────────────────────────────────
+function WorkOrderDetailModal({ wo, onClose }: { wo: WorkOrderItem; onClose: () => void }) {
+  const ss = WORKORDER_STATUS[wo.status] ?? WORKORDER_STATUS.processing;
+  const pri = WORKORDER_PRIORITY[wo.priority] ?? WORKORDER_PRIORITY.medium;
+  const isOverdue = wo.status === "overdue" || (wo.overdueDays != null && wo.overdueDays > 0);
+  return (
+    <Modal
+      onClose={onClose}
+      width={520}
+      title={wo.name}
+      headerAccent={<ModalBadge label={ss.label} bg={ss.bg} color={ss.color} />}
+    >
+      <div style={{ padding: "16px 24px 24px" }}>
+        <ModalField label="Mã yêu cầu" value={wo.code} />
+        <ModalField label="Hạng mục" value={WORKORDER_CATEGORY[wo.category] ?? wo.category} />
+        <ModalField label="Mức ưu tiên" value={pri.label} valueColor={pri.color} />
+        <ModalField label="Người yêu cầu" value={wo.requesterName} />
+        <ModalField label="Ngày tạo" value={formatDateTime(wo.occurredAt)} />
+        {isOverdue && wo.overdueDays != null && (
+          <ModalField label="Quá hạn" value={`${wo.overdueDays} ngày`} valueColor="#f5222d" />
+        )}
+      </div>
+    </Modal>
   );
 }
