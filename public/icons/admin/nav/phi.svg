@@ -1,0 +1,11 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="coin">
+<path id="Vector" d="M6.66667 9.5C6.66667 10.1417 7.16667 10.6667 7.775 10.6667H9.025C9.55833 10.6667 9.99167 10.2083 9.99167 9.65C9.99167 9.04167 9.725 8.825 9.33333 8.68333L7.33333 7.98333C6.93333 7.84167 6.66667 7.625 6.66667 7.01667C6.66667 6.45833 7.1 6 7.63333 6H8.88333C9.5 6.00833 10 6.525 10 7.16667" stroke="var(--stroke-0, #171717)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M8.33333 10.7083V11.325" stroke="var(--stroke-0, #171717)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_3" d="M8.33333 5.34167V5.99167" stroke="var(--stroke-0, #171717)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_4" d="M8.325 14.9833C12.0023 14.9833 14.9833 12.0023 14.9833 8.325C14.9833 4.6477 12.0023 1.66667 8.325 1.66667C4.6477 1.66667 1.66667 4.6477 1.66667 8.325C1.66667 12.0023 4.6477 14.9833 8.325 14.9833Z" stroke="var(--stroke-0, #171717)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_5" d="M10.8167 16.5667C11.5667 17.625 12.7917 18.3167 14.1917 18.3167C16.4667 18.3167 18.3167 16.4667 18.3167 14.1917C18.3167 12.8083 17.6333 11.5833 16.5917 10.8333" stroke="var(--stroke-0, #171717)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="Vector_6" opacity="0">
+</g>
+</g>
+</svg>

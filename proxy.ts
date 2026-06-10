@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const AUTH_COOKIE = "nc_auth";
 const PROTECTED_ROUTES = new Set([
   "/",
+  "/admin",
   "/ai-assistant",
   "/bao-cao",
   "/cai-dat",
@@ -40,6 +41,7 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/",
+    "/admin/:path*",
     "/ai-assistant/:path*",
     "/bao-cao/:path*",
     "/cai-dat/:path*",

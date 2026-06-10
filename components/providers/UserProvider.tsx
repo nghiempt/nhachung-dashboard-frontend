@@ -25,6 +25,13 @@ export interface BuildingItem {
   isOwned: boolean;
   isOwner: boolean;
   isActive: boolean;
+  role: string | null;
+}
+
+/** Roles that should land in the Ban quản trị (admin) UI. */
+export const ADMIN_ROLES = ["admin", "manager"];
+export function isAdminRole(role: string | null | undefined): boolean {
+  return !!role && ADMIN_ROLES.includes(role);
 }
 
 export interface BuildingsResponse {

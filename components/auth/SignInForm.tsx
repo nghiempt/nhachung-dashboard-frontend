@@ -8,7 +8,24 @@ import { BrandLogo } from "./BrandLogo";
 import { SupportBox } from "./SupportBox";
 import { PasswordField, SubmitArrowIcon } from "./PasswordField";
 import { signIn } from "@/lib/auth";
-import { hasSession, ApiError } from "@/lib/api";
+import { hasSession, ApiError, api } from "@/lib/api";
+import { isAdminRole, type BuildingsResponse } from "@/components/providers/UserProvider";
+
+/** Decide where to land after auth based on the active building's role. */
+async function resolveLanding(from: string | null): Promise<string> {
+  let isAdmin = false;
+  try {
+    const buildings = await api<BuildingsResponse>("/buildings");
+    isAdmin = isAdminRole(buildings.active?.role);
+  } catch {
+    /* fall back to resident on any error */
+  }
+  const safeFrom = from && from.startsWith("/") ? from : null;
+  if (isAdmin) {
+    return safeFrom && safeFrom.startsWith("/admin") ? safeFrom : "/admin/dashboard";
+  }
+  return safeFrom && !safeFrom.startsWith("/admin") ? safeFrom : "/dashboard";
+}
 
 export function SignInForm() {
   const router = useRouter();
@@ -17,10 +34,10 @@ export function SignInForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Already signed in (token + cookie agree, matching the middleware) → dashboard.
+  // Already signed in → send to the right area for their role.
   useEffect(() => {
     if (hasSession()) {
-      router.replace("/dashboard");
+      resolveLanding(null).then((to) => router.replace(to));
     }
   }, [router]);
 
@@ -32,7 +49,7 @@ export function SignInForm() {
     try {
       await signIn(email.trim(), password);
       const from = new URLSearchParams(window.location.search).get("from");
-      router.replace(from && from.startsWith("/") ? from : "/dashboard");
+      router.replace(await resolveLanding(from));
     } catch (err) {
       setError(
         err instanceof ApiError
