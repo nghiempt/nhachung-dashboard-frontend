@@ -1,22 +1,203 @@
+"use client";
+
+import { useState } from "react";
+import { useApiData, useAction } from "@/lib/hooks";
+import { apiPost, apiPatch, apiDelete } from "@/lib/api";
+import { useAdminList, inputStyle, labelStyle } from "@/lib/admin";
+import { formatDate } from "@/lib/format";
+import { useToast } from "@/components/ui/Toast";
+import { AdminPagination } from "@/components/admin/Pagination";
+import { AdminModal, StatCard } from "@/components/admin/ui";
+
+interface DocItem {
+  id: string;
+  name: string;
+  fileType: string;
+  sizeBytes: number | null;
+  url: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  viewCount: number;
+  downloadCount: number;
+  createdAt: string;
+}
+interface Category {
+  id: string;
+  name: string;
+  documentCount: number;
+}
+interface UploadResult {
+  url: string;
+  sizeBytes: number;
+}
+
+function fileTypeFromName(name: string): string {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  if (ext === "pdf") return "PDF";
+  if (ext === "doc" || ext === "docx") return "DOCX";
+  if (ext === "xls" || ext === "xlsx") return "XLSX";
+  if (ext === "ppt" || ext === "pptx") return "PPTX";
+  if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) return "IMG";
+  return "OTHER";
+}
+function fmtSize(b: number | null) {
+  if (!b) return "—";
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
+  return `${(b / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export default function AdminTaiLieuPage() {
+  const toast = useToast();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+
+  const { items, meta, loading, refetch } = useAdminList<DocItem>("/admin/documents", {
+    page,
+    limit: 10,
+    search: search || undefined,
+    categoryId: categoryId || undefined,
+  });
+  const { data: categories, refetch: refetchCats } = useApiData<Category[]>("/admin/documents/categories");
+
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [cat, setCat] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+
+  const save = useAction(async () => {
+    if (!file) throw new Error("Vui lòng chọn tệp");
+    const fd = new FormData();
+    fd.append("file", file);
+    const up = await apiPost<UploadResult>("/uploads?folder=documents", fd);
+    await apiPost("/admin/documents", {
+      name: name.trim() || file.name,
+      url: up.url,
+      sizeBytes: up.sizeBytes,
+      fileType: fileTypeFromName(file.name),
+      categoryId: cat || undefined,
+    });
+  });
+  const remove = useAction((id: string) => apiDelete(`/admin/documents/${id}`));
+
+  function openAdd() {
+    setName("");
+    setCat("");
+    setFile(null);
+    save.setError(null);
+    setOpen(true);
+  }
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!file) {
+      save.setError("Vui lòng chọn tệp tài liệu");
+      return;
+    }
+    const res = await save.run();
+    if (res !== undefined) {
+      setOpen(false);
+      toast.success("Đã tải lên tài liệu");
+      refetch();
+      refetchCats();
+    } else if (save.error) toast.error(save.error);
+  }
+  async function handleDelete(d: DocItem) {
+    if (typeof window !== "undefined" && !window.confirm(`Xoá tài liệu "${d.name}"?`)) return;
+    const res = await remove.run(d.id);
+    if (res !== undefined) {
+      toast.success("Đã xoá tài liệu");
+      refetch();
+      refetchCats();
+    }
+  }
+
   return (
     <div className="adm-r-tai-lieu">
       <div className="mg-page">
-            <div className="mg-hd">
-              <div><h1 className="mg-title">Quản lý tài liệu</h1><p className="mg-sub">Lưu trữ, phân loại và phân quyền truy cập tài liệu tòa nhà</p></div>
-              <button className="mg-btn"><svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg> Tải lên tài liệu</button>
-            </div>
-            <div className="mg-stats"><div className="mg-stat"><div className="mg-stat-ic" style={{ background: "#efeeff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#4137f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg></div><div><div className="mg-stat-val">347</div><div className="mg-stat-lbl">Tổng tài liệu</div></div></div><div className="mg-stat"><div className="mg-stat-ic" style={{ background: "#e4f1ff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#2f7bf6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg></div><div><div className="mg-stat-val">2,8 GB</div><div className="mg-stat-lbl">Dung lượng</div></div></div><div className="mg-stat"><div className="mg-stat-ic" style={{ background: "#e6f7f1" }}><svg viewBox="0 0 24 24" fill="none" stroke="#1c9d5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg></div><div><div className="mg-stat-val">24</div><div className="mg-stat-lbl">Mới tháng này</div></div></div><div className="mg-stat"><div className="mg-stat-ic" style={{ background: "#fff3da" }}><svg viewBox="0 0 24 24" fill="none" stroke="#c8761b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg></div><div><div className="mg-stat-val">5.842</div><div className="mg-stat-lbl">Lượt tải</div></div></div></div>
-            
-            <div className="mg-toolbar">
-              <div className="mg-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="20" y1="20" x2="16.65" y2="16.65" /></svg><input placeholder="Tìm kiếm..." /></div>
-              <div className="mg-filter">Lọc <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg></div>
-            </div>
-            <div className="mg-card">
-              <table className="mg-tbl"><thead><tr><th>Tên tài liệu</th><th>Danh mục</th><th>Kích thước</th><th>Ngày cập nhật</th><th>Lượt tải</th><th>Tác vụ</th></tr></thead><tbody><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "34px", height: "40px", borderRadius: "6px", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "9px", fontWeight: "600", flexShrink: "0" }}>PDF</div><div className="mg-pname">Nội quy quản lý chung cư 2026</div></div></td><td><span className="mg-pill s-violet">Nội quy</span></td><td>2.4 MB</td><td>20/05/2026</td><td>1.256 lượt</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "34px", height: "40px", borderRadius: "6px", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "9px", fontWeight: "600", flexShrink: "0" }}>PDF</div><div className="mg-pname">Biên bản họp BQT tháng 5</div></div></td><td><span className="mg-pill s-violet">Biên bản</span></td><td>1.8 MB</td><td>18/05/2026</td><td>892 lượt</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "34px", height: "40px", borderRadius: "6px", background: "#2f7bf6", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "9px", fontWeight: "600", flexShrink: "0" }}>DOC</div><div className="mg-pname">Mẫu đăng ký thẻ từ thang máy</div></div></td><td><span className="mg-pill s-violet">Biểu mẫu</span></td><td>456 KB</td><td>16/05/2026</td><td>745 lượt</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "34px", height: "40px", borderRadius: "6px", background: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "9px", fontWeight: "600", flexShrink: "0" }}>PDF</div><div className="mg-pname">Hướng dẫn sử dụng app Nhà Chung</div></div></td><td><span className="mg-pill s-violet">Hướng dẫn</span></td><td>3.1 MB</td><td>15/05/2026</td><td>1.102 lượt</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "34px", height: "40px", borderRadius: "6px", background: "#1cbf6a", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "9px", fontWeight: "600", flexShrink: "0" }}>XLS</div><div className="mg-pname">Báo cáo thu chi Quỹ bảo trì T4</div></div></td><td><span className="mg-pill s-violet">Báo cáo</span></td><td>892 KB</td><td>12/05/2026</td><td>523 lượt</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr></tbody></table>
-              <div className="mg-foot"><div className="mg-count">Hiển thị 1 - 8 của 347 tài liệu</div><div className="mg-pages"><span className="mg-pg">‹</span><span className="mg-pg active">1</span><span className="mg-pg">2</span><span className="mg-pg">3</span><span className="mg-pg">›</span></div></div>
-            </div>
+        <div className="mg-hd">
+          <div>
+            <h1 className="mg-title">Quản lý tài liệu</h1>
+            <p className="mg-sub">Lưu trữ, phân loại và phân quyền truy cập tài liệu tòa nhà</p>
           </div>
+          <button className="mg-btn" onClick={openAdd}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Tải lên tài liệu
+          </button>
+        </div>
+
+        <div className="mg-toolbar">
+          <div className="mg-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" /><line x1="20" y1="20" x2="16.65" y2="16.65" />
+            </svg>
+            <input placeholder="Tìm theo tên tài liệu..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+          </div>
+          <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1); }} style={{ ...inputStyle, width: "auto", height: 40 }}>
+            <option value="">Mọi danh mục</option>
+            {(categories ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+
+        <div className="mg-card">
+          <table className="mg-tbl">
+            <thead>
+              <tr><th>Tài liệu</th><th>Danh mục</th><th>Dung lượng</th><th>Lượt tải</th><th>Ngày tải lên</th><th>Tác vụ</th></tr>
+            </thead>
+            <tbody>
+              {loading && items.length === 0 ? (
+                <tr><td colSpan={6} style={{ padding: 24, color: "#585c7b" }}>Đang tải...</td></tr>
+              ) : items.length === 0 ? (
+                <tr><td colSpan={6} style={{ padding: 24, color: "#585c7b" }}>Chưa có tài liệu nào</td></tr>
+              ) : (
+                items.map((d) => (
+                  <tr key={d.id}>
+                    <td style={{ fontWeight: 600, color: "var(--text-272727)" }}>
+                      <a href={d.url} target="_blank" rel="noreferrer" style={{ color: "#4137f9", textDecoration: "none" }}>{d.name}</a>
+                      <span className="mg-pill s-gray" style={{ marginLeft: 8 }}>{d.fileType}</span>
+                    </td>
+                    <td>{d.categoryName ?? "—"}</td>
+                    <td>{fmtSize(d.sizeBytes)}</td>
+                    <td>{d.downloadCount}</td>
+                    <td>{formatDate(d.createdAt)}</td>
+                    <td>
+                      <div className="mg-act-btns">
+                        <button className="mg-icon-btn" title="Xoá" onClick={() => handleDelete(d)} disabled={remove.loading}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          <AdminPagination meta={meta} page={page} onPage={setPage} unit="tài liệu" loading={loading} />
+        </div>
+      </div>
+
+      {open && (
+        <AdminModal title="Tải lên tài liệu" onClose={() => setOpen(false)} onSubmit={submit} submitting={save.loading} submitLabel="Tải lên" error={save.error}>
+          <div>
+            <label style={labelStyle}>Tệp tài liệu *</label>
+            <input type="file" style={{ ...inputStyle, height: "auto", padding: 10 }} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Tên hiển thị</label>
+            <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder={file?.name ?? "Tên tài liệu"} />
+          </div>
+          <div>
+            <label style={labelStyle}>Danh mục</label>
+            <select style={inputStyle} value={cat} onChange={(e) => setCat(e.target.value)}>
+              <option value="">— Không phân loại —</option>
+              {(categories ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+        </AdminModal>
+      )}
     </div>
   );
 }

@@ -1,15 +1,137 @@
+"use client";
+
+import { useState } from "react";
+import { useApiData, useAction } from "@/lib/hooks";
+import { apiPatch } from "@/lib/api";
+import { useAdminList, inputStyle } from "@/lib/admin";
+import { useToast } from "@/components/ui/Toast";
+import { AdminPagination } from "@/components/admin/Pagination";
+import { StatCard } from "@/components/admin/ui";
+
+interface Member {
+  id: string;
+  accountId: string;
+  fullName: string;
+  email: string;
+  role: string;
+  isOwner: boolean;
+}
+
+const ROLE_LABEL: Record<string, string> = {
+  resident: "Cư dân",
+  manager: "Ban quản lý",
+  admin: "Quản trị",
+};
+const ROLE_PILL: Record<string, string> = {
+  resident: "s-gray",
+  manager: "s-blue",
+  admin: "s-violet",
+};
+const PALETTE = ["#4137f9", "#1c9d5f", "#c8761b", "#2f7bf6", "#5a3ad9", "#e8736d"];
+function initials(name: string) {
+  const p = name.trim().split(/\s+/);
+  return ((p[p.length - 2]?.[0] ?? "") + (p[p.length - 1]?.[0] ?? "")).toUpperCase() || name.slice(0, 2).toUpperCase();
+}
+
 export default function AdminPhanQuyenPage() {
+  const toast = useToast();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const { items, meta, loading, refetch } = useAdminList<Member>("/admin/roles", {
+    page,
+    limit: 10,
+    search: search || undefined,
+  });
+  const { data: summary, refetch: refetchSummary } = useApiData<Record<string, number>>("/admin/roles/summary");
+  const setRole = useAction((id: string, role: string) => apiPatch(`/admin/roles/${id}`, { role }));
+
+  async function changeRole(m: Member, role: string) {
+    if (role === m.role) return;
+    const res = await setRole.run(m.id, role);
+    if (res !== undefined) {
+      toast.success(`Đã đổi vai trò ${m.fullName} → ${ROLE_LABEL[role] ?? role}`);
+      refetch();
+      refetchSummary();
+    }
+  }
+
+  const adminCount = (summary?.admin ?? 0) + (summary?.manager ?? 0);
+
   return (
     <div className="adm-r-phan-quyen">
       <div className="mg-page">
-            <div className="mg-hd">
-              <div><h1 className="mg-title">Phân quyền & Tài khoản</h1><p className="mg-sub">Quản lý tài khoản quản trị, vai trò và phân quyền truy cập hệ thống</p></div>
-              <button className="mg-btn"><svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg> Thêm tài khoản</button>
-            </div>
-            <div className="mg-stats"><div className="mg-stat"><div className="mg-stat-ic" style={{ background: "#efeeff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#4137f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /></svg></div><div><div className="mg-stat-val">12</div><div className="mg-stat-lbl">Tài khoản quản trị</div></div></div><div className="mg-stat"><div className="mg-stat-ic" style={{ background: "#efeaff" }}><svg viewBox="0 0 24 24" fill="none" stroke="#5a3ad9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg></div><div><div className="mg-stat-val">6</div><div className="mg-stat-lbl">Vai trò</div></div></div><div className="mg-stat"><div className="mg-stat-ic" style={{ background: "#e6f7f1" }}><svg viewBox="0 0 24 24" fill="none" stroke="#1c9d5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg></div><div><div className="mg-stat-val">10</div><div className="mg-stat-lbl">Đang hoạt động</div></div></div><div className="mg-stat"><div className="mg-stat-ic" style={{ background: "#fff3da" }}><svg viewBox="0 0 24 24" fill="none" stroke="#c8761b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3" /></svg></div><div><div className="mg-stat-val">28</div><div className="mg-stat-lbl">Nhóm quyền</div></div></div></div>
-            <div className="mg-toolbar"><div className="mg-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="20" y1="20" x2="16.65" y2="16.65" /></svg><input placeholder="Tìm theo tên, email, vai trò..." /></div><div className="mg-filter">Vai trò <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg></div></div>
-            <div className="mg-card"><table className="mg-tbl"><thead><tr><th>Tài khoản</th><th>Vai trò</th><th>Quyền hạn</th><th>Trạng thái</th><th>Đăng nhập cuối</th><th>Tác vụ</th></tr></thead><tbody><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#4137f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: "14px", flexShrink: "0" }}>NQ</div><div><div className="mg-pname">Nguyễn Văn Quản</div><div className="mg-pmeta">quan.nguyen@nhachung.vn</div></div></div></td><td><span className="mg-pill s-violet">Trưởng BQT</span></td><td>Toàn quyền</td><td><span className="mg-pill s-green">Đang hoạt động</span></td><td>Vừa xong</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#1c9d5f", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: "14px", flexShrink: "0" }}>TK</div><div><div className="mg-pname">Trần Thị Kế</div><div className="mg-pmeta">ke.tran@nhachung.vn</div></div></div></td><td><span className="mg-pill s-green">Kế toán</span></td><td>Tài chính, Phí</td><td><span className="mg-pill s-green">Đang hoạt động</span></td><td>5 phút trước</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#c8761b", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: "14px", flexShrink: "0" }}>LK</div><div><div className="mg-pname">Lê Văn Kỹ</div><div className="mg-pmeta">ky.le@nhachung.vn</div></div></div></td><td><span className="mg-pill s-amber">Kỹ thuật</span></td><td>Vận hành, Bảo trì</td><td><span className="mg-pill s-green">Đang hoạt động</span></td><td>1 giờ trước</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#2f7bf6", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: "14px", flexShrink: "0" }}>PL</div><div><div className="mg-pname">Phạm Thị Lễ</div><div className="mg-pmeta">le.pham@nhachung.vn</div></div></div></td><td><span className="mg-pill s-blue">Lễ tân</span></td><td>Cư dân, Thông báo</td><td><span className="mg-pill s-green">Đang hoạt động</span></td><td>Hôm qua</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr><tr><td><div style={{ display: "flex", alignItems: "center", gap: "12px" }}><div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#5a3ad9", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: "14px", flexShrink: "0" }}>HV</div><div><div className="mg-pname">Hoàng Văn Vệ</div><div className="mg-pmeta">ve.hoang@nhachung.vn</div></div></div></td><td><span className="mg-pill s-gray">Bảo vệ</span></td><td>An ninh</td><td><span className="mg-pill s-red">Tạm khóa</span></td><td>3 ngày trước</td><td><div className="mg-act-btns"><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button><button className="mg-icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button></div></td></tr></tbody></table><div className="mg-foot"><div className="mg-count">Hiển thị 1 - 8 của 12 tài khoản</div><div className="mg-pages"><span className="mg-pg">‹</span><span className="mg-pg active">1</span><span className="mg-pg">2</span><span className="mg-pg">3</span><span className="mg-pg">›</span></div></div></div>
+        <div className="mg-hd">
+          <div>
+            <h1 className="mg-title">Phân quyền & Tài khoản</h1>
+            <p className="mg-sub">Quản lý vai trò và phân quyền truy cập của thành viên tòa nhà</p>
           </div>
+        </div>
+
+        <div className="mg-stats">
+          <StatCard bg="#efeeff" color="#4137f9" label="Tài khoản quản trị" value={adminCount}>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          </StatCard>
+          <StatCard bg="#efeaff" color="#5a3ad9" label="Ban quản lý" value={summary?.manager ?? 0}>
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </StatCard>
+          <StatCard bg="#e6f7f1" color="#1c9d5f" label="Cư dân" value={summary?.resident ?? 0}>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+          </StatCard>
+        </div>
+
+        <div className="mg-toolbar">
+          <div className="mg-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" /><line x1="20" y1="20" x2="16.65" y2="16.65" />
+            </svg>
+            <input placeholder="Tìm theo tên, email..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+          </div>
+        </div>
+
+        <div className="mg-card">
+          <table className="mg-tbl">
+            <thead>
+              <tr><th>Tài khoản</th><th>Vai trò hiện tại</th><th>Đổi vai trò</th></tr>
+            </thead>
+            <tbody>
+              {loading && items.length === 0 ? (
+                <tr><td colSpan={3} style={{ padding: 24, color: "#585c7b" }}>Đang tải...</td></tr>
+              ) : items.length === 0 ? (
+                <tr><td colSpan={3} style={{ padding: 24, color: "#585c7b" }}>Không có thành viên nào</td></tr>
+              ) : (
+                items.map((m, i) => (
+                  <tr key={m.id}>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 38, height: 38, borderRadius: "50%", background: PALETTE[i % PALETTE.length], display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{initials(m.fullName)}</div>
+                        <div>
+                          <div className="mg-pname">{m.fullName}</div>
+                          <div className="mg-pmeta">{m.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span className={`mg-pill ${ROLE_PILL[m.role] ?? "s-gray"}`}>{ROLE_LABEL[m.role] ?? m.role}</span></td>
+                    <td>
+                      <select
+                        value={m.role}
+                        onChange={(e) => changeRole(m, e.target.value)}
+                        disabled={setRole.loading}
+                        style={{ ...inputStyle, width: "auto", height: 36 }}
+                      >
+                        <option value="resident">Cư dân</option>
+                        <option value="manager">Ban quản lý</option>
+                        <option value="admin">Quản trị</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          <AdminPagination meta={meta} page={page} onPage={setPage} unit="tài khoản" loading={loading} />
+        </div>
+      </div>
     </div>
   );
 }
