@@ -28,7 +28,11 @@ export function SignUpForm() {
 
     if (!fullName.trim()) return setError("Vui lòng nhập họ và tên.");
     if (!email.trim()) return setError("Vui lòng nhập email.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      return setError("Email không hợp lệ.");
     if (password.length < 8) return setError("Mật khẩu cần tối thiểu 8 ký tự.");
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d])/.test(password))
+      return setError("Mật khẩu cần có chữ hoa, chữ thường, số và ký tự đặc biệt.");
     if (!agree) return setError("Vui lòng đồng ý với điều khoản dịch vụ.");
 
     setLoading(true);

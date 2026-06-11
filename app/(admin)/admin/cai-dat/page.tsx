@@ -98,21 +98,8 @@ export default function AdminCaiDatPage() {
           </div>
         </div>
 
-        {/* Các cấu hình nâng cao (phí, thông báo, bảo mật) — hiển thị tham khảo */}
-        <div className="st-card">
-          <div className="st-card-hd">
-            <div className="st-card-ic" style={{ background: "#fff3da" }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#c8761b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
-            </div>
-            <div>
-              <div className="st-card-title">Thông báo & Bảo mật</div>
-              <div className="st-card-desc">Cấu hình kênh gửi và bảo mật (đang phát triển)</div>
-            </div>
-          </div>
-          <div className="st-row"><div className="st-row-info"><div className="n">Gửi qua ứng dụng</div><div className="d">Push notification tới app cư dân</div></div><div className="sw on"></div></div>
-          <div className="st-row"><div className="st-row-info"><div className="n">Tự động nhắc nợ phí</div><div className="d">Nhắc cư dân chưa nộp phí trước hạn 3 ngày</div></div><div className="sw on"></div></div>
-          <div className="st-row"><div className="st-row-info"><div className="n">Ghi log hoạt động</div><div className="d">Lưu lịch sử thao tác của tài khoản quản trị</div></div><div className="sw on"></div></div>
-        </div>
+        {/* Removed the "Thông báo & Bảo mật" placeholder card: its toggles were
+            static and non-functional, implying features that did not exist. */}
 
         <div className="st-save">
           <button className="st-btn" onClick={reset} disabled={save.loading}>Hủy</button>

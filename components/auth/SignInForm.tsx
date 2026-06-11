@@ -45,9 +45,19 @@ export function SignInForm() {
     e.preventDefault();
     if (loading) return;
     setError("");
+    // Client-side validation before hitting the API.
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      setError("Vui lòng nhập email và mật khẩu");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError("Email không hợp lệ");
+      return;
+    }
     setLoading(true);
     try {
-      await signIn(email.trim(), password);
+      await signIn(trimmedEmail, password);
       const from = new URLSearchParams(window.location.search).get("from");
       router.replace(await resolveLanding(from));
     } catch (err) {
@@ -93,13 +103,6 @@ export function SignInForm() {
               autoComplete="current-password"
               value={password}
               onChange={setPassword}
-              footer={
-                <div className={styles.fieldFooter}>
-                  <a href="#" className={styles.forgotLink}>
-                    Quên mật khẩu?
-                  </a>
-                </div>
-              }
             />
 
             <button type="submit" className={styles.submitBtn} disabled={loading}>

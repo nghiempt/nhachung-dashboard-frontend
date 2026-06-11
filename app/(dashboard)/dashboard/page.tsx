@@ -86,6 +86,29 @@ export default function DashboardPage() {
   const communityPosts = data?.communityPosts ?? [];
   const events = data?.events ?? [];
 
+  // Build a Monday-first calendar grid for the current month (6 weeks),
+  // marking today and out-of-month spill days. Replaces the old static grid.
+  const now = new Date();
+  const calYear = now.getFullYear();
+  const calMonth = now.getMonth();
+  const todayDate = now.getDate();
+  const MONTHS_VI = [
+    "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+    "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12",
+  ];
+  const firstDow = (new Date(calYear, calMonth, 1).getDay() + 6) % 7; // 0 = Mon
+  const startDate = new Date(calYear, calMonth, 1 - firstDow);
+  const calCells = Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
+    const inMonth = d.getMonth() === calMonth;
+    return {
+      key: i,
+      day: d.getDate(),
+      inMonth,
+      isToday: inMonth && d.getDate() === todayDate,
+    };
+  });
+
   return (
     <div className="db-content">
 
@@ -126,8 +149,9 @@ export default function DashboardPage() {
             <img className="weather-icon" src="/images/dashboard/weather-icon.png" alt="Sun" />
             <div className="weather-info">
               <span className="weather-city">TP. Hồ Chí Minh</span>
-              <span className="weather-temp">28°C</span>
-              <span className="weather-desc">Trời nắng</span>
+              {/* Live temperature/condition not wired to a weather provider yet;
+                  show a neutral prompt instead of fabricated values. */}
+              <span className="weather-desc">Dự báo thời tiết</span>
             </div>
           </div>
           <button className="weather-btn" onClick={() => window.open('https://nchmf.gov.vn/Kttv/vi-VN/1/index.html', '_blank', 'noopener,noreferrer')}>
@@ -329,7 +353,7 @@ export default function DashboardPage() {
                   </svg>
                 </span>
                 <div className="cal-month-btn">
-                  <span className="cal-month-text">Tháng 5, 2026</span>
+                  <span className="cal-month-text">{MONTHS_VI[calMonth]}, {calYear}</span>
                 </div>
                 <span className="cal-nav-btn" style={{ opacity: 0.4, cursor: 'default' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3e4265" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -347,54 +371,14 @@ export default function DashboardPage() {
                 <div className="cal-dow">T6</div>
                 <div className="cal-dow">T7</div>
                 <div className="cal-dow">CN</div>
-                {/* Week 1 (Apr 26 – May 1) */}
-                <div className="cal-cell other-month">26</div>
-                <div className="cal-cell other-month">27</div>
-                <div className="cal-cell other-month">28</div>
-                <div className="cal-cell other-month">29</div>
-                <div className="cal-cell other-month">30</div>
-                <div className="cal-cell other-month">31</div>
-                <div className="cal-cell">1</div>
-                {/* Week 2 */}
-                <div className="cal-cell">2</div>
-                <div className="cal-cell">3</div>
-                <div className="cal-cell">4</div>
-                <div className="cal-cell">5</div>
-                <div className="cal-cell">6</div>
-                <div className="cal-cell">7</div>
-                <div className="cal-cell">8</div>
-                {/* Week 3 */}
-                <div className="cal-cell">9</div>
-                <div className="cal-cell">10</div>
-                <div className="cal-cell">11</div>
-                <div className="cal-cell">12</div>
-                <div className="cal-cell">13</div>
-                <div className="cal-cell">14</div>
-                <div className="cal-cell">15</div>
-                {/* Week 4 */}
-                <div className="cal-cell">16</div>
-                <div className="cal-cell today">17</div>
-                <div className="cal-cell">18</div>
-                <div className="cal-cell">19</div>
-                <div className="cal-cell">20</div>
-                <div className="cal-cell">21</div>
-                <div className="cal-cell">22</div>
-                {/* Week 5 */}
-                <div className="cal-cell">23</div>
-                <div className="cal-cell">24</div>
-                <div className="cal-cell">25</div>
-                <div className="cal-cell">26</div>
-                <div className="cal-cell">27</div>
-                <div className="cal-cell">28</div>
-                <div className="cal-cell">29</div>
-                {/* Week 6 */}
-                <div className="cal-cell">30</div>
-                <div className="cal-cell other-month">1</div>
-                <div className="cal-cell other-month">2</div>
-                <div className="cal-cell other-month">3</div>
-                <div className="cal-cell other-month">4</div>
-                <div className="cal-cell other-month">5</div>
-                <div className="cal-cell other-month">6</div>
+                {calCells.map((c) => (
+                  <div
+                    key={c.key}
+                    className={`cal-cell${c.inMonth ? "" : " other-month"}${c.isToday ? " today" : ""}`}
+                  >
+                    {c.day}
+                  </div>
+                ))}
               </div>
 
               {/* Event cards */}

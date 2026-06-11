@@ -139,11 +139,17 @@ async function tryRefresh(): Promise<boolean> {
 interface ApiOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   auth?: boolean; // default true; set false for public endpoints
+  timeoutMs?: number; // default 30s; abort the request if it hangs
   _retried?: boolean;
 }
 
+// Default request timeout so a hung connection doesn't leave the UI spinning
+// forever. Callers can override per-request via `timeoutMs` or pass their own
+// `signal` (in which case no timeout is applied).
+const DEFAULT_TIMEOUT_MS = 30_000;
+
 export async function api<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { body, auth = true, headers, _retried, ...rest } = options;
+  const { body, auth = true, headers, timeoutMs, signal, _retried, ...rest } = options;
 
   const finalHeaders: Record<string, string> = { ...(headers as Record<string, string>) };
   const isFormData = isBrowser() && body instanceof FormData;
@@ -155,11 +161,31 @@ export async function api<T = unknown>(path: string, options: ApiOptions = {}): 
     if (token) finalHeaders["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    headers: finalHeaders,
-    body: body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
-  });
+  // Use the caller's signal if provided; otherwise enforce a timeout.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let effectiveSignal = signal ?? undefined;
+  if (!effectiveSignal && typeof AbortController !== "undefined") {
+    const controller = new AbortController();
+    timer = setTimeout(() => controller.abort(), timeoutMs ?? DEFAULT_TIMEOUT_MS);
+    effectiveSignal = controller.signal;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...rest,
+      headers: finalHeaders,
+      signal: effectiveSignal,
+      body: body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError" && !signal) {
+      throw new ApiError("Yêu cầu quá thời gian chờ. Vui lòng thử lại.", 0);
+    }
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 
   if (res.status === 401 && auth && !_retried) {
     const ok = await tryRefresh();

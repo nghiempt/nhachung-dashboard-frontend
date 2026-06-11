@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useApiData, useAction } from "@/lib/hooks";
-import { apiPost, apiPatch, apiDelete } from "@/lib/api";
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
 import { useAdminList, inputStyle, labelStyle } from "@/lib/admin";
 import { formatDate } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
@@ -80,6 +80,27 @@ export default function AdminThongBaoPage() {
     setForm(EMPTY);
     save.setError(null);
     setOpen(true);
+  }
+  async function openEdit(n: Notif) {
+    setEditingId(n.id);
+    save.setError(null);
+    // Seed from the list row so the modal opens instantly, then hydrate the
+    // body paragraphs from the detail endpoint (the list payload omits them).
+    setForm({ title: n.title, body: "", category: n.category, isUrgent: n.isUrgent });
+    setOpen(true);
+    try {
+      const detail = await apiGet<{ title: string; body?: string[] | null; category: string; isUrgent: boolean }>(
+        `/admin/notifications/${n.id}`,
+      );
+      setForm({
+        title: detail.title,
+        body: Array.isArray(detail.body) ? detail.body.join("\n") : "",
+        category: detail.category,
+        isUrgent: detail.isUrgent,
+      });
+    } catch {
+      /* keep the list-seeded values if detail fetch fails */
+    }
   }
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -164,6 +185,11 @@ export default function AdminThongBaoPage() {
                     <td>{formatDate(n.publishedAt)}</td>
                     <td>
                       <div className="mg-act-btns">
+                        <button className="mg-icon-btn" title="Sửa" onClick={() => openEdit(n)}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="#4137f9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
                         <button className="mg-icon-btn" title="Xoá" onClick={() => handleDelete(n)} disabled={remove.loading}>
                           <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -181,7 +207,7 @@ export default function AdminThongBaoPage() {
       </div>
 
       {open && (
-        <AdminModal title="Tạo thông báo" onClose={() => setOpen(false)} onSubmit={submit} submitting={save.loading} submitLabel="Phát thông báo" error={save.error}>
+        <AdminModal title={editingId ? "Cập nhật thông báo" : "Tạo thông báo"} onClose={() => setOpen(false)} onSubmit={submit} submitting={save.loading} submitLabel={editingId ? "Lưu thay đổi" : "Phát thông báo"} error={save.error}>
           <div>
             <label style={labelStyle}>Tiêu đề *</label>
             <input style={inputStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Thông báo bảo trì thang máy..." />

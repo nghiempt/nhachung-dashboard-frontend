@@ -28,6 +28,7 @@ interface Category {
 }
 interface UploadResult {
   url: string;
+  key: string;
   sizeBytes: number;
 }
 
@@ -70,13 +71,24 @@ export default function AdminTaiLieuPage() {
     const fd = new FormData();
     fd.append("file", file);
     const up = await apiPost<UploadResult>("/uploads?folder=documents", fd);
-    await apiPost("/admin/documents", {
-      name: name.trim() || file.name,
-      url: up.url,
-      sizeBytes: up.sizeBytes,
-      fileType: fileTypeFromName(file.name),
-      categoryId: cat || undefined,
-    });
+    try {
+      await apiPost("/admin/documents", {
+        name: name.trim() || file.name,
+        url: up.url,
+        sizeBytes: up.sizeBytes,
+        fileType: fileTypeFromName(file.name),
+        categoryId: cat || undefined,
+      });
+    } catch (err) {
+      // Metadata save failed — remove the just-uploaded file so it doesn't
+      // become an orphaned object in storage.
+      try {
+        await apiDelete("/uploads", { body: { key: up.key } });
+      } catch {
+        /* best-effort cleanup; surface the original error below */
+      }
+      throw err;
+    }
   });
   const remove = useAction((id: string) => apiDelete(`/admin/documents/${id}`));
 

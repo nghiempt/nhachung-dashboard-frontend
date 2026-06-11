@@ -710,7 +710,7 @@ export default function HoSoPage() {
                         {v.licensePlate}
                         {v.parkingLocation ? ` · ${v.parkingLocation}` : ""}
                       </div>
-                      <button style={{ ...btnRemove, marginTop: 4 }} disabled={removeVehicle.loading} onClick={() => removeVehicle.run(v.id)}>Xóa</button>
+                      <button style={{ ...btnRemove, marginTop: 4 }} disabled={removeVehicle.loading} onClick={() => { if (typeof window !== "undefined" && window.confirm(`Xóa phương tiện "${v.vehicleName || v.licensePlate}"?`)) removeVehicle.run(v.id); }}>Xóa</button>
                     </div>
                     <span className="vehicle-badge" style={{ background: a.badgeBg, color: a.badgeColor }}>{VEHICLE_TYPE_LABEL[v.vehicleType] ?? "Khác"}</span>
                   </div>
@@ -766,7 +766,7 @@ export default function HoSoPage() {
                         {[c.relationship, c.location].filter(Boolean).join(" · ") || "—"}
                       </div>
                       <div className="contact-phone">{c.phoneNumber}</div>
-                      <button style={{ ...btnRemove, marginTop: 4 }} disabled={removeContact.loading} onClick={() => removeContact.run(c.id)}>Xóa</button>
+                      <button style={{ ...btnRemove, marginTop: 4 }} disabled={removeContact.loading} onClick={() => { if (typeof window !== "undefined" && window.confirm(`Xóa liên hệ "${c.contactName}"?`)) removeContact.run(c.id); }}>Xóa</button>
                     </div>
                   </div>
                 );

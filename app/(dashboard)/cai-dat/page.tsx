@@ -260,18 +260,8 @@ export default function CaiDatPage() {
                   </button>
                 </div>
               )}
-              <div className="toggle-row">
-                <div className="tr-icon" style={{ background: "#e3fbed" }}><svg viewBox="0 0 24 24" fill="none" stroke="#1c9d5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-                <div className="tr-text">
-                  <div className="tr-label">Xác thực 2 bước (2FA)</div>
-                  <div className="tr-sub">Bảo vệ tài khoản bằng mã OTP qua SMS</div>
-                </div>
-                <div
-                  className={`toggle${settings?.twoFactorEnabled ? " on" : ""}`}
-                  style={patchSettings.loading ? { pointerEvents: "none" } : undefined}
-                  onClick={() => patchSettings.run({ twoFactorEnabled: !settings?.twoFactorEnabled })}
-                ></div>
-              </div>
+              {/* 2FA toggle hidden until OTP enforcement is implemented in the
+                  backend — showing it implied a protection that did not exist. */}
               <div className="link-row">
                 <div className="lr-icon" style={{ background: "#fff8ec" }}><svg viewBox="0 0 24 24" fill="none" stroke="#c8761b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
                 <div className="lr-text">

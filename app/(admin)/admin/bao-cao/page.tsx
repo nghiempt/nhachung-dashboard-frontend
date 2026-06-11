@@ -7,6 +7,7 @@ import { useAdminList, inputStyle, labelStyle } from "@/lib/admin";
 import { formatDate } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
 import { AdminModal } from "@/components/admin/ui";
+import { AdminPagination } from "@/components/admin/Pagination";
 
 interface Report {
   id: string;
@@ -37,25 +38,41 @@ const EMPTY: ReportForm = { title: "", periodType: "month", periodLabel: "", cat
 
 export default function AdminBaoCaoPage() {
   const toast = useToast();
-  const { items, loading, refetch } = useAdminList<Report>("/admin/reports", { page: 1, limit: 50 });
+  const [page, setPage] = useState(1);
+  const { items, meta, loading, refetch } = useAdminList<Report>("/admin/reports", { page, limit: 12 });
 
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ReportForm>(EMPTY);
 
-  const save = useAction(() =>
-    apiPost("/admin/reports", {
+  const save = useAction(() => {
+    const body = {
       title: form.title.trim(),
       periodType: form.periodType,
       periodLabel: form.periodLabel.trim(),
       category: form.category || undefined,
       responsibleName: form.responsibleName.trim() || undefined,
-    }),
-  );
+    };
+    return editingId ? apiPatch(`/admin/reports/${editingId}`, body) : apiPost("/admin/reports", body);
+  });
   const publish = useAction((id: string) => apiPatch(`/admin/reports/${id}`, { status: "published" }));
   const remove = useAction((id: string) => apiDelete(`/admin/reports/${id}`));
 
   function openAdd() {
+    setEditingId(null);
     setForm(EMPTY);
+    save.setError(null);
+    setOpen(true);
+  }
+  function openEdit(r: Report) {
+    setEditingId(r.id);
+    setForm({
+      title: r.title,
+      periodType: r.periodType,
+      periodLabel: r.periodLabel,
+      category: r.category ?? "finance",
+      responsibleName: r.responsibleName ?? "",
+    });
     save.setError(null);
     setOpen(true);
   }
@@ -68,7 +85,7 @@ export default function AdminBaoCaoPage() {
     const res = await save.run();
     if (res !== undefined) {
       setOpen(false);
-      toast.success("Đã tạo báo cáo");
+      toast.success(editingId ? "Đã cập nhật báo cáo" : "Đã tạo báo cáo");
       refetch();
     } else if (save.error) toast.error(save.error);
   }
@@ -132,6 +149,9 @@ export default function AdminBaoCaoPage() {
                     ) : (
                       <span className="bc-a" style={{ opacity: 0.5 }}>Chưa có tệp</span>
                     )}
+                    <a className="bc-a" onClick={() => openEdit(r)} style={{ cursor: "pointer" }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg> Sửa
+                    </a>
                     {r.status !== "published" && (
                       <a className="bc-a primary" onClick={() => handlePublish(r)} style={{ cursor: "pointer" }}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg> Phát hành
@@ -146,10 +166,13 @@ export default function AdminBaoCaoPage() {
             })}
           </div>
         )}
+        {items.length > 0 && (
+          <AdminPagination meta={meta} page={page} onPage={setPage} unit="báo cáo" loading={loading} />
+        )}
       </div>
 
       {open && (
-        <AdminModal title="Tạo báo cáo" onClose={() => setOpen(false)} onSubmit={submit} submitting={save.loading} submitLabel="Tạo báo cáo" error={save.error}>
+        <AdminModal title={editingId ? "Cập nhật báo cáo" : "Tạo báo cáo"} onClose={() => setOpen(false)} onSubmit={submit} submitting={save.loading} submitLabel={editingId ? "Lưu thay đổi" : "Tạo báo cáo"} error={save.error}>
           <div>
             <label style={labelStyle}>Tiêu đề *</label>
             <input style={inputStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Báo cáo tài chính tháng 5/2026" />

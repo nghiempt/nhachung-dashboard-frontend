@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApiData, useAction } from "@/lib/hooks";
-import { apiPatch } from "@/lib/api";
+import { apiPatch, getStoredAccount } from "@/lib/api";
 import { useAdminList, inputStyle } from "@/lib/admin";
 import { useToast } from "@/components/ui/Toast";
 import { AdminPagination } from "@/components/admin/Pagination";
@@ -35,8 +35,12 @@ function initials(name: string) {
 
 export default function AdminPhanQuyenPage() {
   const toast = useToast();
+  const [myAccountId, setMyAccountId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+
+  // Read after mount to avoid SSR/CSR hydration mismatch on the disabled state.
+  useEffect(() => { setMyAccountId(getStoredAccount()?.id ?? null); }, []);
 
   const { items, meta, loading, refetch } = useAdminList<Member>("/admin/roles", {
     page,
@@ -48,11 +52,20 @@ export default function AdminPhanQuyenPage() {
 
   async function changeRole(m: Member, role: string) {
     if (role === m.role) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Đổi vai trò của ${m.fullName} từ "${ROLE_LABEL[m.role] ?? m.role}" thành "${ROLE_LABEL[role] ?? role}"?`,
+      )
+    )
+      return;
     const res = await setRole.run(m.id, role);
     if (res !== undefined) {
       toast.success(`Đã đổi vai trò ${m.fullName} → ${ROLE_LABEL[role] ?? role}`);
       refetch();
       refetchSummary();
+    } else if (setRole.error) {
+      toast.error(setRole.error);
     }
   }
 
@@ -113,16 +126,20 @@ export default function AdminPhanQuyenPage() {
                     </td>
                     <td><span className={`mg-pill ${ROLE_PILL[m.role] ?? "s-gray"}`}>{ROLE_LABEL[m.role] ?? m.role}</span></td>
                     <td>
-                      <select
-                        value={m.role}
-                        onChange={(e) => changeRole(m, e.target.value)}
-                        disabled={setRole.loading}
-                        style={{ ...inputStyle, width: "auto", height: 36 }}
-                      >
-                        <option value="resident">Cư dân</option>
-                        <option value="manager">Ban quản lý</option>
-                        <option value="admin">Quản trị</option>
-                      </select>
+                      {m.accountId === myAccountId ? (
+                        <span className="mg-pmeta" style={{ fontStyle: "italic" }}>Tài khoản của bạn</span>
+                      ) : (
+                        <select
+                          value={m.role}
+                          onChange={(e) => changeRole(m, e.target.value)}
+                          disabled={setRole.loading}
+                          style={{ ...inputStyle, width: "auto", height: 36 }}
+                        >
+                          <option value="resident">Cư dân</option>
+                          <option value="manager">Ban quản lý</option>
+                          <option value="admin">Quản trị</option>
+                        </select>
+                      )}
                     </td>
                   </tr>
                 ))

@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useApiData, useAction } from "@/lib/hooks";
-import { apiPost, apiPatch, apiDelete } from "@/lib/api";
-import { inputStyle, labelStyle } from "@/lib/admin";
+import { apiPost, apiDelete } from "@/lib/api";
+import { useAdminList, inputStyle, labelStyle } from "@/lib/admin";
 import { formatVnd } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
 import { AdminModal, StatCard } from "@/components/admin/ui";
+import { AdminPagination } from "@/components/admin/Pagination";
 
 interface Fund {
   balance: number;
@@ -45,8 +46,14 @@ const EMPTY: JobForm = { name: "", status: "planned", contractor: "", amount: ""
 
 export default function AdminQuyBaoTriPage() {
   const toast = useToast();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const { data: fund, refetch: refetchFund } = useApiData<Fund>("/admin/fund/overview");
-  const { data: jobs, loading, refetch } = useApiData<Job[]>("/admin/fund/jobs");
+  const { items: jobs, meta, loading, refetch } = useAdminList<Job>("/admin/fund/jobs", {
+    page,
+    limit: 10,
+    search: search || undefined,
+  });
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<JobForm>(EMPTY);
@@ -124,6 +131,15 @@ export default function AdminQuyBaoTriPage() {
           </StatCard>
         </div>
 
+        <div className="mg-toolbar">
+          <div className="mg-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" /><line x1="20" y1="20" x2="16.65" y2="16.65" />
+            </svg>
+            <input placeholder="Tìm theo hạng mục, nhà thầu..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+          </div>
+        </div>
+
         <div className="mg-card">
           <table className="mg-tbl">
             <thead>
@@ -160,6 +176,7 @@ export default function AdminQuyBaoTriPage() {
               )}
             </tbody>
           </table>
+          <AdminPagination meta={meta} page={page} onPage={setPage} unit="hạng mục" loading={loading} />
         </div>
       </div>
 
