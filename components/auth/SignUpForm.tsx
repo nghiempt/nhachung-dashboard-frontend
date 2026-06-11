@@ -7,6 +7,7 @@ import styles from "./auth.module.css";
 import { BrandLogo } from "./BrandLogo";
 import { SupportBox } from "./SupportBox";
 import { PasswordField, SubmitArrowIcon } from "./PasswordField";
+import { LoadingSpinner } from "@/components/ui/Skeleton";
 import { signUp } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 
@@ -154,7 +155,7 @@ export function SignUpForm() {
 
             <button type="submit" className={styles.submitBtn} disabled={loading}>
               <span>{loading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}</span>
-              <SubmitArrowIcon />
+              {loading ? <LoadingSpinner size={16} stroke={2} color="#fff" /> : <SubmitArrowIcon />}
             </button>
 
             {error ? <div className={styles.loginError}>{error}</div> : null}

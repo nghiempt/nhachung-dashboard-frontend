@@ -165,12 +165,18 @@ export function useAction<TArgs extends unknown[], TResult>(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep `run` stable but always invoke the LATEST `fn`. Without this ref,
+  // a `useCallback(fn, [])` would freeze the first-render closure and submit
+  // stale/initial form state (empty title, default category, etc.).
+  const fnRef = useRef(fn);
+  fnRef.current = fn;
+
   const run = useCallback(
     async (...args: TArgs): Promise<TResult | undefined> => {
       setLoading(true);
       setError(null);
       try {
-        return await fn(...args);
+        return await fnRef.current(...args);
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Đã có lỗi xảy ra");
         return undefined;
@@ -178,7 +184,6 @@ export function useAction<TArgs extends unknown[], TResult>(
         setLoading(false);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 

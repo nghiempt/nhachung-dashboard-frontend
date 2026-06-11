@@ -20,6 +20,7 @@ import { signOut } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { useApiData } from "@/lib/hooks";
 import { useUser } from "@/components/providers/UserProvider";
+import { LoadingSpinner } from "@/components/ui/Skeleton";
 import { formatTime } from "@/lib/format";
 
 interface NotifItem {
@@ -57,6 +58,7 @@ export function Header() {
   const [buildingOpen, setBuildingOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Cmd/Ctrl+K focuses the global search; Esc blurs it.
@@ -89,7 +91,8 @@ export function Header() {
 
   const closeAll = () => { setBuildingOpen(false); setNotifOpen(false); setUserOpen(false); };
   const handleLogout = async () => {
-    closeAll();
+    if (loggingOut) return;
+    setLoggingOut(true);
     await signOut();
     router.replace("/sign-in");
     router.refresh();
@@ -367,9 +370,9 @@ export function Header() {
                   </Link>
                 ))}
                 <div style={{ height: 1, background: "#e2e5f1" }} />
-                <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: "9px", padding: "9px 16px", fontSize: "13px", fontWeight: 500, color: "#f5222d", width: "100%", background: "transparent", border: 0, cursor: "pointer", textAlign: "left" }}>
-                  <LogOut size={15} color="#f5222d" />
-                  Đăng xuất
+                <button onClick={handleLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: "9px", padding: "9px 16px", fontSize: "13px", fontWeight: 500, color: "#f5222d", width: "100%", background: "transparent", border: 0, cursor: loggingOut ? "default" : "pointer", textAlign: "left" }}>
+                  {loggingOut ? <LoadingSpinner size={15} stroke={2} color="#f5222d" /> : <LogOut size={15} color="#f5222d" />}
+                  {loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
                 </button>
               </div>
             )}
