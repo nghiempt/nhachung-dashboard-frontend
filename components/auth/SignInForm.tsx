@@ -61,13 +61,16 @@ export function SignInForm() {
       await signIn(trimmedEmail, password);
       const from = new URLSearchParams(window.location.search).get("from");
       router.replace(await resolveLanding(from));
+      // Keep the spinner running through navigation — the component unmounts
+      // when the dashboard loads, so we intentionally do NOT reset `loading`
+      // here. Resetting it would briefly flash the button back to its idle
+      // state before the route actually changes.
     } catch (err) {
       setError(
         err instanceof ApiError
           ? err.message
           : "Không kết nối được máy chủ. Vui lòng thử lại.",
       );
-    } finally {
       setLoading(false);
     }
   }

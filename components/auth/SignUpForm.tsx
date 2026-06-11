@@ -47,13 +47,14 @@ export function SignUpForm() {
         agree,
       });
       router.replace("/dashboard");
+      // Keep the spinner running through navigation (component unmounts on
+      // success) — don't reset `loading` or the button flashes back to idle.
     } catch (err) {
       setError(
         err instanceof ApiError
           ? err.message
           : "Không kết nối được máy chủ. Vui lòng thử lại.",
       );
-    } finally {
       setLoading(false);
     }
   }
