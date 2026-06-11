@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -57,6 +57,21 @@ export function Header() {
   const [buildingOpen, setBuildingOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Cmd/Ctrl+K focuses the global search; Esc blurs it.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === "Escape" && document.activeElement === searchRef.current) {
+        searchRef.current?.blur();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const { data: overview, refetch } = useApiData<NotifOverview>("/dashboard/overview");
   const recent = overview?.notifications ?? [];
@@ -197,9 +212,26 @@ export function Header() {
         }}>
           <Search size={20} color="#b4b7c9" style={{ flexShrink: 0 }} />
           <input
+            ref={searchRef}
             placeholder="Tìm kiếm thông báo, tài liệu, báo cáo..."
             style={{ flex: 1, border: 0, outline: 0, fontSize: "14px", color: "#222", background: "transparent" }}
           />
+          <kbd
+            style={{
+              flexShrink: 0,
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "#9499b5",
+              background: "#f3f4f9",
+              border: "1px solid #e2e5f1",
+              borderRadius: "6px",
+              padding: "2px 7px",
+              fontFamily: "inherit",
+              userSelect: "none",
+            }}
+          >
+            ⌘K
+          </kbd>
         </div>
 
         {/* Right side */}

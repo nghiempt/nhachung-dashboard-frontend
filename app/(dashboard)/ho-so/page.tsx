@@ -7,6 +7,8 @@ import { useApiData, useAction } from "@/lib/hooks";
 import { formatDate, timeAgo } from "@/lib/format";
 import { GENDER_LABEL, ID_TYPE_LABEL, VEHICLE_TYPE_LABEL } from "@/lib/ui-maps";
 import { useUser } from "@/components/providers/UserProvider";
+import { useToast } from "@/components/ui/Toast";
+import { LoadingState } from "@/components/ui/Skeleton";
 
 interface Vehicle {
   id: string;
@@ -172,6 +174,7 @@ function initials(name: string): string {
 
 export default function HoSoPage() {
   const { refreshProfile } = useUser();
+  const toast = useToast();
   const { data: profile, loading, refetch } = useApiData<ProfileData>("/profile/me");
   const { data: activities } = useApiData<Activity[]>("/profile/activities");
 
@@ -242,16 +245,19 @@ export default function HoSoPage() {
     await apiPatch("/profile", basicForm);
     await reload();
     setEditBasic(false);
+    toast.success("Đã cập nhật thông tin cơ bản");
   });
   const saveId = useAction(async () => {
     await apiPatch("/profile", idForm);
     await reload();
     setEditId(false);
+    toast.success("Đã cập nhật giấy tờ tùy thân");
   });
   const saveContact = useAction(async () => {
     await apiPatch("/profile", contactForm);
     await reload();
     setEditContact(false);
+    toast.success("Đã cập nhật thông tin liên hệ");
   });
 
   const addVehicle = useAction(async () => {
@@ -264,10 +270,12 @@ export default function HoSoPage() {
     await reload();
     setShowVehicleForm(false);
     setVehicleForm({ vehicleName: "", licensePlate: "", vehicleType: "car", parkingLocation: "" });
+    toast.success("Đã thêm phương tiện");
   });
   const removeVehicle = useAction(async (id: string) => {
     await apiDelete(`/profile/vehicles/${id}`);
     await reload();
+    toast.success("Đã xóa phương tiện");
   });
 
   const addContact = useAction(async () => {
@@ -280,10 +288,12 @@ export default function HoSoPage() {
     await reload();
     setShowContactForm(false);
     setNewContact({ contactName: "", relationship: "", location: "", phoneNumber: "" });
+    toast.success("Đã thêm liên hệ khẩn cấp");
   });
   const removeContact = useAction(async (id: string) => {
     await apiDelete(`/profile/contacts/${id}`);
     await reload();
+    toast.success("Đã xóa liên hệ");
   });
 
   const uploadAvatar = useAction(async (file: File) => {
@@ -292,19 +302,40 @@ export default function HoSoPage() {
     const res = await apiPost<{ url: string }>("/uploads?folder=avatars", fd);
     await apiPatch("/profile", { avatarUrl: res.url });
     await reload();
+    toast.success("Đã cập nhật ảnh đại diện");
   });
+
+  // Surface errors from actions that have no inline error UI.
+  useEffect(() => {
+    if (removeVehicle.error) toast.error(removeVehicle.error);
+  }, [removeVehicle.error, toast]);
+  useEffect(() => {
+    if (removeContact.error) toast.error(removeContact.error);
+  }, [removeContact.error, toast]);
+  useEffect(() => {
+    if (uploadAvatar.error) toast.error(uploadAvatar.error);
+  }, [uploadAvatar.error, toast]);
 
   const onAvatarClick = () => fileInputRef.current?.click();
   const onAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) uploadAvatar.run(file);
     e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.warning("Vui lòng chọn tệp ảnh hợp lệ");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.warning("Ảnh vượt quá 5MB, vui lòng chọn ảnh nhỏ hơn");
+      return;
+    }
+    uploadAvatar.run(file);
   };
 
   if (loading && !profile) {
     return (
       <div className="profile-page">
-        <div style={{ padding: 40, color: "#585c7b", fontSize: 14 }}>Đang tải...</div>
+        <LoadingState label="Đang tải hồ sơ..." minHeight="60vh" />
       </div>
     );
   }

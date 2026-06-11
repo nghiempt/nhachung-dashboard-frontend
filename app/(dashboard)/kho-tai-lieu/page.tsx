@@ -6,6 +6,18 @@ import { apiPost } from "@/lib/api";
 import { formatDate, formatNumber } from "@/lib/format";
 import { docColor, docTypeLabel, DOC_CATEGORY_CLASS } from "@/lib/ui-maps";
 import { Modal } from "@/components/ui/Modal";
+import { SkeletonRows } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/Toast";
+
+// File-type filters mirror the backend DocumentFileType enum.
+const FILE_TYPES: { value: string; label: string }[] = [
+  { value: "PDF", label: "PDF" },
+  { value: "DOCX", label: "Word" },
+  { value: "XLSX", label: "Excel" },
+  { value: "PPTX", label: "PowerPoint" },
+  { value: "IMG", label: "Hình ảnh" },
+  { value: "OTHER", label: "Khác" },
+];
 
 interface DocCategory {
   id: string;
@@ -52,19 +64,22 @@ export default function KhoTaiLieuPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [showRequest, setShowRequest] = useState(false);
+  const toast = useToast();
 
   const { data: categories } = useApiData<DocCategory[]>("/documents/categories");
 
   const listPath = useMemo(() => {
     const params = new URLSearchParams();
     if (categoryId) params.set("categoryId", categoryId);
+    if (fileType) params.set("fileType", fileType);
     if (search) params.set("search", search);
     params.set("page", String(page));
     params.set("limit", String(PAGE_LIMIT));
     return `/documents?${params.toString()}`;
-  }, [categoryId, search, page]);
+  }, [categoryId, fileType, search, page]);
 
   const { data: list, loading } = useApiData<DocList>(listPath, [listPath]);
 
@@ -86,13 +101,22 @@ export default function KhoTaiLieuPage() {
     setCategoryId((prev) => (prev === id ? null : id));
   };
 
+  const handleSelectFileType = (value: string | null) => {
+    setPage(1);
+    setFileType((prev) => (prev === value ? null : value));
+  };
+
   const handleOpenDoc = async (doc: DocItem) => {
     try {
       await apiPost(`/documents/${doc.id}/view`, {});
     } catch {
       /* ignore view-count errors, still open the doc */
     }
-    if (doc.url) window.open(doc.url, "_blank", "noopener,noreferrer");
+    if (doc.url) {
+      window.open(doc.url, "_blank", "noopener,noreferrer");
+    } else {
+      toast.warning("Tài liệu này chưa có tệp đính kèm");
+    }
   };
 
   const pageNumbers = useMemo(() => {
@@ -160,6 +184,34 @@ export default function KhoTaiLieuPage() {
         </button>
       </div>
 
+      {/* File-type filter chips */}
+      <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "13px", color: "#585c7b", fontWeight: 500, marginRight: "4px" }}>Loại tệp:</span>
+        {[{ value: null, label: "Tất cả" }, ...FILE_TYPES].map((ft) => {
+          const active = fileType === ft.value;
+          return (
+            <button
+              key={ft.value ?? "all"}
+              onClick={() => handleSelectFileType(ft.value)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "999px",
+                fontSize: "13px",
+                fontWeight: 500,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                border: active ? "1px solid #4137f9" : "1px solid #d4d7e5",
+                background: active ? "#4137f9" : "#ffffff",
+                color: active ? "#ffffff" : "#3e4265",
+                transition: "all .15s ease",
+              }}
+            >
+              {ft.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Section: Danh mục */}
       <div style={{
         background: "#ffffff", border: "1px solid #e2e5f1",
@@ -220,9 +272,7 @@ export default function KhoTaiLieuPage() {
           </thead>
           <tbody>
             {loading && items.length === 0 ? (
-              <tr>
-                <td colSpan={6} style={{ padding: "24px 12px", textAlign: "center", fontSize: "13.5px", color: "#585c7b" }}>Đang tải...</td>
-              </tr>
+              <SkeletonRows rows={PAGE_LIMIT} cols={6} />
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={6} style={{ padding: "24px 12px", textAlign: "center", fontSize: "13.5px", color: "#585c7b" }}>Không có tài liệu</td>
@@ -386,6 +436,7 @@ function RequestDocumentModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [done, setDone] = useState(false);
+  const toast = useToast();
 
   const { run, loading, error } = useAction(async () =>
     apiPost("/feedbacks", {
@@ -403,9 +454,17 @@ function RequestDocumentModal({ onClose }: { onClose: () => void }) {
   const labelStyle: React.CSSProperties = { fontSize: "12px", fontWeight: 600, color: "#585c7b", marginBottom: "6px", display: "block" };
 
   const onSubmit = async () => {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      toast.warning("Vui lòng nhập tên tài liệu cần yêu cầu");
+      return;
+    }
     const res = await run();
-    if (res) setDone(true);
+    if (res) {
+      setDone(true);
+      toast.success("Đã gửi yêu cầu tài liệu");
+    } else {
+      toast.error("Gửi yêu cầu thất bại, vui lòng thử lại");
+    }
   };
 
   return (

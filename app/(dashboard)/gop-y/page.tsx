@@ -6,6 +6,8 @@ import { useApiData, useAction } from "@/lib/hooks";
 import { apiPost } from "@/lib/api";
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import { feedbackStatus, feedbackPriority } from "@/lib/ui-maps";
+import { Skeleton, SkeletonText, LoadingState } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/Toast";
 
 interface SummaryTab {
   key: string;
@@ -59,6 +61,7 @@ const PAGE_LIMIT = 5;
 
 export default function GopYPage() {
   const router = useRouter();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -196,9 +199,19 @@ export default function GopYPage() {
           </div>
 
           {/* Cards */}
-          {listLoading && items.length === 0 && (
-            <div style={{ fontSize: "13.5px", color: "#585c7b", padding: "16px" }}>Đang tải...</div>
-          )}
+          {listLoading && items.length === 0 &&
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={`sk-${i}`} style={{ background: "#ffffff", border: "1px solid #e2e5f1", borderRadius: "20px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <Skeleton width={44} height={44} radius={10} />
+                  <div style={{ flex: 1 }}>
+                    <Skeleton height={10} width="40%" />
+                    <SkeletonText lines={2} lineHeight={11} />
+                  </div>
+                </div>
+                <Skeleton height={10} width="70%" />
+              </div>
+            ))}
           {!listLoading && items.length === 0 && (
             <div style={{ fontSize: "13.5px", color: "#585c7b", padding: "16px" }}>Chưa có phản ánh nào.</div>
           )}
@@ -265,9 +278,7 @@ export default function GopYPage() {
             </div>
           </div>
 
-          {detailLoading && !detail && (
-            <div style={{ fontSize: "13.5px", color: "#585c7b" }}>Đang tải...</div>
-          )}
+          {detailLoading && !detail && <LoadingState label="Đang tải chi tiết..." minHeight={200} />}
           {!detailLoading && !detail && (
             <div style={{ fontSize: "13.5px", color: "#585c7b" }}>Chọn một phản ánh để xem chi tiết.</div>
           )}
@@ -464,6 +475,7 @@ export default function GopYPage() {
             refetchList();
             refetchSummary();
             setSelectedId(created.id);
+            toast.success("Đã gửi phản ánh thành công");
           }}
         />
       )}
@@ -502,6 +514,24 @@ function CreateFeedbackModal({
   const [location, setLocation] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
+
+  // Validate images up front: must be images and ≤5MB each.
+  const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    const valid = picked.filter((f) => {
+      if (!f.type.startsWith("image/")) {
+        toast.warning(`"${f.name}" không phải tệp ảnh`);
+        return false;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        toast.warning(`"${f.name}" vượt quá 5MB`);
+        return false;
+      }
+      return true;
+    });
+    setFiles(valid);
+  };
 
   const { run, loading, error } = useAction(async () => {
     const imageUrls: string[] = [];
@@ -529,9 +559,13 @@ function CreateFeedbackModal({
   const labelStyle: React.CSSProperties = { fontSize: "12px", fontWeight: 600, color: "#585c7b", marginBottom: "6px", display: "block" };
 
   const onSubmit = async () => {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      toast.warning("Vui lòng nhập tiêu đề phản ánh");
+      return;
+    }
     const created = await run();
     if (created) onCreated(created);
+    else toast.error("Gửi phản ánh thất bại, vui lòng thử lại");
   };
 
   return (
@@ -584,7 +618,7 @@ function CreateFeedbackModal({
             type="file"
             accept="image/*"
             multiple
-            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            onChange={onPickFiles}
             style={{ fontSize: "13px", color: "#3e4265" }}
           />
           {files.length > 0 && (

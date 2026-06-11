@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useApiData } from "@/lib/hooks";
 import { formatDateLong, formatTime, timeAgo, formatNumber } from "@/lib/format";
 import { notifIconColor, type IconColor } from "@/lib/ui-maps";
+import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 
 interface OverviewHero {
   greeting: string;
@@ -233,7 +234,20 @@ export default function DashboardPage() {
                   {[rowStart, rowStart + 1].map((i) => {
                     const stat = stats[i];
                     if (!stat) {
-                      return <div className="stat-card" key={i} />;
+                      // While loading show a shimmer placeholder; otherwise an empty slot.
+                      return (
+                        <div className="stat-card" key={i}>
+                          {loading && (
+                            <>
+                              <Skeleton width={44} height={44} radius={12} />
+                              <div className="stat-info" style={{ flex: 1 }}>
+                                <Skeleton height={11} width="70%" />
+                                <Skeleton height={20} width="45%" style={{ marginTop: 8 }} />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
                     }
                     return (
                       <div className="stat-card" key={stat.key}>
@@ -271,6 +285,16 @@ export default function DashboardPage() {
               </a>
             </div>
             <div className="community-grid">
+
+              {loading && communityPosts.length === 0 &&
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div className="community-card" key={`sk-${i}`}>
+                    <Skeleton height={120} radius={0} style={{ width: "100%" }} />
+                    <div className="community-body" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <SkeletonText lines={2} />
+                    </div>
+                  </div>
+                ))}
 
               {communityPosts.map((post, i) => (
                 <div className="community-card" key={post.id}>
@@ -313,6 +337,17 @@ export default function DashboardPage() {
               </a>
             </div>
             <div className="notif-list-card">
+
+              {loading && notifications.length === 0 &&
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div className="notif-row" key={`sk-${i}`}>
+                    <Skeleton width={40} height={40} radius={10} />
+                    <div className="notif-info" style={{ flex: 1 }}>
+                      <Skeleton height={12} width="80%" />
+                      <Skeleton height={10} width="50%" style={{ marginTop: 6 }} />
+                    </div>
+                  </div>
+                ))}
 
               {notifications.map((n) => (
                 <div className="notif-row" key={n.id}>

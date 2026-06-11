@@ -7,6 +7,7 @@ import {
   getAccessToken,
   type AuthResult,
 } from "./api";
+import { clearApiCache } from "./hooks";
 
 export interface SignUpPayload {
   email: string;
@@ -42,5 +43,6 @@ export async function signOut(): Promise<void> {
     // ignore network/expiry errors — we clear locally regardless
   } finally {
     clearSession();
+    clearApiCache(); // drop cached data so the next user starts clean
   }
 }
